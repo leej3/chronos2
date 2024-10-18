@@ -1,0 +1,1 @@
+echo $1 > /home/rj/sp.txt

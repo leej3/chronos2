@@ -1,0 +1,1 @@
+bstat -s /dev/ttyUSB0 

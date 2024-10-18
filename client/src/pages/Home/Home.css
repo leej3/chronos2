@@ -1,0 +1,70 @@
+/* Home.css */
+
+.home-container {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-start;
+  padding: 2rem 1rem;
+  gap: 1.2rem;
+  flex-wrap: wrap;
+}
+
+.home-container .left {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.2rem;
+  column-gap: 1.2rem;
+  width: 100%;
+}
+
+.home-container .left .item1 {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.home-container .left .item2 {
+  width: 100%;
+}
+
+.home-container .right {
+  width: 100%;
+  display: flex;
+}
+
+.item1n2 {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  row-gap: 15px;
+}
+
+/* Desktop view */
+@media screen and (min-width: 768px) {
+  .home-container {
+    flex-wrap: nowrap;
+  }
+
+  .home-container .left {
+    width: 80%;
+  }
+
+  .home-container .left .item1 {
+    width: 35%;
+  }
+
+  .home-container .left .item2 {
+    width: 65%;
+  }
+
+  .home-container .right {
+    width: 20%;
+  }
+
+  .item1n2 {
+    flex-direction: row;
+    gap: 1.2rem;
+  }
+}

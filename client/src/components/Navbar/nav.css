@@ -1,0 +1,75 @@
+.nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #333645;
+    padding: 1rem 2rem;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+  }
+  
+  .left .logo {
+    font-size: 1.8rem;
+    color: #21c8af;
+    font-weight: bold;
+    margin: 0;
+  }
+  
+  .left .status {
+    font-size: 1.2rem;
+    color: #ffffff;
+    margin: 0;
+    margin-top: 0.2rem;
+  }
+  
+  .right {
+    display: flex;
+    gap: 1.5rem;
+  }
+  .right  .seasonNicon{
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+    font-size: 1.2rem;
+    color: #ffffff;
+  }
+  
+  .season-mode {
+    font-size: 1rem;
+    color: #ffffff;
+    padding: 0.5rem 1rem;
+    background-color: #1e443e;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .season-mode:hover {
+    background-color: #21c8af;
+    color: #1e443e;
+  }
+ /* CSS for the blurred effect */
+.blurred {
+  filter: blur(5px);
+  pointer-events: none; /* Prevent interactions with blurred content */
+}
+
+/* CSS for the overlay */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.message {
+  color: white;
+  font-size: 24px;
+  font-weight: bold;
+}

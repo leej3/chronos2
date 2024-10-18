@@ -1,0 +1,16 @@
+[Unit]
+Description=uWSGI Socketio
+After=syslog.target
+
+[Service]
+ExecStart=uwsgi --ini /etc/uwsgi/apps-enabled/socketio_server.ini
+# Requires systemd version 211 or newer
+RuntimeDirectory=uwsgi-socketio
+Restart=always
+KillSignal=SIGQUIT
+Type=notify
+StandardError=syslog
+NotifyAccess=all
+
+[Install]
+WantedBy=multi-user.target

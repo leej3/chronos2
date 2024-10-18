@@ -1,0 +1,35 @@
+#!/bin/bash
+
+chronos_log_dir="/var/log/chronos"
+chronos_group_name="chronos"
+chronos_config_path="/etc/chronos_config.json"
+chronos_db_dir="/home/pi/chronos_db"
+pi_groups=`groups pi`
+wwwdata_groups=`groups www-data`
+crontab_command='0 0 * * * python -c "from chronos.lib.db_queries import keep_history_for_last_week; keep_history_for_last_week()"'
+
+chmod 0755 "/etc/init.d/chronos"
+chmod 0755 "/etc/init.d/uwsgi"
+chmod 0755 "/etc/init.d/uwsgi-socketio"
+groupadd -f $chronos_group_name
+chown pi:$chronos_group_name $chronos_config_path
+
+if [ ! -d $chronos_log_dir ]; then
+    mkdir $chronos_log_dir
+    chgrp $chronos_group_name $chronos_log_dir
+    chmod g+w+s $chronos_log_dir
+fi
+
+if [ ! -d $chronos_db_dir ]; then
+    mkdir $chronos_db_dir
+    chgrp $chronos_group_name $chronos_db_dir
+    chmod g+w+s $chronos_db_dir
+fi
+
+umask 0002
+
+if [[ $pi_groups != *$chronos_group_name* ]]; then
+    usermod -a -G $chronos_group_name pi
+fi
+
+(crontab -u pi -l; echo $crontab_command) | sort - | uniq - | crontab -u pi -

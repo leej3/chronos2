@@ -1,0 +1,54 @@
+.manual-override {
+  background-color: #333645;
+  border-radius: 16px;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+  color: #ffffff;
+  border: 2px solid #4c5c77;
+  text-align: center;
+  width: 100%;
+}
+.manual-override-body{
+  width: 90%;
+    padding: 20px;
+}
+
+.manual-override h2 {
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+  color: #ffffff;
+}
+
+.override-controls {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 10px;
+  text-align: start;
+}
+
+.radio-group {
+  display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+}
+
+.radio-group label {
+  margin-bottom: 5px;
+  color: #dddddd;
+}
+
+.radio-group input[type="radio"] {
+  margin-right: 8px;
+}
+
+label {
+  font-size: 0.9rem;
+  color: #dddddd;
+  font-weight: 600;
+}

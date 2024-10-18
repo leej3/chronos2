@@ -1,0 +1,84 @@
+.system-map {
+  background-color: #333645;
+  border-radius: 16px;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  border: 2px solid #4c5c77;
+  padding: 1rem;
+  margin: 0rem auto;
+  height: auto;
+}
+
+.tankRightArrow-wrapper{
+  display: flex;
+  flex-direction: column;
+}
+.tankRightArrow-wrapper .arrowUpTemp{
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 22px;
+}
+
+.tankRightArrow-wrapper img{
+  filter: brightness(0) invert(1);
+
+}
+.tankRightBottom img{
+  filter: brightness(0) invert(1);
+
+}
+
+
+.section-title {
+  font-size: 1.5rem;
+  color: #ffffff;
+  margin-bottom: 1rem;
+}
+
+.tank-container {
+    display: grid;
+    grid-template-columns: auto auto; 
+    justify-content: center;
+}
+.tank-container1 {
+  display: grid;
+  grid-template-columns: auto auto; 
+  justify-content: space-around;
+  gap: 20px;
+}
+
+
+.tankRight{
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 10px 0px 30px 0px;
+  margin-top: -10px;
+}
+
+
+.temperature {
+  font-size: 1rem;
+  color: #ffffff;
+  font-weight: bold;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+.arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.arrow-line {
+  width: 100px;
+  height: 2px;
+  background-color: #4c5c77;
+  margin: 0 1rem;
+}
+
+.arrow span {
+  font-size: 1rem;
+  color: #ffffff;
+}
