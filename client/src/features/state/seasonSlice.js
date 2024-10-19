@@ -2,6 +2,7 @@ import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
   season: 'default', 
+  timer: false
 };
 
 // Create the slice
@@ -11,6 +12,7 @@ const seasonSlice = createSlice({
   reducers: {
     setSeason: (state, action) => {
       state.season = action.payload;
+      state.timer = true;
     },
   },
 });

@@ -32,6 +32,7 @@
     align-items: center;
     font-size: 1.2rem;
     color: #ffffff;
+    cursor: pointer;
   }
   
   .season-mode {
@@ -73,3 +74,9 @@
   font-size: 24px;
   font-weight: bold;
 }
+.disabled {
+  opacity: 0.5; 
+  pointer-events: none; /* Makes the element unclickable */
+  cursor: not-allowed; /* Shows a "not-allowed" cursor */
+}
+

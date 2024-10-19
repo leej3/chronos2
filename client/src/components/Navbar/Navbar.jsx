@@ -8,8 +8,9 @@ const Navbar = () => {
   const season = useSelector((state) => state.season.season);
   const dispatch = useDispatch();
   
-  const [countdown, setCountdown] = useState(null); // State for countdown timer
-  const [isSwitching, setIsSwitching] = useState(false); // State for blurring and showing "Please wait..."
+  const [countdown, setCountdown] = useState(null);
+  const [isSwitching, setIsSwitching] = useState(false); 
+  const [isTimerOn, setIsTimeron] = useState(false); 
 
   const switchSeason = (newMode, season) => {
     setIsSwitching(true); // Start the blur effect and show the message
@@ -34,6 +35,7 @@ const Navbar = () => {
   };
 
   const startCountdown = () => {
+    setIsTimeron(true)
     setCountdown(120); // Start the countdown from 120 seconds (2 minutes)
   };
 
@@ -45,6 +47,7 @@ const Navbar = () => {
       return () => clearTimeout(timer);
     } else if (countdown === 0) {
       setCountdown(null); // Reset countdown when it reaches 0
+      setIsTimeron(false);
     }
   }, [countdown]);
 
@@ -69,15 +72,15 @@ const Navbar = () => {
         </div>
         <div className="right">
           <span 
-            className="seasonNicon" 
-            onClick={() => {switchSeason(3, 0)}} // 3 is the code for winter, second param 0 is for Winter
+            className={`seasonNicon ${isTimerOn ? 'disabled' : ''}`} 
+            onClick={!isTimerOn ? () => {switchSeason(3, 0)} : null} // 3 is the code for winter, 0 for Winter
           >
             <FaSnowflake className="icon" />
             Winter
           </span>
           <span 
-            className="seasonNicon" 
-            onClick={() => {switchSeason(2, 1)}} // 2 is the code for summer, 1 for Summer
+            className={`seasonNicon ${isTimerOn ? 'disabled' : ''}`} 
+            onClick={!isTimerOn ? () => {switchSeason(2, 1)} : null} // 2 is the code for summer, 1 for Summer
           >
             <FaSun className="icon" />
             Summer

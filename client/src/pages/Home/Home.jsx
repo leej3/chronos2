@@ -11,7 +11,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchSummerData } from '../../features/summer/summerSlice';
 import Modbus from '../../components/Modebus/Modbus';
 import { setSeason } from '../../features/state/seasonSlice';
-import ModeSwitcher from '../../components/Test/ModeSwitcher';
 
 const Home = () => {
     const [homedata, setHomeData] = useState()
@@ -58,7 +57,6 @@ const Home = () => {
 
                     <ManualOverride data = {homedata}/> 
                     <TemperatureGraph />
-                    <ModeSwitcher/>
                 </div>
 
 

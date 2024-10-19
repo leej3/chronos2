@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import './ManualOverride.css';
 import { useDispatch, useSelector } from 'react-redux';
+import io from 'socket.io-client';
 import { setOverride, setInitialState } from '../../features/state/ManualOverrideSlice';
+import './ManualOverride.css';
 
 const ManualOverride = ({ data }) => {
   const dispatch = useDispatch();
   const state = useSelector((state) => state.manualOverride);
+  const season = useSelector((state) => state.season.season); // Get the current season
   const [alertMessage, setAlertMessage] = useState('');
+  const [socket, setSocket] = useState(null);
 
   useEffect(() => {
     if (data?.actStream) {
@@ -33,22 +36,16 @@ const ManualOverride = ({ data }) => {
     }[device];
 
     const overrideValue = value === 'on' ? 1 : value === 'off' ? 2 : 0;
-
-    // Dispatch Redux action to update state
     dispatch(setOverride({ device, value }));
 
-    // Create form data for the API request
     const formData = new URLSearchParams();
     formData.append('device', deviceNumber);
     formData.append('manual_override', overrideValue);
 
-    // Send the update to the backend
     fetch('http://localhost:80/update_state', {
       method: 'POST',
       body: formData,
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     })
       .then((response) => {
         if (!response.ok) throw new Error('Network response was not ok');
@@ -63,6 +60,48 @@ const ManualOverride = ({ data }) => {
       });
   };
 
+  useEffect(() => {
+    // Initialize the WebSocket connection
+    const socketInstance = io('http://localhost', { path: '/socket.io', transports: ['websocket'] });
+    setSocket(socketInstance);
+
+    socketInstance.on('connect', () => console.log('Connected to WebSocket server'));
+
+    socketInstance.on('manual_override', (data) => {
+      const deviceMap = ['boiler', 'chiller1', 'chiller2', 'chiller3', 'chiller4'];
+      const deviceName = deviceMap[data.device];
+      const status = getStatus(data.manual_override);
+      dispatch(setOverride({ device: deviceName, value: status }));
+    });
+
+    socketInstance.on('chiller', (data) => {
+      const status = data.status === 1 ? 'on' : 'off';
+      dispatch(setOverride({ device: `chiller${data.device + 1}`, value: status }));
+    });
+
+    socketInstance.on('boiler', (data) => {
+      const status = data.status === 1 ? 'on' : 'off';
+      dispatch(setOverride({ device: 'boiler', value: status }));
+    });
+    socketInstance.on('manual_override', (data) => {
+      const deviceMap = ['boiler', 'chiller1', 'chiller2', 'chiller3', 'chiller4'];
+      if (data.device < deviceMap.length) {
+        const deviceName = deviceMap[data.device];
+        const status = getStatus(data.manual_override);
+        dispatch(setOverride({ device: deviceName, value: status }));
+      } else {
+        console.warn(`Unexpected device index: ${data.device}`);
+      }
+    });
+    
+
+    socketInstance.on('connect_error', (err) => console.error('Connection error:', err));
+
+    return () => {
+      socketInstance.disconnect();
+    };
+  }, [dispatch]);
+
   return (
     <div className="manual-override">
       <div className="manual-override-body">
@@ -75,45 +114,35 @@ const ManualOverride = ({ data }) => {
             <strong>Error!</strong> {alertMessage}
           </div>
         )}
-        <div className="override-controls">
-          {Object.keys(state).map((device) => (
-            <div key={device} className="control-group">
-              <label>{device.replace(/^\w/, (c) => c.toUpperCase())}</label>
-              <div className="radio-group">
-                <label>
-                  <input
-                    type="radio"
-                    name={device}
-                    value="auto"
-                    checked={state[device] === 'auto'}
-                    onChange={() => handleRadioChange(device, 'auto')}
-                  />{' '}
-                  Auto
-                </label>
-                <label>
-                  <input
-                    type="radio"
-                    name={device}
-                    value="on"
-                    checked={state[device] === 'on'}
-                    onChange={() => handleRadioChange(device, 'on')}
-                  />{' '}
-                  On
-                </label>
-                <label>
-                  <input
-                    type="radio"
-                    name={device}
-                    value="off"
-                    checked={state[device] === 'off'}
-                    onChange={() => handleRadioChange(device, 'off')}
-                  />{' '}
-                  Off
-                </label>
-              </div>
-            </div>
+       <div className="override-controls">
+  {console.log(state)}
+  {Object.keys(state)
+    .filter((device, index) => index <= 4 && (device === 'boiler' || device.startsWith('chiller'))) // Allow only boiler and 4 chillers
+    .map((device) => (
+      <div key={device} className="control-group">
+        <label>{device.replace(/^\w/, (c) => c.toUpperCase())}</label>
+        <div className="radio-group">
+          {['auto', 'on', 'off'].map((value) => (
+            <label key={value}>
+              <input
+                type="radio"
+                name={device}
+                value={value}
+                checked={state[device] === value}
+                onChange={() => handleRadioChange(device, value)}
+                disabled={
+                  (season === 'Winter' && device.startsWith('chiller')) || // Disable chillers in Winter
+                  (season === 'Summer' && device === 'boiler')            // Disable boiler in Summer
+                }
+              />{' '}
+              {value.charAt(0).toUpperCase() + value.slice(1)}
+            </label>
           ))}
         </div>
+      </div>
+    ))}
+</div>
+
       </div>
     </div>
   );
