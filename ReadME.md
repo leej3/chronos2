@@ -10,10 +10,31 @@ Chronos is a boiling/cooling water system working on Raspberry Pi. Chronos has a
 
 ### Overview
 
-The Chronos project has been refactored to separate the frontend and backend components. The backend operates as a standalone service providing APIs, while the frontend is handled separately.
+The Chronos project has been refactored to separate the frontend and backend components. The backend operates as a standalone service providing APIs, while the frontend is handled separately. 
 
-### A screenshot of API response of Chronos
-![Alt text](https://miro.medium.com/v2/resize:fit:720/format:webp/1*p5MTHzrfaLYycSmZFSdmoA.png "A screenshot of API response of Chronos")
+### New Project Structure  
+
+The **Chronos2** folder contains both the **server** (backend) and **client** (frontend). The **client** is built with **React**. The project is configured to run both components **simultaneously** using a single Docker command.  
+
+### Summary of set up ###
+
+#### Installation with Docker ####
+This repository consists of a docker container that has all the dependencies and simulators built-in. Just run using these two commands:
+```
+sudo docker-compose up --build -d chronos
+sudo docker restart chronosBackend
+```
+
+
+> **Important:**  
+> <span style="color:red;">**The backend service must be restarted manually using:**</span>  
+> ```bash  
+> sudo docker restart chronosBackend  
+> ```  
+> **Make sure to wait until the restart completes to ensure everything runs correctly.**
+
+
+
 
 ### API Endpoints
 
@@ -183,7 +204,3 @@ https://docs.github.com/en/actions/hosting-your-own-runners/adding-self-hosted-r
 - Install docker.io and docker-compose on the Runner
   - sudo apt update
   - sudo apt install docker.io docker-compose -y
-  
-
-
-
