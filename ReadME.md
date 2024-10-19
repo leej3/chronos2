@@ -41,7 +41,7 @@ sudo docker restart chronosBackend
 The backend provides the following API endpoints:
 
 #### Base URL
-- **Base URL**: `http://<backend-server-url>:90`
+- **Base URL**: `http://<backend-server-url>:80`
 
 #### Endpoints
 
