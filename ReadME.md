@@ -5,7 +5,7 @@
 
 Chronos is a boiling/cooling water system working on Raspberry Pi. Chronos has a web interface to control the system and tracking for the state.
 
-![Alt text](http://i.imgur.com/8II1ydG.png "A screenshot of the Chronos web interface")
+![Alt text](https://cdn-images-1.medium.com/v2/resize:fit:800/1*Yk7RuJxn_PqkQ146k9tRug.png "A screenshot of the Chronos web interface")
 ## Frontend and Backend Separation
 
 ### Overview
@@ -103,7 +103,6 @@ The backend provides the following API endpoints:
   - **Response**: JSON object containing chart data.
   
 
-![Alt text](http://i.imgur.com/8II1ydG.png "A screenshot of the Chronos web interface")
 
 ### SIMULATORS
 
