@@ -28,4 +28,3 @@ iregs = client.read_input_registers(3, count=9, unit=1)
 for i in range (1, 9):
     print (c_to_f(iregs.getRegister(i) / 10.0))
     print (float(iregs.getRegister(i)))
-    print ('testttttttttttttttttttttttttttttttftttttftft')
