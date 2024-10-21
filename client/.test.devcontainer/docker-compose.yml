@@ -3,7 +3,7 @@ services:
   frontend:
     build:
       context: ./client
-      dockerfile: Dockerfile
+      dockerfile: ../Dockerfile
     container_name: frontend-dev1
     ports:
       - "5173:80"

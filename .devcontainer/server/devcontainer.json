@@ -1,0 +1,26 @@
+{
+    "name": "chronos-Sever",
+    "dockerComposeFile": [
+        "../../docker-compose.yml",
+        "../../docker-compose.dev.yml"
+    ],
+
+    "service": "server",
+    "shutdownAction": "stopCompose",
+    "workspaceFolder": "/workspace/",
+    "runArgs": ["--privileged"],
+    "customizations": {
+        // Configure properties specific to VS Code.
+        "vscode": {
+            // Add the IDs of extensions you want installed when the container is created.
+            "extensions": [
+                "ms-python.python",            // Python extension
+                "ms-python.vscode-pylance",    // Pylance extension for type checking and IntelliSense
+                "ms-azuretools.vscode-docker",  // Docker extension
+                "streetsidesoftware.code-spell-checker", // Spell checker extension
+                "ms-vscode.cpptools"           // Optional: C/C++ extension if needed
+            ]
+        }
+    }
+}
+ 

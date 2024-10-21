@@ -101,8 +101,6 @@ def switch_mode():
 @app.route("/")
 def index():
     data = get_data()
-    log.info("fardin")
-    print "App started"
     return jsonify(data)
 
 
@@ -117,7 +115,6 @@ def update_state():
 @app.route("/winter")
 def winter():
     data = get_data()
-    log.info("fardin") 
     return jsonify(data)
 
 

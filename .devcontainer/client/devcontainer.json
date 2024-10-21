@@ -1,0 +1,11 @@
+{
+    "name": "chronos-Client",
+    "dockerComposeFile": [
+        "../../docker-compose.yml",
+        "../../docker-compose.dev.yml"
+    ],
+
+    "service": "frontend",
+    "shutdownAction": "none",
+    "workspaceFolder": "/workspace/frontend"
+}
