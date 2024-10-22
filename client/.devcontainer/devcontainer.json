@@ -1,0 +1,35 @@
+{
+    "name": "React DevContainer",
+    "context": "..",
+    "dockerFile": "Dockerfile",
+
+    
+    // "dockerComposeFile": [
+    //     "../../docker-compose.yml",
+    //     "../../docker-compose.dev.yml"
+    // ],
+    // "service": "frontend",
+    // "shutdownAction": "none",
+    // "workspaceFolder": "/workspace/frontend",
+
+
+    "appPort": [5173],
+    "postCreateCommand": "bash .devcontainer/scripts/post-create-commands.sh",
+    "postAttachCommand": "bash .devcontainer/scripts/post-attach-commands.sh",
+    "settings": {
+      "terminal.integrated.shell.linux": "/bin/bash",
+      "workbench.colorTheme": "oh-lucy",
+      "workbench.iconTheme": "material-icon-theme"
+    },
+    "extensions": [
+      "dbaeumer.vscode-eslint",
+      "esbenp.prettier-vscode",
+      "dsznajder.es7-react-js-snippets",
+      "ms-azuretools.vscode-docker",
+      "hermitter.oh-lucy-vscode",
+      "pkief.material-icon-theme"
+    ],
+    "runArgs": ["--env-file", ".devcontainer/.env"],
+    "forwardPorts": [5173],
+    "remoteUser": "node"
+  }
