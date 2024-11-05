@@ -24,18 +24,50 @@ const Home = () => {
     useEffect(() => {
         const fetchData = async () => {
             const resultAction = await dispatch(fetchSummerData());
-
+    
             if (fetchSummerData.fulfilled.match(resultAction)) {
                 const data = resultAction.payload;
                 setHomeData(data);
-                data?.results?.mode === 0 ? dispatch(setSeason('Winter')) : data?.results?.mode === 1 ? dispatch(setSeason('Summer')) : data?.results?.mode === 2 ? dispatch(setSeason('Winter to summer')) : data?.results?.mode === 3 ? dispatch(setSeason('Summer to Winter')) : dispatch(setSeason('Default'));
+    
+                // Set season based on data results
+                const mode = data?.results?.mode;
+                switch (mode) {
+                    case 0:
+                        dispatch(setSeason('Winter'));
+                        break;
+                    case 1:
+                        dispatch(setSeason('Summer'));
+                        break;
+                    case 2:
+                        dispatch(setSeason('Winter to summer'));
+                        break;
+                    case 3:
+                        dispatch(setSeason('Summer to Winter'));
+                        break;
+                    default:
+                        dispatch(setSeason('Default'));
+                        break;
+                }
             } else {
                 console.error('Failed to fetch summer data');
             }
         };
-
+    
         fetchData();
+    
+        // Re-check every second until season is 'Winter' or 'Summer'
+        const interval = setInterval(() => {
+            if (season !== 'Winter' && season !== 'Summer') {
+                fetchData();
+                
+            } else {
+                clearInterval(interval);  // Stop the interval when season is 'Winter' or 'Summer'
+            }
+        }, 2000);
+    
+        return () => clearInterval(interval);  // Cleanup interval on unmount
     }, [season]);
+    
 
 
     return (

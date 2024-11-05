@@ -20,7 +20,7 @@ services:
     ports:
       - "5173:80"
     volumes:
-      - ./client:/workspaces/frontend:cached  # Correctly mounted path  
+      - ./client:/workspaces/frontend:cached  
 
 networks:
   default:

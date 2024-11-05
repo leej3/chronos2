@@ -44,7 +44,7 @@ const Navbar = () => {
 
   const startCountdown = () => {
     setIsTimeron(true);
-    setCountdown(123);
+    setCountdown(121);
   };
 
   useEffect(() => {
