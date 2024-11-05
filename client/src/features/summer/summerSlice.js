@@ -11,7 +11,7 @@ const initialState = {
     error: ""
 }
 
-export const fetchSummerData = createAsyncThunk("summer/fetchSummerData", async () => {
+export const fetchSummerData = createAsyncThunk("", async () => {
     const response = await axios.get(BASE_URL)
     return response?.data
 })

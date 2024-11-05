@@ -3,7 +3,7 @@ import "./SummerMode.css";
 
 const SummerMode = ({ homedata }) => {
   // Extract the necessary data from homedata
-  const mode = homedata?.results?.mode === 1 ? "Summer Mode" : "Winter Mode";
+  const mode = homedata?.results?.mode === 1 ? "Summer Mode" : homedata?.results?.mode === 0? "Winter Mode": homedata?.results?.mode === 2? "Summer to Winter": homedata?.results?.mode ===3 ?"Winter to Summer": "Default";
   const outdoorTemp = homedata?.results?.outside_temp || "N/A";
   const avgTemp = homedata?.efficiency?.average_temperature_difference || "N/A";
   const systemStatus = homedata?.chronos_status ? "ONLINE" : "OFFLINE";

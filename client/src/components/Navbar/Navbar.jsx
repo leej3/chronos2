@@ -11,9 +11,11 @@ const Navbar = () => {
   const [countdown, setCountdown] = useState(null);
   const [isSwitching, setIsSwitching] = useState(false); 
   const [isTimerOn, setIsTimeron] = useState(false); 
+  const [nextMode, setNextMode] = useState(null);
 
-  const switchSeason = (newMode, season) => {
-    setIsSwitching(true); // Start the blur effect and show the message
+  const switchSeason = (newMode) => {
+    setIsSwitching(true);
+
     fetch('http://localhost:80/switch_mode', {
       method: 'POST',
       headers: {
@@ -23,20 +25,26 @@ const Navbar = () => {
     })
     .then(response => response.json())
     .then(data => {
-      console.log('Mode switched:', data);
-      startCountdown(); // Start countdown when API response is received
-      season === 0 ? dispatch(setSeason('Winter')) : season === 1 ? dispatch(setSeason('Summer')) : dispatch(setSeason('Default'));
-      setIsSwitching(false); // Stop the blur effect
+      if (!data.error) {
+        console.log('Mode switched:', data);
+        startCountdown();
+
+        setNextMode(newMode);
+      } else {
+        console.error("Error: Mode switching is restricted.");
+      }
+
+      setIsSwitching(false);
     })
     .catch(error => {
       console.error('Error switching mode:', error);
-      setIsSwitching(false); // Stop the blur effect if there's an error
+      setIsSwitching(false);
     });
   };
 
   const startCountdown = () => {
-    setIsTimeron(true)
-    setCountdown(120); // Start the countdown from 120 seconds (2 minutes)
+    setIsTimeron(true);
+    setCountdown(123);
   };
 
   useEffect(() => {
@@ -45,11 +53,21 @@ const Navbar = () => {
         setCountdown(countdown - 1);
       }, 1000);
       return () => clearTimeout(timer);
-    } else if (countdown === 0) {
-      setCountdown(null); // Reset countdown when it reaches 0
+    } else if (countdown === 0 && nextMode !== null) {
+     
+      setCountdown(null);
       setIsTimeron(false);
+      setNextMode(null);
+        if (nextMode === 2) { // TO_WINTER
+          dispatch(setSeason('Winter'));
+        } else if (nextMode === 3) { 
+          dispatch(setSeason('Summer'));
+        } else {
+          dispatch(setSeason('Default'));
+        }
+  
     }
-  }, [countdown]);
+  }, [countdown, dispatch, nextMode]);
 
   return (
     <>
@@ -73,14 +91,14 @@ const Navbar = () => {
         <div className="right">
           <span 
             className={`seasonNicon ${isTimerOn ? 'disabled' : ''}`} 
-            onClick={!isTimerOn ? () => {switchSeason(3, 0)} : null} // 3 is the code for winter, 0 for Winter
+            onClick={!isTimerOn ? () => { switchSeason(2); } : null} // TO_WINTER
           >
             <FaSnowflake className="icon" />
             Winter
           </span>
           <span 
             className={`seasonNicon ${isTimerOn ? 'disabled' : ''}`} 
-            onClick={!isTimerOn ? () => {switchSeason(2, 1)} : null} // 2 is the code for summer, 1 for Summer
+            onClick={!isTimerOn ? () => { switchSeason(3); } : null} // TO_SUMMER
           >
             <FaSun className="icon" />
             Summer

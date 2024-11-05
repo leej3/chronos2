@@ -11,12 +11,15 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchSummerData } from '../../features/summer/summerSlice';
 import Modbus from '../../components/Modebus/Modbus';
 import { setSeason } from '../../features/state/seasonSlice';
+import Ontime from '../../components/OnTime/Ontime';
 
 const Home = () => {
     const [homedata, setHomeData] = useState()
     const dispatch = useDispatch();
-  
-    
+    const season = useSelector((state) => state.season.season);
+
+
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -25,17 +28,14 @@ const Home = () => {
             if (fetchSummerData.fulfilled.match(resultAction)) {
                 const data = resultAction.payload;
                 setHomeData(data);
-                data?.results?.mode === 0 ? dispatch(setSeason('Winter')) :data?.results?.mode === 1 ? dispatch(setSeason('Summer')):dispatch(setSeason('Default'));
+                data?.results?.mode === 0 ? dispatch(setSeason('Winter')) : data?.results?.mode === 1 ? dispatch(setSeason('Summer')) : data?.results?.mode === 2 ? dispatch(setSeason('Winter to summer')) : data?.results?.mode === 3 ? dispatch(setSeason('Summer to Winter')) : dispatch(setSeason('Default'));
             } else {
                 console.error('Failed to fetch summer data');
             }
         };
 
         fetchData();
-    }, []);
-
-    console.log(homedata);
-
+    }, [season]);
 
 
     return (
@@ -47,7 +47,10 @@ const Home = () => {
                         <div className="item1">
                             <SummerMode homedata={homedata} />
                             <TableTemplate homedata={homedata} />
-                            <Modbus homedata={homedata} />
+                            {
+                                season === 'Summer' ?  <Ontime homedata={homedata}/> : season === 'Winter'?  <Modbus homedata={homedata} /> :''
+                            }
+                           
 
                         </div>
                         <div className="item2">
@@ -55,20 +58,13 @@ const Home = () => {
                         </div>
                     </div>
 
-                    <ManualOverride data = {homedata}/> 
+                    <ManualOverride data={homedata} season={season}/>
                     <TemperatureGraph />
                 </div>
-
-
                 <div className="right">
-                    <UserSettings data = {homedata}/>
+                    <UserSettings data={homedata} />
                 </div>
-
-
             </div>
-
-
-
         </>
     );
 };

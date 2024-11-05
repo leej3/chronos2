@@ -71,7 +71,7 @@ const SystemMap = ({ homedata }) => {
               </div>
               <div className='tank'>
                 <div className='tank-image'>
-                  {manualOverride.chiller1 === 'on' ? (
+                  {manualOverride.chiller2 === 'on' ? (
                     <img src='images/Icons/Boiler/Chiller-ON.png' alt='Tank' />
                   ) : (
                     <img src='images/Icons/Boiler/Chiller-OFF.png' alt='' />
@@ -80,7 +80,7 @@ const SystemMap = ({ homedata }) => {
               </div>
               <div className='tank'>
                 <div className='tank-image'>
-                  {manualOverride.chiller1 === 'on' ? (
+                  {manualOverride.chiller3 === 'on' ? (
                     <img src='images/Icons/Boiler/Chiller-ON.png' alt='Tank' />
                   ) : (
                     <img src='images/Icons/Boiler/Chiller-OFF.png' alt='' />
@@ -89,7 +89,7 @@ const SystemMap = ({ homedata }) => {
               </div>
               <div className='tank'>
                 <div className='tank-image'>
-                  {manualOverride.chiller1 === 'on' ? (
+                  {manualOverride.chiller4 === 'on' ? (
                     <img src='images/Icons/Boiler/Chiller-ON.png' alt='Tank' />
                   ) : (
                     <img src='images/Icons/Boiler/Chiller-OFF.png' alt='' />
