@@ -1,0 +1,133 @@
+name: Deploy OpenTofu
+
+on:
+  push:
+    branches:
+      - '**'
+      - '!main'
+    paths:
+      - 'terraform/**'
+      - '.github/workflows/deploy-opentofu.yml'
+  workflow_dispatch:
+    inputs:
+      development-environment:
+        description: Development environment to deploy to.
+        required: true
+        default: staging
+        type: choice
+        options:
+          - staging
+          - production
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed
+    paths:
+      - 'terraform/**'
+      - '.github/workflows/deploy-opentofu.yml'
+
+env:
+  working_directory_parent: ./terraform
+  TF_VAR_AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+
+permissions:
+  id-token: write
+  contents: read
+  
+jobs:
+  set-development-environment:
+    runs-on: ubuntu-latest
+    name: Set development environment
+    outputs:
+      development-environment: ${{ steps.set-development-environment.outputs.development-environment }}
+    steps:
+      - name: Set development environment
+        id: set-development-environment
+        run: |
+          if [[ "${{ github.event_name }}" == 'workflow_dispatch' && "${{ inputs.development-environment }}" == 'production' ]]; then
+            echo 'development-environment=production' >> "$GITHUB_OUTPUT"
+          else
+            echo 'development-environment=staging' >> "$GITHUB_OUTPUT"
+          fi
+          cat "$GITHUB_OUTPUT"
+          cat "$GITHUB_OUTPUT" | grep 'development-environment'
+    
+  deploy-shared-resources:
+    needs: [set-development-environment]
+    if: ${{ always() && !cancelled() && needs.set-development-environment.result == 'success' && needs.set-development-environment.outputs.development-environment == 'staging' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ secrets.AWS_REGION }}
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-actions-role-shared
+
+      - name: Setup OpenTofu
+        uses: opentofu/setup-opentofu@v1
+
+      - name: Initialize shared resources
+        working-directory: ${{ env.working_directory_parent }}/shared
+        run: |
+          tofu init
+
+      - name: Plan resources
+        working-directory: ${{ env.working_directory_parent }}/shared
+        run: |
+          tofu plan -no-color -detailed-exitcode -out=tfplan
+        continue-on-error: true
+
+      - name: Deploy shared resources
+        if: ${{ github.event_name != 'push' }}
+        working-directory: ${{ env.working_directory_parent }}/shared
+        run: |
+          tofu apply -no-color -auto-approve tfplan
+
+  deploy-environments:
+    needs: [deploy-shared-resources, set-development-environment]
+    runs-on: ubuntu-latest
+    if: ${{ always() && !cancelled() && (needs.deploy-shared-resources.result == 'success' || (needs.deploy-shared-resources.result == 'skipped' && github.event_name == 'workflow_dispatch')) }}
+    env:
+      TF_VAR_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ secrets.AWS_REGION }}
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-actions-role-shared
+
+      - name: Setup OpenTofu
+        uses: opentofu/setup-opentofu@v1
+
+      - name: Initialize resources
+        working-directory: ${{ env.working_directory_parent }}/${{ needs.set-development-environment.outputs.development-environment }}
+        run: |
+          tofu init
+
+      - name: Plan resources
+        working-directory: ${{ env.working_directory_parent }}/${{ needs.set-development-environment.outputs.development-environment }}
+        run: |
+          tofu plan -no-color -detailed-exitcode -out=tfplan
+        continue-on-error: true
+
+      - name: Deploy resources
+        if: ${{ github.event_name != 'push' }}
+        working-directory: ${{ env.working_directory_parent }}/${{ needs.set-development-environment.outputs.development-environment }}
+        run: |
+          tofu apply -no-color -auto-approve tfplan
+
+  deploy-docker:
+    needs: [deploy-environments, set-development-environment]
+    if: ${{ always() && !cancelled() && needs.deploy-environments.result == 'success' && github.event_name != 'push' }}
+    name: Push and deploy Docker images to EC2
+    uses: ./.github/workflows/deploy-docker.yml
+    secrets: inherit
+    with:
+      development-environment: ${{ needs.set-development-environment.outputs.development-environment }}

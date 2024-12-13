@@ -43,7 +43,7 @@ const UserSettings = ({ data }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    fetch("http://localhost:80/update_settings", {
+    fetch("http://edge_server:5171/update_settings", {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",

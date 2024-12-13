@@ -44,7 +44,7 @@ const ManualOverride = ({ data, season }) => {
     formData.append('device', deviceNumber);
     formData.append('manual_override', overrideValue);
 
-    fetch('http://localhost:80/update_state', {
+    fetch('http://edge_server:5171/update_state', {
       method: 'POST',
       body: formData,
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },

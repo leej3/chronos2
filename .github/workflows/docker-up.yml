@@ -1,0 +1,80 @@
+name: Execute `docker compose up`
+
+on:
+  workflow_call:
+    inputs:
+      development-environment:
+        description: Development environment to deploy to. Usually `staging` or `production`
+        required: true
+        default: staging
+        type: string
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.2
+        
+      - name: Get image tag
+        run: |
+          echo "RELEASE_TAG=$(git rev-parse --short ${{ github.sha }})" >> $GITHUB_ENV
+          
+      - name: Set host URI
+        env:
+          SSH_PROD_HOST: ${{ secrets.SSH_PROD_HOST }}
+          SSH_STAGE_HOST: ${{ secrets.SSH_STAGE_HOST }}
+        run: |
+          if [[ ${{ inputs.development-environment }} == 'production' ]]; then
+            echo "HOST_URI=${SSH_PROD_HOST}" >> $GITHUB_ENV
+            echo "DEPLOYMENT_URI=${{ vars.PRODUCTION_DEPLOYMENT_URI }}" >> $GITHUB_ENV
+          else
+            echo "HOST_URI=${SSH_STAGE_HOST}" >> $GITHUB_ENV
+            echo "DEPLOYMENT_URI=${{ vars.STAGING_DEPLOYMENT_URI }}" >> $GITHUB_ENV
+          fi
+          
+      - name: Configure SSH
+        env:
+          PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          DEPLOY_USERNAME: ${{ secrets.DEPLOYMENT_USERNAME || 'ubuntu' }}
+        run: |
+          mkdir -p ~/.ssh/
+          echo "$PRIVATE_KEY" > ~/.ssh/aws
+          chmod 600 ~/.ssh/aws
+          cat >>~/.ssh/config <<END
+          Host ${{ inputs.development-environment }}
+            HostName ${HOST_URI}
+            User ${DEPLOY_USERNAME}
+            IdentityFile ~/.ssh/aws
+            StrictHostKeyChecking no
+          END
+
+      - name: Log in to ECR
+        env:
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+        run: |
+          ssh ${{ inputs.development-environment }} "aws ecr get-login-password --region ${AWS_REGION} | \
+          docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+
+      - name: Run `docker compose up` on remote staging host
+        env:
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          LETSENCRYPT_ADMIN_EMAIL: ${{ secrets.LETSENCRYPT_ADMIN_EMAIL }}
+        run: |
+          ssh ${{ inputs.development-environment }} \
+          "MONGODB_URI='${MONGODB_URI}' \
+          HOST_URI='${HOST_URI}' \
+          RELEASE_TAG='${RELEASE_TAG}' \
+          AWS_ACCOUNT_ID='${AWS_ACCOUNT_ID}' \
+          AWS_REGION='${AWS_REGION}' \
+          LETSENCRYPT_ADMIN_EMAIL='${LETSENCRYPT_ADMIN_EMAIL}' \
+          DEPLOYMENT_URI='${DEPLOYMENT_URI}' \
+          docker compose -f - up -d" < ./web/docker-compose.yaml
+
+      - name: Prune Docker artifacts
+        run: |
+          ssh ${{ inputs.development-environment }} docker system prune -af --filter "until=24h"

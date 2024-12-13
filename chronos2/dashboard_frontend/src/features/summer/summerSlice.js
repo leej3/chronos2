@@ -2,7 +2,7 @@ import { createSlice } from '@reduxjs/toolkit'
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import axios from 'axios';
 
-const BASE_URL = "http://localhost:80/"
+const BASE_URL = "http://edge_server:5171/"
 
 
 const initialState = {

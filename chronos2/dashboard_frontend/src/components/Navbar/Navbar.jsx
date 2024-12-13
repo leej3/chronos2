@@ -16,7 +16,7 @@ const Navbar = () => {
   const switchSeason = (newMode) => {
     setIsSwitching(true);
 
-    fetch('http://localhost:80/switch_mode', {
+    fetch('http://edge_server:5171/switch_mode', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
