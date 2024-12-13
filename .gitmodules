@@ -1,0 +1,3 @@
+[submodule "external/frp"]
+	path = external/frp
+	url = git@github.com:fatedier/frp.git
