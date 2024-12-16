@@ -14,3 +14,17 @@ requires-python = ">=3.11"
 [build-system]
 requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.poetry]
+name = "dashboard-backend"
+version = "0.1.0"
+description = "A minimal dashboard backend service"
+authors = ["Your Name <your.email@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9.0"
+fastapi = "^0.115.6"
+uvicorn = "^0.34.0"
+alembic = "^1.14.0"
+psycopg2 = "^2.9.10"
+python-dotenv = "^1.0.1"
