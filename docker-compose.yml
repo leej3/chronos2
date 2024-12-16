@@ -1,22 +1,94 @@
-version: "3"
 services:
-  server:
+  edge_server:
     build:
-      context: ./server
-    ports:
-      - "80:80"
+      context: ./edge_server
     privileged: true
-    container_name: chronosBackend
+    container_name: edge_server
+    networks:
+      - traefik-public
+    expose:
+      - "5171"
 
-  frontend:
+  dashboard_backend:
     build:
-      context: ./client
-    container_name: frontend
-    ports:
-      - "5173:80"
+      context: ./chronos2/dashboard_backend
+    container_name: dashboard_backend
+    environment:
+      - POSTGRES_URI="${POSTGRES_URI}"
+    restart: always
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=chronos2_traefik-public
+      - traefik.http.routers.chronos2_web_api.rule=Host("`${DEPLOYMENT_URI}`") && PathPrefix(`/api`)
+      - "traefik.http.routers.chronos2_web_api.entrypoints=web,websecure"
+      - traefik.http.services.chronos2_web_api.loadbalancer.server.port=5172
+      - traefik.http.routers.chronos2_web_api.tls=true
+      - traefik.http.routers.chronos2_web_api.tls.certresolver=le
     depends_on:
-      - server
+      - edge_server
+    networks:
+      - traefik-public
+    expose:
+      - "5172"
+
+
+  dashboard_frontend:
+    build:
+      context: ./chronos2/dashboard_frontend
+    container_name: dashboard_frontend
+    depends_on:
+      - dashboard_backend
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=chronos2_traefik-public
+      - traefik.http.routers.dashboard.rule=Host("`${DEPLOYMENT_URI}`")
+      - traefik.http.routers.dashboard.entrypoints=web,websecure
+      - traefik.http.services.dashboard.loadbalancer.server.port=5173
+      - traefik.http.routers.dashboard.tls=true
+      - traefik.http.routers.dashboard.tls.certresolver=le
+    networks:
+      - traefik-public
+    expose:
+      - "5173"
+
+  frps:
+    image: frps
+    container_name: frps
+    command: -c /etc/frp/frps.toml
+    volumes:
+      - ./frp_config:/etc/frp
+    networks:
+      - traefik-public
+    ports:
+      - "7005:7005"
+
+  frpc:
+    image: frpc
+    container_name: frpc
+    command: -c /etc/frp/frpc.toml
+    volumes:
+      - ./frp_config:/etc/frp
+    networks:
+      - traefik-public
+
+  postgres:
+    image: postgres:15
+    # env_file: "../.env"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s  # Added missing timeout value
+      retries: 5
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - traefik-public
+    ports:
+      - "5400:5432"
+
+volumes:
+  postgres_data:
+  traefik-public-certificates:
 
 networks:
-  default:
-    attachable: true
+  traefik-public:
