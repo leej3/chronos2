@@ -1,0 +1,55 @@
+services:
+
+  dashboard_frontend:
+    labels:
+    - traefik.enable=true
+    - traefik.docker.network=chronos2_traefik-public
+    - traefik.http.routers.dashboard.rule=Host("`${DEPLOYMENT_URI}`")
+    - traefik.http.routers.dashboard.entrypoints=web,websecure
+    - traefik.http.services.dashboard.loadbalancer.server.port=5173
+    - traefik.http.routers.dashboard.tls=true
+    - traefik.http.routers.dashboard.tls.certresolver=le
+  dashboard_backend:
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=chronos2_traefik-public
+      - traefik.http.routers.chronos2_web_api.rule=Host("`${DEPLOYMENT_URI}`") && PathPrefix(`/api`)
+      - "traefik.http.routers.chronos2_web_api.entrypoints=web,websecure"
+      - traefik.http.services.chronos2_web_api.loadbalancer.server.port=5172
+      - traefik.http.routers.chronos2_web_api.tls=true
+      - traefik.http.routers.chronos2_web_api.tls.certresolver=le
+  reverse_proxy:
+    image: traefik
+    restart: always
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --entryPoints.web.http.redirections.entryPoint.to=websecure
+      - "--certificatesresolvers.le.acme.email=${LETSENCRYPT_ADMIN_EMAIL}"
+      - --certificatesresolvers.le.acme.storage=/certificates/acme.json
+      - --certificatesresolvers.le.acme.tlschallenge=true
+      - --log
+      - --accesslog
+      - --log.level=DEBUG
+    ports:
+      - 80:80
+      - 8080:8080
+      - 443:443
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-public-certificates:/certificates
+    networks:
+      - traefik-public
+
+  frps:
+    image: frps
+    container_name: frps
+    command: -c /etc/frp/frps.toml
+    volumes:
+      - ./frp_config:/etc/frp
+    networks:
+      - traefik-public
+    ports:
+      - "7005:7005"

@@ -75,7 +75,7 @@ jobs:
     needs: [infrastructure-modified, set-development-environment]
     strategy:
       matrix:
-        deployment: ["api", "dashboard"]
+        deployment: ["backend", "frontend"]
     uses: ./.github/workflows/build-docker.yml
     if: ( (github.event_name == 'pull_request' && github.event.pull_request.merged == true && needs.infrastructure-modified.outputs.modified-files != 'true' && needs.set-development-environment.result == 'success') || (github.event_name == 'workflow_dispatch') || (github.event_name == 'workflow_call') )
     secrets: inherit
