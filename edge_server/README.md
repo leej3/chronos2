@@ -4,17 +4,12 @@ Edge server implementation for the HVAC system running on Raspberry Pi.
 
 ## Setup Instructions
 
-1. Install Python 3.8+ and pip
+1. Install uv and python >= 3.11
 
 2. Create and activate virtual environment:
 ```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-3. Install dependencies:
-```bash
-pip install -r requirements.txt
+uv sync
+source .venv/bin/activate
 ```
 
 4. Configure environment variables:

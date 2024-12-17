@@ -2,3 +2,6 @@
 .terraform
 .terraform.lock.hcl
 *.tfstate
+__pycache__
+hvac.log
+venv
