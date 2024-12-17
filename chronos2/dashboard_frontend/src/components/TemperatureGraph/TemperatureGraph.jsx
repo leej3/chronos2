@@ -52,7 +52,7 @@ const TemperatureGraph = () => {
   };
   const downloadLogs = async () => {
     try {
-      const response = await fetch(`${BASE_URL}/chart_data`);
+      const response = await fetch(`${API_BASE_URL}/chart_data`);
       const blob = await response.blob(); // Get the response as a Blob
   
       // Create a link element

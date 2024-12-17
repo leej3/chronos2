@@ -1,22 +1,32 @@
 FROM python:3.11-slim
 
-# Install necessary packages including PostgreSQL development packages
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+ENV POETRY_VERSION=1.7.1
+
+WORKDIR /app
+RUN apt-get update && apt-get install -y \
+    curl \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Poetry
+RUN curl -sSL https://install.python-poetry.org | python3 - && \
+    ln -s /root/.local/bin/poetry /usr/local/bin/poetry
+
 RUN apt-get update && apt-get install -y \
     curl \
     gcc \
     libpq-dev
 
-RUN curl -sSL https://install.python-poetry.org | python3 -
-ENV PATH="/root/.local/bin:$PATH"
+COPY pyproject.toml poetry.lock* /app/
 
-WORKDIR /opt/app
-COPY pyproject.toml poetry.lock /opt/app/
-RUN poetry install --no-root
+RUN poetry config virtualenvs.create false && \
+    poetry install --no-root --no-dev
 
-SHELL ["/bin/bash", "--login", "-c"]
-COPY --from=ghcr.io/astral-sh/uv:0.4.0 /uv /bin/uv
-RUN mkdir -p /opt/data
-COPY . /opt/app/
-RUN uv sync
-# CMD ["poetry", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5172"]
-CMD ["poetry", "run", "python", "main.py"]
+COPY . /app
+
+EXPOSE 5172
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5172"]
