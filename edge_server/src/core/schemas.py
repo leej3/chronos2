@@ -3,9 +3,11 @@ from typing import Dict, List, Optional
 from .constants import MODES, TEMP_LIMITS
 
 class SensorConfig(BaseModel):
+    # DS18B20 thermometer connected via 1-wire bus. Connected by gpio pin and
+    # file system interface
     id: str
     type: str
-    pin: int
+    label: str
 
 class ActuatorConfig(BaseModel):
     id: str

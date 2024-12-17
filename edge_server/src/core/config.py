@@ -18,8 +18,8 @@ class Settings(BaseSettings):
 
     # Hardware configuration
     SENSORS: List[SensorConfig] = [
-        SensorConfig(id="temp_1", type="temperature", pin=17),
-        SensorConfig(id="temp_2", type="temperature", pin=18)
+        SensorConfig(type="temperature", id="28-00000677d509",label="In"),
+        SensorConfig(type="temperature", id="28-0000067841b0",label="Out")
     ]
     
     ACTUATORS: List[ActuatorConfig] = [

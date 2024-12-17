@@ -2,6 +2,12 @@ import RPi.GPIO as GPIO
 from loguru import logger
 from .schemas import SystemState
 from .config import settings
+import os
+import sys
+import time
+
+def c_to_f(t):
+    return round(((9.0 / 5.0) * t + 32.0), 1)
 
 class HardwareController:
     def __init__(self):
@@ -19,8 +25,7 @@ class HardwareController:
         """Initialize connection to physical hardware"""
         try:
             for sensor in settings.SENSORS:
-                GPIO.setup(sensor.pin, GPIO.IN)
-                self.sensors[sensor.id] = sensor
+                self.sensors[sensor.label] = sensor
 
             for actuator in settings.ACTUATORS:
                 GPIO.setup(actuator.pin, GPIO.OUT)
@@ -38,24 +43,37 @@ class HardwareController:
             "actuators": {}
         }
         
-        for sensor_id, sensor in self.sensors.items():
-            state["sensors"][sensor_id] = GPIO.input(sensor.pin)
+        for label, sensor in self.sensors.items():
+            state["sensors"][label] = self._read_temperature_sensor(sensor.id)
         
         for actuator_id, actuator in self.actuators.items():
             state["actuators"][actuator_id] = GPIO.input(actuator.pin)
         
         return SystemState(**state)
 
-    def switch_mode(self, mode: str) -> dict:
-        """Switch system operation mode"""
-        # Implement mode switching logic
-        return {"status": "success", "mode": mode}
-
     def update_settings(self, settings: dict) -> dict:
         """Update system settings"""
         # Implement settings update logic
         return {"status": "success", "settings": settings}
 
-    def __del__(self):
-        """Cleanup GPIO on object destruction"""
-        GPIO.cleanup()
+    def _read_temperature_sensor(sensor_id):
+        device_file = os.path.join("/sys/bus/w1/devices", sensor_id, "w1_slave")
+        while True:
+            try:
+                with open(device_file) as content:
+                    lines = content.readlines()
+            except IOError as e:
+                logger.error("Temp sensor error: {}".format(e))
+                sys.exit(1)
+            else:
+                if lines[0].strip()[-3:] == "YES":
+                    break
+                else:
+                    time.sleep(0.2)
+        equals_pos = lines[1].find("t=")
+        if equals_pos != -1:
+            temp_string = lines[1][equals_pos + 2:]
+            # Divide by 1000 for proper decimal point
+            temp = float(temp_string) / 1000.0
+            # Convert to degF
+            return c_to_f(temp)
