@@ -2,7 +2,7 @@ from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
-from core.models.base import Base
+from src.core.models.base import Base
 from alembic import context
 
 # this is the Alembic Config object, which provides
@@ -18,7 +18,7 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 target_metadata = Base.metadata
-from core.configs.database import DATABASE_URL
+from src.core.configs.database import DATABASE_URL
 config.set_main_option('sqlalchemy.url', str(DATABASE_URL))
 
 # target_metadata = None
