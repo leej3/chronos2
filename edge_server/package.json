@@ -1,0 +1,10 @@
+{
+  "name": "hvac-edge-server",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "python src/main.py",
+    "test": "pytest tests/",
+    "lint": "flake8 src/ tests/"
+  }
+}
