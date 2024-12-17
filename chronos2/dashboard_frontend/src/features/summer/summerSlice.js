@@ -1,9 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit'
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import axios from 'axios';
-
-const BASE_URL = "http://edge_server:5171/"
-
+import { API_BASE_URL } from '../../utils/constant';
 
 const initialState = {
     data: {},
@@ -12,7 +10,7 @@ const initialState = {
 }
 
 export const fetchSummerData = createAsyncThunk("", async () => {
-    const response = await axios.get(BASE_URL)
+    const response = await axios.get(API_BASE_URL)
     return response?.data
 })
 

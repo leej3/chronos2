@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./UserSettings.css";
+import { API_BASE_URL } from "../../utils/constant";
 
 const UserSettings = ({ data }) => {
   const [formData, setFormData] = useState({
@@ -43,7 +44,7 @@ const UserSettings = ({ data }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    fetch("http://edge_server:5171/update_settings", {
+    fetch(`${API_BASE_URL}/update_settings`, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",

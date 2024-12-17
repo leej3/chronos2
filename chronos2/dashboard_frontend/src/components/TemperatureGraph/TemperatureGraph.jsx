@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Label } from 'recharts';
 import './TemperatureGraph.css';
+import { API_BASE_URL } from '../../utils/constant';
 
 const TemperatureGraph = () => {
   const [data, setData] = useState([]);
@@ -8,7 +9,7 @@ const TemperatureGraph = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('http://edge_server:5171/chart_data');
+        const response = await fetch(`${API_BASE_URL}/chart_data`);
         const result = await response.json();
 
         // Transform the API response into the desired format
@@ -51,7 +52,7 @@ const TemperatureGraph = () => {
   };
   const downloadLogs = async () => {
     try {
-      const response = await fetch('http://edge_server:5171/chart_data');
+      const response = await fetch(`${BASE_URL}/chart_data`);
       const blob = await response.blob(); // Get the response as a Blob
   
       // Create a link element
