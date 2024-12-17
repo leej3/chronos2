@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import io from 'socket.io-client';
 import './ManualOverride.css';
 import { setOverride, setInitialState } from '../../features/state/ManualOverrideSlice';
+import { API_BASE_URL } from '../../utils/constant';
 
 const ManualOverride = ({ data, season }) => {
   
@@ -44,7 +45,7 @@ const ManualOverride = ({ data, season }) => {
     formData.append('device', deviceNumber);
     formData.append('manual_override', overrideValue);
 
-    fetch('http://edge_server:5171/update_state', {
+    fetch(`${API_BASE_URL}/update_state`, {
       method: 'POST',
       body: formData,
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },

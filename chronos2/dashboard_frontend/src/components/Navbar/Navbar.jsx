@@ -3,6 +3,7 @@ import { FaSun, FaSnowflake } from 'react-icons/fa';
 import "./nav.css";
 import { useSelector, useDispatch } from 'react-redux';
 import { setSeason } from '../../features/state/seasonSlice';
+import { API_BASE_URL } from '../../utils/constant';
 
 const Navbar = () => {
   const season = useSelector((state) => state.season.season);
@@ -16,7 +17,7 @@ const Navbar = () => {
   const switchSeason = (newMode) => {
     setIsSwitching(true);
 
-    fetch('http://edge_server:5171/switch_mode', {
+    fetch(`${API_BASE_URL}/switch_mode`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
