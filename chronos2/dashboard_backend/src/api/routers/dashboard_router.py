@@ -80,9 +80,4 @@ async def summer():
 @router.get("/chart_data")
 def chart_data():
     data = db_queries.get_chart_data()
-    resp = Response(
-        response=data,
-        status=200,
-        mimetype="application/json"
-    )
-    return resp
+    return JSONResponse(content={"data": data})
