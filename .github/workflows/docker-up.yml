@@ -62,18 +62,17 @@ jobs:
         env:
           AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
-          MONGODB_URI: ${{ secrets.MONGODB_URI }}
           LETSENCRYPT_ADMIN_EMAIL: ${{ secrets.LETSENCRYPT_ADMIN_EMAIL }}
         run: |
           ssh ${{ inputs.development-environment }} \
-          "MONGODB_URI='${MONGODB_URI}' \
           HOST_URI='${HOST_URI}' \
           RELEASE_TAG='${RELEASE_TAG}' \
           AWS_ACCOUNT_ID='${AWS_ACCOUNT_ID}' \
           AWS_REGION='${AWS_REGION}' \
           LETSENCRYPT_ADMIN_EMAIL='${LETSENCRYPT_ADMIN_EMAIL}' \
           DEPLOYMENT_URI='${DEPLOYMENT_URI}' \
-          docker compose -f - up -d" < ./web/docker-compose.yaml
+            docker compose -f - up -d" \
+            < <(docker compose -f docker-compose.yml -f docker-compose.deployment.yml config --no-interpolate)
 
       - name: Prune Docker artifacts
         run: |

@@ -52,24 +52,12 @@ jobs:
           found_tag=$(aws ecr list-images --repository-name ${{ inputs.deployment }}-shared --region ${{ inputs.aws_region }} --query 'imageIds[*].imageTag' | grep -q "${{ steps.compute-image-tag.outputs.short_sha }}"; echo $?)
           echo "found_tag=$found_tag" >> $GITHUB_OUTPUT
 
-      - name: Build base Docker image
-        # only build if the image tag doesn't exist
-        if: steps.check-image-tag.outputs.found_tag == 1
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          file: Dockerfile.base
-          tags: localhost:5000/chronos2/chronos2_base
-          
       - name: Build and push Docker image
         # only build if the image tag doesn't exist
         if: steps.check-image-tag.outputs.found_tag == 1
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: chronos2/dashboard_${{ inputs.deployment }}
           push: true
           tags: ${{ steps.compute-image-tag.outputs.tag }}
-          file: web/${{ inputs.deployment }}/Dockerfile
-          build-args: |
-            BASE_IMAGE=localhost:5000/chronos2/chronos2_base
+          file: chronos2/dashboard_${{ inputs.deployment }}/Dockerfile

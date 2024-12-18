@@ -1,0 +1,41 @@
+services:
+  edge_server:
+    build:
+      context: ./edge_server
+    privileged: true
+    container_name: edge_server
+    networks:
+      - traefik-public
+    ports:
+      - "5171:80"
+  dashboard_frontend:
+    ports:
+      - "5173:5173"
+
+  dashboard_backend:
+    ports:
+      - "5172:5172"
+
+  postgres:
+    ports:
+      - "5400:5432"
+
+  frps:
+    image: frps
+    container_name: frps
+    command: -c /etc/frp/frps.toml
+    volumes:
+      - ./frp_config:/etc/frp
+    networks:
+      - traefik-public
+    ports:
+      - "7005:7005"
+
+  frpc:
+    image: frpc
+    container_name: frpc
+    command: -c /etc/frp/frpc.toml
+    volumes:
+      - ./frp_config:/etc/frp
+    networks:
+      - traefik-public
