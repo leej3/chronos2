@@ -93,7 +93,12 @@
         "s3:HeadObject",
         "s3:PutBucketVersioning",
         "ec2:DescribeVpcs",
-        "ec2:DescribeDhcpOptions"
+        "ec2:DescribeDhcpOptions",
+        "dynamodb:DeleteItem",
+        "ecr:ListTagsForResource",
+        "iam:ListRolePolicies",
+        "iam:GetPolicyVersion",
+        "ec2:DescribeVpcAttribute"
       ],
       "Resource": "*"
     }
