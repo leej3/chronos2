@@ -1,6 +1,7 @@
 from sqlalchemy import Column, INTEGER, BOOLEAN
 from .base import Base
 
+
 class SummerValve(Base):
 
     __tablename__ = "summer_valve"

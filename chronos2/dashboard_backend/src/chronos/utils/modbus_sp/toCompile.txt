@@ -1,6 +1,0 @@
-to compile:
-gcc -o bstat -lmodbus bstat.c
-
-to run:
-./bstat -s /dev/ttyUSB0
-

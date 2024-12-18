@@ -1,7 +1,10 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from dotenv import load_dotenv
 import os
+from contextlib import contextmanager
+
+from dotenv import load_dotenv
+from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session, sessionmaker
+from src.core.configs.root_logger import root_logger as logger
 
 load_dotenv()
 
@@ -16,11 +19,18 @@ DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NA
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine)
-session = SessionLocal()
 
-def get_db():
-    db = SessionLocal()
+
+@contextmanager
+def session_scope():
+    "Provide a transactional scope around a series of operations."
+    Session = scoped_session(SessionLocal)
+    Session()
     try:
-        yield db
+        yield Session
+        Session.commit()
+    except Exception as e:
+        logger.exception("Failed during interaction with the db: {}".format(e))
+        Session.rollback()
     finally:
-        db.close()
+        Session.remove()

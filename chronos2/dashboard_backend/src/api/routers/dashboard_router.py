@@ -1,11 +1,8 @@
-from src.chronos.lib.db import History
-from src.core.configs.database import get_db
-from fastapi import APIRouter, Depends, Response, Request
+from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, StreamingResponse
-from sqlalchemy.orm import Session
+from src.core.chronos import Chronos
+from src.core.chronos.constant import TO_SUMMER, TO_WINTER
 from src.features.dashboard.dashboard_service import DashboardService
-from src.chronos.lib import Chronos, WINTER, SUMMER, TO_WINTER, TO_SUMMER
-from src.chronos.lib import db_queries
 
 router = APIRouter(tags=["Dashboard"])
 dashboard_service = DashboardService()
@@ -20,7 +17,7 @@ async def get_rendered_season_templates():
 
 @router.get("/download_log")
 def dump_log():
-    resp = StreamingResponse(db_queries.log_generator(), media_type="text/csv")
+    resp = StreamingResponse(dashboard_service.log_generator(), media_type="text/csv")
     resp.headers["Content-Disposition"] = "attachment; filename=exported-data.csv"
     return resp
 
@@ -51,8 +48,8 @@ def switch_mode(request: Request):
 
 
 @router.get("/")
-async def index(request: Request):
-    data = await dashboard_service.get_data()
+def index(request: Request):
+    data = dashboard_service.get_data()
     mode = int(data["results"]["mode"])
     return JSONResponse(content={"data": data, "mode": mode})
 
@@ -79,5 +76,5 @@ async def summer():
 
 @router.get("/chart_data")
 def chart_data():
-    data = db_queries.get_chart_data()
+    data = dashboard_service.get_chart_data()
     return JSONResponse(content={"data": data})

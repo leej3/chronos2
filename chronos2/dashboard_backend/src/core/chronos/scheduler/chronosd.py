@@ -2,8 +2,10 @@
 
 import sys
 import signal
-from chronos.lib.root_logger import root_logger as logger
-from chronos.lib import Chronos, WINTER, SUMMER, TO_WINTER, TO_SUMMER, ON, MANUAL_OFF
+from chronos2.dashboard_backend.src.core.configs.root_logger import root_logger as logger
+from chronos2.dashboard_backend.src.core.chronos import Chronos
+from chronos2.dashboard_backend.src.core.chronos.constant import WINTER, SUMMER, ON, MANUAL_OFF, TO_SUMMER, TO_WINTER
+
 
 chronos = Chronos()
 
@@ -29,9 +31,10 @@ def main():
             mode = chronos.mode
             if mode == WINTER:
                 if chronos.boiler.status == ON:
-                    chronos.boiler.read_modbus_data()
+                    pass
+                    # chronos.boiler.read_modbus_data()
                 if chronos.boiler.manual_override != MANUAL_OFF:
-                    chronos.boiler.set_boiler_setpoint(chronos.effective_setpoint)
+                    # chronos.boiler.set_boiler_setpoint(chronos.effective_setpoint)
                     chronos.boiler_switcher()
                 if chronos.is_time_to_switch_season_to_summer:
                     chronos.switch_season(TO_SUMMER)

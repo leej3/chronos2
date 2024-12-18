@@ -2,6 +2,7 @@ from datetime import datetime
 from sqlalchemy import Column, INTEGER, BOOLEAN, DateTime
 from .base import Base
 
+
 class Chiller1(Base):
 
     __tablename__ = "chiller1"

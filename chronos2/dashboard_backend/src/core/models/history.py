@@ -2,6 +2,7 @@ from datetime import datetime
 from sqlalchemy import Column, INTEGER, REAL, DateTime
 from .base import Base
 
+
 class History(Base):
 
     __tablename__ = "history"
@@ -34,4 +35,3 @@ class History(Base):
     avg_outside_temp = Column(REAL, default=0, nullable=False)
     avg_cascade_fire_rate = Column(REAL, default=0, nullable=False)
     delta = Column(INTEGER, default=0, nullable=False)
-

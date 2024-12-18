@@ -1,12 +1,9 @@
-from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker
 import contextlib
 from typing import Any, AsyncIterator
-from sqlalchemy.ext.asyncio import (
-    AsyncConnection,
-    AsyncSession,
-    async_sessionmaker,
-    create_async_engine,
-)
+
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
+
+
 class AsyncSQLRepository:
     def __init__(self, engine : AsyncEngine) -> None:
         self._engine = engine

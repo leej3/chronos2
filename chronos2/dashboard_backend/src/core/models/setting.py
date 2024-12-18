@@ -19,4 +19,3 @@ class Settings(Base):
     mode = Column(INTEGER, default=1, nullable=False)
     mode_switch_timestamp = Column(DateTime, default=datetime.now, nullable=False)
     mode_switch_lockout_time = Column(INTEGER, default=2, nullable=False)
-

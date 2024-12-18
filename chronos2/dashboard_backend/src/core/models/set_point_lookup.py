@@ -1,6 +1,7 @@
 from sqlalchemy import Column, INTEGER, REAL
 from .base import Base
 
+
 class SetpointLookup(Base):
 
     __tablename__ = "setpoint_lookup"
