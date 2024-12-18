@@ -31,7 +31,7 @@ module "ecr_api" {
 module "ecr_dashboard" {
   source      = "../modules/ecr/"
   environment = var.environment
-  ecr_name    = "dashboard"
+  ecr_name    = "frontend"
 }
 
 module "iam_role_and_policy" {

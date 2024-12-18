@@ -3,8 +3,8 @@ name: Execute `docker compose up`
 on:
   workflow_call:
     inputs:
-      development-environment:
-        description: Development environment to deploy to. Usually `staging` or `production`
+      deployment:
+        description: Deployment environment to deploy to. Usually `staging` or `production`
         required: true
         default: staging
         type: string
@@ -26,7 +26,7 @@ jobs:
           SSH_PROD_HOST: ${{ secrets.SSH_PROD_HOST }}
           SSH_STAGE_HOST: ${{ secrets.SSH_STAGE_HOST }}
         run: |
-          if [[ ${{ inputs.development-environment }} == 'production' ]]; then
+          if [[ ${{ inputs.deployment }} == 'production' ]]; then
             echo "HOST_URI=${SSH_PROD_HOST}" >> $GITHUB_ENV
             echo "DEPLOYMENT_URI=${{ vars.PRODUCTION_DEPLOYMENT_URI }}" >> $GITHUB_ENV
           else
@@ -43,7 +43,7 @@ jobs:
           echo "$PRIVATE_KEY" > ~/.ssh/aws
           chmod 600 ~/.ssh/aws
           cat >>~/.ssh/config <<END
-          Host ${{ inputs.development-environment }}
+          Host ${{ inputs.deployment }}
             HostName ${HOST_URI}
             User ${DEPLOY_USERNAME}
             IdentityFile ~/.ssh/aws
@@ -55,7 +55,7 @@ jobs:
           AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
         run: |
-          ssh ${{ inputs.development-environment }} "aws ecr get-login-password --region ${AWS_REGION} | \
+          ssh ${{ inputs.deployment }} "aws ecr get-login-password --region ${AWS_REGION} | \
           docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
 
       - name: Run `docker compose up` on remote staging host
@@ -64,7 +64,7 @@ jobs:
           AWS_REGION: ${{ secrets.AWS_REGION }}
           LETSENCRYPT_ADMIN_EMAIL: ${{ secrets.LETSENCRYPT_ADMIN_EMAIL }}
         run: |
-          ssh ${{ inputs.development-environment }} \
+          ssh ${{ inputs.deployment }} \
           HOST_URI='${HOST_URI}' \
           RELEASE_TAG='${RELEASE_TAG}' \
           AWS_ACCOUNT_ID='${AWS_ACCOUNT_ID}' \
@@ -76,4 +76,4 @@ jobs:
 
       - name: Prune Docker artifacts
         run: |
-          ssh ${{ inputs.development-environment }} docker system prune -af --filter "until=24h"
+          ssh ${{ inputs.deployment }} docker system prune -af --filter "until=24h"

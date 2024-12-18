@@ -3,8 +3,8 @@ name: Push to Docker image to AWS ECR and deploy to AWS EC2
 on:
   workflow_dispatch:
     inputs:
-      development-environment:
-        description: Development environment to deploy to.
+      deployment:
+        description: Deployment environment to deploy to.
         required: true
         default: staging
         type: choice
@@ -20,7 +20,7 @@ on:
       - 'terraform/**'
   workflow_call:
     inputs:
-      development-environment:
+      deployment:
         description: Development environment to deploy to. Usually `staging` or `production`
         required: true
         default: staging
@@ -31,22 +31,22 @@ permissions:
   contents: read
 
 jobs:
-  set-development-environment:
+  set-deployment:
     runs-on: ubuntu-latest
-    name: Set development environment
+    name: Set deployment
     outputs:
-      development-environment: ${{ steps.set-development-environment.outputs.development-environment }}
+      deployment: ${{ steps.set-deployment.outputs.deployment }}
     steps:
-      - name: Set development environment
-        id: set-development-environment       
+      - name: Set deployment
+        id: set-deployment
         run: |
-          if [[ "${{ github.event_name }}" == 'pull_request' || "${{ inputs.development-environment }}" == 'staging' ]]; then
-            echo "development-environment=staging" >> $GITHUB_OUTPUT
+          if [[ "${{ github.event_name }}" == 'pull_request' || "${{ inputs.deployment }}" == 'staging' ]]; then
+            echo "deployment=staging" >> $GITHUB_OUTPUT
           else
-            echo "development-environment=production" >> $GITHUB_OUTPUT
+            echo "deployment=production" >> $GITHUB_OUTPUT
           fi
           cat "$GITHUB_OUTPUT"
-          cat "$GITHUB_OUTPUT" | grep 'development-environment'
+          cat "$GITHUB_OUTPUT" | grep 'deployment'
 
   infrastructure-modified:
     runs-on: ubuntu-latest
@@ -72,22 +72,23 @@ jobs:
           echo "modified-files=${MODIFIED_FILES}" >> $GITHUB_OUTPUT
 
   build-and-push:
-    needs: [infrastructure-modified, set-development-environment]
+    needs: [infrastructure-modified, set-deployment]
     strategy:
       matrix:
         component: ["backend", "frontend"]
     uses: ./.github/workflows/build-docker.yml
-    if: ( (github.event_name == 'pull_request' && github.event.pull_request.merged == true && needs.infrastructure-modified.outputs.modified-files != 'true' && needs.set-development-environment.result == 'success') || (github.event_name == 'workflow_dispatch') || (github.event_name == 'workflow_call') )
+    if: ( (github.event_name == 'pull_request' && github.event.pull_request.merged == true && needs.infrastructure-modified.outputs.modified-files != 'true' && needs.set-deployment.result == 'success') || (github.event_name == 'workflow_dispatch') || (github.event_name == 'workflow_call') )
     secrets: inherit
     with:
       component: ${{ matrix.component }}
+      deployment: ${{ needs.set-deployment.outputs.deployment }}
 
   docker-up:
-    needs: [build-and-push, set-development-environment, infrastructure-modified]
+    needs: [build-and-push, set-deployment, infrastructure-modified]
     if: ${{ always() && !cancelled() && needs.build-and-push.result == 'success'  && ( (github.event_name == 'pull_request' && github.event.pull_request.merged == 'true' && needs.infrastructure-modified.outputs.modified-files != 'true') || (github.event_name == 'workflow_dispatch') || (github.event_name == 'push') || (github.event_name == 'workflow_call') )}}
     name: Deploy and run Docker images on EC2
     uses: ./.github/workflows/docker-up.yml
     secrets: inherit
     with:
-      development-environment: ${{ needs.set-development-environment.outputs.development-environment }}
+      deployment: ${{ needs.set-deployment.outputs.deployment }}
       
