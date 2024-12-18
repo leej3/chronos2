@@ -70,17 +70,17 @@ jobs:
           MODIFIED_FILES: ${{ steps.infrastructure-modified.outputs.any_modified }}
         run: |
           echo "modified-files=${MODIFIED_FILES}" >> $GITHUB_OUTPUT
-  
+
   build-and-push:
     needs: [infrastructure-modified, set-development-environment]
     strategy:
       matrix:
-        deployment: ["backend", "frontend"]
+        component: ["backend", "frontend"]
     uses: ./.github/workflows/build-docker.yml
     if: ( (github.event_name == 'pull_request' && github.event.pull_request.merged == true && needs.infrastructure-modified.outputs.modified-files != 'true' && needs.set-development-environment.result == 'success') || (github.event_name == 'workflow_dispatch') || (github.event_name == 'workflow_call') )
     secrets: inherit
     with:
-      deployment: ${{ matrix.deployment }}
+      component: ${{ matrix.component }}
 
   docker-up:
     needs: [build-and-push, set-development-environment, infrastructure-modified]

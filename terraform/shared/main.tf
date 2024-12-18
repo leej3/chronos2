@@ -25,7 +25,7 @@ module "networking" {
 module "ecr_api" {
   source      = "../modules/ecr/"
   environment = var.environment
-  ecr_name    = "api"
+  ecr_name    = "backend"
 }
 
 module "ecr_dashboard" {
