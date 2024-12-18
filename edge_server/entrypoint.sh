@@ -19,10 +19,6 @@ mkdir -p /var/log/uwsgi
 echo -e "YES\nt=100" > /tmp/water_in
 echo -e "YES\nt=150" > /tmp/water_out
 
-service uwsgi start
-service nginx start
-service chronos start
-service chronos restart
 
 
 

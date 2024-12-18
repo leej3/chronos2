@@ -34,6 +34,8 @@ def c_to_f(t):
 class Device(object):
 
     def _switch_state(self, command, relay_only=False):
+        # TODO... why is serial used instead of modbus? If this is for
+        # winter/summer we should delete it
         try:
             with serial.Serial(cfg.serial.portname, cfg.serial.baudr, timeout=1) as ser_port:
                 ser_port.write("relay {} {}\n\r".format(command, self.relay_number))
@@ -188,7 +190,7 @@ class Boiler(Device):
     def __init__(self):
         self.number = 0
         self.relay_number = cfg.relay.boiler
-        self.table_class_name = "Boiler"
+
 
     @property
     def cascade_current_power(self):
@@ -255,11 +257,7 @@ class Boiler(Device):
                 break
         else:
             logger.error("Couldn't read modbus stats")
-        self._update_value_in_db(**boiler_stats)
-        socketio_client.send({
-            "event": "misc",
-            "message": boiler_stats
-        })
+        return boiler_stats
 
 
 class Valve(Device):
@@ -316,7 +314,7 @@ class Chronos(object):
     @staticmethod
     def _read_temperature_sensor(sensor_id):
         #return 50
-        device_file = sensor_id #os.path.join("/sys/bus/w1/devices", sensor_id, "w1_slave")
+        device_file = os.path.join("/sys/bus/w1/devices", sensor_id, "w1_slave")
         while True:
             try:
                 with open(device_file) as content:
