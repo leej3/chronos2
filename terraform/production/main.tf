@@ -21,6 +21,6 @@ module "ec2" {
   source        = "../modules/ec2/"
   environment   = var.environment
   instance_type = var.instance_type
-  public_key    = var.PUBLIC_KEY
+  public_key    = var.public_key
   additional_public_key = var.additional_public_key
 }

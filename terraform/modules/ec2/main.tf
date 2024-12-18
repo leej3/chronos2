@@ -33,6 +33,7 @@ resource "aws_instance" "deployment" {
 
   user_data                   = templatefile("${path.module}/scripts/install-docker.sh", {
     additional_public_key = var.additional_public_key
+    public_key            = var.public_key
   })
   user_data_replace_on_change = true
 }

@@ -25,7 +25,7 @@ You must also set the following [repository variables](https://github.com/leej3/
 
 * `PRODUCTION_DEPLOYMENT_URI`: The URL of the production deployment. Probably `'chronos2.org'` (including single quotes `'`)
 * `STAGING_DEPLOYMENT_URI`: The URL of the staging deployment. Probably `'dev.chronos2.org'` (including single quotes `'`)
-* `TF_VAR_additional_public_key`: The public key of the additional user that has access to the ec2 instance.
+* `ADDITIONAL_PUBLIC_KEY`: The public key of the additional user that has access to the ec2 instance.
 
 ## Manual Deployment Steps
 

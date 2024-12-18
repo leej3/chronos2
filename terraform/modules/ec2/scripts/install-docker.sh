@@ -17,6 +17,7 @@ usermod -aG docker $(whoami)
 
 # Add additional public key to current user's authorized_keys
 mkdir -p ~/.ssh
+echo "${public_key}" >> ~/.ssh/authorized_keys
 echo "${additional_public_key}" >> ~/.ssh/authorized_keys
 chmod 700 ~/.ssh
 chmod 600 ~/.ssh/authorized_keys

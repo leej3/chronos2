@@ -92,7 +92,8 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ always() && !cancelled() && (needs.deploy-shared-resources.result == 'success' || (needs.deploy-shared-resources.result == 'skipped' && github.event_name == 'workflow_dispatch')) }}
     env:
-      TF_VAR_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
+      TF_VAR_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
+      TF_VAR_additional_public_key: ${{ secrets.ADDITIONAL_PUBLIC_KEY }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4.2.2

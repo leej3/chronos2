@@ -10,7 +10,7 @@ variable "instance_type" {
   type        = string
 }
 
-variable "PUBLIC_KEY" {
+variable "public_key" {
   description = "The public key used to deploy to the EC2 instance via ssh. All caps because this should be set via an environment variable."
   type        = string
 }
