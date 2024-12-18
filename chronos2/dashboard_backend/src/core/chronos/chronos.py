@@ -35,12 +35,9 @@ class Chronos(object):
             self.chiller1,
             self.chiller2,
             self.chiller3,
-            self.chiller4
+            self.chiller4,
         )
-        self.valves = (
-            self.winter_valve,
-            self.summer_valve
-        )
+        self.valves = (self.winter_valve, self.summer_valve)
         self._outside_temp = None
         self._wind_speed = None
         self._baseline_setpoint = None
@@ -49,14 +46,16 @@ class Chronos(object):
         self._water_out_temp = None
         self._return_temp = None
         self.scheduler = BackgroundScheduler()
-        # 
+        #
         self.history_repository = HistoryRepository()
         self.setting_repository = SettingRepository()
 
     @staticmethod
     def _read_temperature_sensor(sensor_id):
-        #return 50
-        device_file = sensor_id #os.path.join("/sys/bus/w1/devices", sensor_id, "w1_slave")
+        # return 50
+        device_file = (
+            sensor_id  # os.path.join("/sys/bus/w1/devices", sensor_id, "w1_slave")
+        )
         while True:
             try:
                 with open(device_file) as content:
@@ -71,7 +70,7 @@ class Chronos(object):
                     time.sleep(0.2)
         equals_pos = lines[1].find("t=")
         if equals_pos != -1:
-            temp_string = lines[1][equals_pos + 2:]
+            temp_string = lines[1][equals_pos + 2 :]
             # Divide by 1000 for proper decimal point
             temp = float(temp_string) / 1000.0
             # Convert to degF
@@ -102,23 +101,27 @@ class Chronos(object):
     def get_data_from_web(self):
         logger.debug("Retrieve data from web.")
         try:
-            #content = urllib2.urlopen(WEATHER_URL, timeout=5)
+            # content = urllib2.urlopen(WEATHER_URL, timeout=5)
             data = requests.get(WEATHER_URL, headers=WEATHER_HEADERS).json()
-            for zone in data['zones']:
-                for param in zone['parameters']:
-                    if param['name'] == 'RAIN':
-                        rain_value = param['value']
-                    elif param['name'] == 'WIND':
-                        wind_speed = float(param['value'])
-                    elif param['name'] == 'EXT1':
-                        outside_temp = round(float(param['value']), 1)
+            for zone in data["zones"]:
+                for param in zone["parameters"]:
+                    if param["name"] == "RAIN":
+                        rain_value = param["value"]
+                    elif param["name"] == "WIND":
+                        wind_speed = float(param["value"])
+                    elif param["name"] == "EXT1":
+                        outside_temp = round(float(param["value"]), 1)
         except Exception as e:
             logger.error(e)
-            logger.error("Unable to get data from the website. Reading previous value from the ")
+            logger.error(
+                "Unable to get data from the website. Reading previous value from the "
+            )
             with session_scope() as session:
-                wind_speed, outside_temp = session.query(
-                    History.wind_speed, History.outside_temp
-                ).order_by(desc(History.id)).first()
+                wind_speed, outside_temp = (
+                    session.query(History.wind_speed, History.outside_temp)
+                    .order_by(desc(History.id))
+                    .first()
+                )
 
         if outside_temp != self._outside_temp:
             # socketio_client.send({
@@ -127,10 +130,7 @@ class Chronos(object):
             # })
             self._outside_temp = outside_temp
             self._wind_speed = wind_speed
-        return {
-            "outside_temp": outside_temp,
-            "wind_speed": wind_speed
-        }
+        return {"outside_temp": outside_temp, "wind_speed": wind_speed}
 
     @property
     def outside_temp(self):
@@ -143,7 +143,7 @@ class Chronos(object):
     def _get_settings_from_db(self, param):
         param = getattr(Settings, param)
         with session_scope() as session:
-            value, = session.query(param).first()
+            (value,) = session.query(param).first()
         return value
 
     def _update_settings(self, name, value):
@@ -242,10 +242,12 @@ class Chronos(object):
     @property
     def wind_chill_avg(self):
         with session_scope() as session:
-            result = session.query(History.outside_temp).filter(
-                History.timestamp > (datetime.now() - timedelta(days=4))
-            ).subquery()
-            wind_chill_avg, = session.query(func.avg(result.c.outside_temp)).first()
+            result = (
+                session.query(History.outside_temp)
+                .filter(History.timestamp > (datetime.now() - timedelta(days=4)))
+                .subquery()
+            )
+            (wind_chill_avg,) = session.query(func.avg(result.c.outside_temp)).first()
         wind_chill_avg = wind_chill_avg or self.outside_temp
         return int(round(wind_chill_avg))
 
@@ -253,14 +255,15 @@ class Chronos(object):
     def cascade_fire_rate_avg(self):
         timespan = datetime.now() - timedelta(hours=cfg.efficiency.hours)
         with session_scope() as session:
-            result = session.query(
-                History.cascade_fire_rate
-            ).order_by(desc(History.id)).filter(
-                History.mode == WINTER,
-                History.timestamp > timespan
-            ).subquery()
-            average_cascade_fire_rate, = session.query(
-                func.avg(result.c.cascade_fire_rate)).first()
+            result = (
+                session.query(History.cascade_fire_rate)
+                .order_by(desc(History.id))
+                .filter(History.mode == WINTER, History.timestamp > timespan)
+                .subquery()
+            )
+            (average_cascade_fire_rate,) = session.query(
+                func.avg(result.c.cascade_fire_rate)
+            ).first()
         return average_cascade_fire_rate or 0
 
     @property
@@ -270,9 +273,11 @@ class Chronos(object):
             baseline_setpoint = 100
         else:
             with session_scope() as session:
-                baseline_setpoint = session.query(
-                    SetpointLookup.setpoint
-                ).filter(SetpointLookup.wind_chill == wind_chill).first()
+                baseline_setpoint = (
+                    session.query(SetpointLookup.setpoint)
+                    .filter(SetpointLookup.wind_chill == wind_chill)
+                    .first()
+                )
 
         if baseline_setpoint != self._baseline_setpoint:
             # socketio_client.send({
@@ -288,9 +293,11 @@ class Chronos(object):
             temperature_history_adjsutment = 0
         else:
             with session_scope() as session:
-                temperature_history_adjsutment, = session.query(
-                    SetpointLookup.setpoint_offset
-                ).filter(SetpointLookup.avg_wind_chill == self.wind_chill_avg).first()
+                (temperature_history_adjsutment,) = (
+                    session.query(SetpointLookup.setpoint_offset)
+                    .filter(SetpointLookup.avg_wind_chill == self.wind_chill_avg)
+                    .first()
+                )
         tha_setpoint = self.baseline_setpoint - temperature_history_adjsutment
         if tha_setpoint != self._tha_setpoint:
             # socketio_client.send({
@@ -311,9 +318,9 @@ class Chronos(object):
     def effective_setpoint(self):
         "Calculate setpoint from wind_chill."
         if self.mode in (WINTER, TO_WINTER):
-            effective_setpoint = (self.tha_setpoint + self.setpoint_offset_winter)
+            effective_setpoint = self.tha_setpoint + self.setpoint_offset_winter
         elif self.mode in (SUMMER, TO_SUMMER):
-            effective_setpoint = (self.tha_setpoint + self.setpoint_offset_summer)
+            effective_setpoint = self.tha_setpoint + self.setpoint_offset_summer
         effective_setpoint = self._constrain_effective_setpoint(effective_setpoint)
         if effective_setpoint != self._effective_setpoint:
             # socketio_client.send({
@@ -326,11 +333,13 @@ class Chronos(object):
     def boiler_switcher(self):
         logger.debug("Starting boiler switcher")
         if self.boiler.manual_override == MANUAL_AUTO:
-            if ((self.boiler.status == OFF and
-                 self.return_temp) <= (self.effective_setpoint - self.tolerance)):
+            if (self.boiler.status == OFF and self.return_temp) <= (
+                self.effective_setpoint - self.tolerance
+            ):
                 self.boiler.turn_on()
-            elif ((self.boiler.status == ON and
-                   self.return_temp) > (self.effective_setpoint + self.tolerance)):
+            elif (self.boiler.status == ON and self.return_temp) > (
+                self.effective_setpoint + self.tolerance
+            ):
                 self.boiler.turn_off()
         logger.debug("Boiler: {}; mode: {}".format(self.boiler.status, self.mode))
 
@@ -338,9 +347,11 @@ class Chronos(object):
         min_date = datetime.now()
         switch_index = None
         for i, chiller in enumerate(self.devices[1:], 1):
-            if (chiller.timestamp < min_date and
-                    chiller.manual_override == MANUAL_AUTO and
-                    chiller.status == status):
+            if (
+                chiller.timestamp < min_date
+                and chiller.manual_override == MANUAL_AUTO
+                and chiller.status == status
+            ):
                 min_date = chiller.timestamp
                 switch_index = i
         return switch_index
@@ -348,9 +359,9 @@ class Chronos(object):
     @property
     def previous_return_temp(self):
         with session_scope() as session:
-            previous_return_temp = session.query(
-                History.return_temp
-            ).order_by(desc(History.id)).first()[0]
+            previous_return_temp = (
+                session.query(History.return_temp).order_by(desc(History.id)).first()[0]
+            )
         return float(previous_return_temp)
 
     @property
@@ -366,7 +377,9 @@ class Chronos(object):
 
     def chillers_cascade_switcher(self):
         logger.debug("Chiller cascade switcher")
-        max_chillers_timestamp = max(chiller.switched_timestamp for chiller in self.devices[1:])
+        max_chillers_timestamp = max(
+            chiller.switched_timestamp for chiller in self.devices[1:]
+        )
         time_gap = (datetime.now() - max_chillers_timestamp).total_seconds()
         db_delta = self.history_repository.three_minute_avg_delta()
         db_return_temp = self.previous_return_temp
@@ -376,18 +389,22 @@ class Chronos(object):
             )
         )
         # Turn on chillers
-        if (self.return_temp >= (self.effective_setpoint + self.tolerance) and
-                db_delta > 0.1 and
-                time_gap >= self.cascade_time * 60):
+        if (
+            self.return_temp >= (self.effective_setpoint + self.tolerance)
+            and db_delta > 0.1
+            and time_gap >= self.cascade_time * 60
+        ):
             turn_on_index = self._find_chiller_index_to_switch(OFF)
             try:
                 self.devices[turn_on_index].turn_on()
             except TypeError:
                 pass
         # Turn off chillers
-        elif (db_return_temp < (self.effective_setpoint - self.tolerance) and
-                self.current_delta < 0 and
-                time_gap >= self.cascade_time * 60 / 1.5):
+        elif (
+            db_return_temp < (self.effective_setpoint - self.tolerance)
+            and self.current_delta < 0
+            and time_gap >= self.cascade_time * 60 / 1.5
+        ):
             turn_off_index = self._find_chiller_index_to_switch(ON)
             try:
                 self.devices[turn_off_index].turn_off()
@@ -463,7 +480,7 @@ class Chronos(object):
                     wind_speed=self.wind_speed,
                     avg_outside_temp=self.wind_chill_avg,
                     avg_cascade_fire_rate=self.cascade_fire_rate_avg,
-                    delta=self.current_delta
+                    delta=self.current_delta,
                 )
                 session.add(parameters)
 
@@ -479,7 +496,7 @@ class Chronos(object):
                 self.switch_season,
                 "date",
                 run_date=datetime.now() + timedelta(minutes=VALVES_SWITCH_TIME),
-                args=[FROM_WINTER]
+                args=[FROM_WINTER],
             )
         elif mode == TO_WINTER:
             logger.debug("Switching to winter mode")
@@ -492,7 +509,7 @@ class Chronos(object):
                 self.switch_season,
                 "date",
                 run_date=datetime.now() + timedelta(minutes=VALVES_SWITCH_TIME),
-                args=[FROM_SUMMER]
+                args=[FROM_SUMMER],
             )
         elif mode == FROM_SUMMER:
             logger.debug("Switched to winter mode")
@@ -527,12 +544,16 @@ class Chronos(object):
         effective_setpoint = self._constrain_effective_setpoint(effective_setpoint)
         timespan = datetime.now() - self.mode_switch_timestamp
         sum_switch_lockout_time = timedelta(
-            minutes=(self.mode_switch_lockout_time + VALVES_SWITCH_TIME))
-        return (self.return_temp > (effective_setpoint + self.mode_change_delta_temp) and
-                timespan > sum_switch_lockout_time and
-                # this check needs if mode_switch_lockout_time less than 0.
-                # https://bitbucket.org/quarck/chronos/issues/37/make-the-chronos-switch-between-season#comment-29724948
-                sum_switch_lockout_time > timedelta(minutes=VALVES_SWITCH_TIME))
+            minutes=(self.mode_switch_lockout_time + VALVES_SWITCH_TIME)
+        )
+        return (
+            self.return_temp > (effective_setpoint + self.mode_change_delta_temp)
+            and timespan > sum_switch_lockout_time
+            and
+            # this check needs if mode_switch_lockout_time less than 0.
+            # https://bitbucket.org/quarck/chronos/issues/37/make-the-chronos-switch-between-season#comment-29724948
+            sum_switch_lockout_time > timedelta(minutes=VALVES_SWITCH_TIME)
+        )
 
     @property
     def is_time_to_switch_season_to_winter(self):
@@ -540,10 +561,13 @@ class Chronos(object):
         effective_setpoint = self._constrain_effective_setpoint(effective_setpoint)
         timespan = datetime.now() - self.mode_switch_timestamp
         sum_switch_lockout_time = timedelta(
-            minutes=(self.mode_switch_lockout_time + VALVES_SWITCH_TIME))
-        return (self.return_temp < (effective_setpoint - self.mode_change_delta_temp) and
-                timespan > sum_switch_lockout_time and
-                sum_switch_lockout_time > timedelta(minutes=VALVES_SWITCH_TIME))
+            minutes=(self.mode_switch_lockout_time + VALVES_SWITCH_TIME)
+        )
+        return (
+            self.return_temp < (effective_setpoint - self.mode_change_delta_temp)
+            and timespan > sum_switch_lockout_time
+            and sum_switch_lockout_time > timedelta(minutes=VALVES_SWITCH_TIME)
+        )
 
     def emergency_shutdown(self):
         mode = self.mode
@@ -553,12 +577,17 @@ class Chronos(object):
         valves_ = zip(self.valves, valves)
         all_devices = devices_ + valves_
         return_temp = self.return_temp
-        status_string = "; ".join("{}: {}".format(
-            device[0].table_class_name, device[1]) for device in all_devices)
+        status_string = "; ".join(
+            "{}: {}".format(device[0].table_class_name, device[1])
+            for device in all_devices
+        )
         shutdown = False
         if all(valves):
-            logger.warning("EMERGENCY SHUTDOWN. All valves turned on. Relays states: {}".format(
-                status_string))
+            logger.warning(
+                "EMERGENCY SHUTDOWN. All valves turned on. Relays states: {}".format(
+                    status_string
+                )
+            )
             self.summer_valve.turn_off()
             self.winter_valve.turn_off()
             shutdown = True
@@ -566,12 +595,16 @@ class Chronos(object):
             logger.warning("EMERGENCY SHUTDOWN. The boiler is turned on in summer mode")
             shutdown = True
         elif any(devices[1:]) and mode == WINTER:
-            logger.warning("EMERGENCY SHUTDOWN. One of the chillers is turned on in winter mode. "
-                           "Relays states: {}".format(status_string))
+            logger.warning(
+                "EMERGENCY SHUTDOWN. One of the chillers is turned on in winter mode. "
+                "Relays states: {}".format(status_string)
+            )
             shutdown = True
         elif return_temp < 36 or return_temp > 110:
-            logger.warning("EMERGENCY SHUTDOWN. The temperature is not in safe range. Temperature: "
-                           "{}".format(return_temp))
+            logger.warning(
+                "EMERGENCY SHUTDOWN. The temperature is not in safe range. Temperature: "
+                "{}".format(return_temp)
+            )
             shutdown = True
         if shutdown:
             self.turn_off_devices()

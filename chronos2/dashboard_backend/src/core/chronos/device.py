@@ -13,15 +13,19 @@ class Device(object):
 
     def _switch_state(self, command, relay_only=False):
         try:
-            with serial.Serial(cfg.serial.portname, cfg.serial.baudr, timeout=1) as ser_port:
+            with serial.Serial(
+                cfg.serial.portname, cfg.serial.baudr, timeout=1
+            ) as ser_port:
                 ser_port.write("relay {} {}\n\r".format(command, self.relay_number))
         except serial.SerialException as e:
             logger.error("Serial port error: {}".format(e))
             sys.exit(1)
         else:
-            logger.debug("Relay {} has been turned {}. Relay only: {}".format(
-                self.relay_number, command, relay_only
-            ))
+            logger.debug(
+                "Relay {} has been turned {}. Relay only: {}".format(
+                    self.relay_number, command, relay_only
+                )
+            )
             if command == "on" and not relay_only:
                 self._update_value_in_db(status=ON)
             elif command == "off" and not relay_only:
@@ -30,7 +34,9 @@ class Device(object):
     @property
     def relay_state(self):
         try:
-            with serial.Serial(cfg.serial.portname, cfg.serial.baudr, timeout=1) as ser_port:
+            with serial.Serial(
+                cfg.serial.portname, cfg.serial.baudr, timeout=1
+            ) as ser_port:
                 ser_port.write("relay read {}\n\r".format(self.relay_number))
                 response = ser_port.read(25)
         except serial.SerialException as e:
@@ -45,8 +51,9 @@ class Device(object):
                 logger.error("Unexpected response: {}".format(response))
             return state
 
-    def _send_socketio_message(self, event=None, status=None, switched_timestamp=None,
-                               manual_override=None):
+    def _send_socketio_message(
+        self, event=None, status=None, switched_timestamp=None, manual_override=None
+    ):
         if switched_timestamp:
             switched_timestamp = switched_timestamp.strftime("%B %d, %I:%M %p")
         # socketio_client.send({
@@ -75,21 +82,22 @@ class Device(object):
         if not relay_only and not isinstance(self, Boiler):
             now = datetime.now()
             self._update_value_in_db(timestamp=now, switched_timestamp=now)
-        self._send_socketio_message(
-            event=self.TYPE, status=OFF, switched_timestamp=now
-        )
+        self._send_socketio_message(event=self.TYPE, status=OFF, switched_timestamp=now)
 
     def _get_property_from_db(self, *args, **kwargs):
         device = getattr(db, self.table_class_name)
         from_backup = kwargs.pop("from_backup", False)
         with session_scope() as session:
-            instance = session.query(device).filter(device.backup == from_backup).first()
+            instance = (
+                session.query(device).filter(device.backup == from_backup).first()
+            )
             result = [getattr(instance, arg) for arg in args]
         if len(result) == 1:
             result = result[0]
         return result
 
     def _update_value_in_db(self, **kwargs):
+        print("======")
         device = getattr(db, self.table_class_name)
         to_backup = kwargs.pop("to_backup", False)
         with session_scope() as session:
@@ -102,17 +110,18 @@ class Device(object):
             status=self.status,
             manual_override=self.manual_override,
             switched_timestamp=self.switched_timestamp,
-            to_backup=True
+            to_backup=True,
         )
 
     def restore_status(self):
         status, manual_override, switched_timestamp = self._get_property_from_db(
-            "status", "manual_override", "switched_timestamp", from_backup=True)
+            "status", "manual_override", "switched_timestamp", from_backup=True
+        )
         self._update_value_in_db(
             status=status,
             manual_override=manual_override,
             switched_timestamp=switched_timestamp,
-            to_backup=False
+            to_backup=False,
         )
 
     @property
@@ -133,6 +142,7 @@ class Device(object):
 
     @manual_override.setter
     def manual_override(self, manual_override):
+        print("123456789")
         if manual_override == MANUAL_ON:
             if self.status != ON:
                 self.turn_on()
@@ -143,5 +153,6 @@ class Device(object):
             self._update_value_in_db(manual_override=MANUAL_OFF)
         elif manual_override == MANUAL_AUTO:
             self._update_value_in_db(manual_override=MANUAL_AUTO)
-        self._send_socketio_message(event="manual_override", manual_override=manual_override)
-
+        # self._send_socketio_message(
+        #     event="manual_override", manual_override=manual_override
+        # )

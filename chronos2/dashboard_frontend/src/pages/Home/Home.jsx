@@ -18,17 +18,14 @@ const Home = () => {
     const dispatch = useDispatch();
     const season = useSelector((state) => state.season.season);
 
-
-
-
     useEffect(() => {
         const fetchData = async () => {
             const resultAction = await dispatch(fetchSummerData());
-    
+
             if (fetchSummerData.fulfilled.match(resultAction)) {
                 const data = resultAction.payload;
                 setHomeData(data);
-    
+
                 // Set season based on data results
                 const mode = data?.results?.mode;
                 switch (mode) {
@@ -52,22 +49,22 @@ const Home = () => {
                 console.error('Failed to fetch summer data');
             }
         };
-    
+
         fetchData();
-    
+
         // Re-check every second until season is 'Winter' or 'Summer'
         const interval = setInterval(() => {
             if (season !== 'Winter' && season !== 'Summer') {
                 fetchData();
-                
+
             } else {
                 clearInterval(interval);  // Stop the interval when season is 'Winter' or 'Summer'
             }
         }, 2000);
-    
+
         return () => clearInterval(interval);  // Cleanup interval on unmount
     }, [season]);
-    
+
 
 
     return (
@@ -80,9 +77,9 @@ const Home = () => {
                             <SummerMode homedata={homedata} />
                             <TableTemplate homedata={homedata} />
                             {
-                                season === 'Summer' ?  <Ontime homedata={homedata}/> : season === 'Winter'?  <Modbus homedata={homedata} /> :''
+                                season === 'Summer' ? <Ontime homedata={homedata} /> : season === 'Winter' ? <Modbus homedata={homedata} /> : ''
                             }
-                           
+
 
                         </div>
                         <div className="item2">
@@ -90,7 +87,7 @@ const Home = () => {
                         </div>
                     </div>
 
-                    <ManualOverride data={homedata} season={season}/>
+                    <ManualOverride data={homedata} season={season} />
                     <TemperatureGraph />
                 </div>
                 <div className="right">

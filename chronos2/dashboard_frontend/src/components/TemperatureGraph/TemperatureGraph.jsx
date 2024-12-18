@@ -16,7 +16,7 @@ const TemperatureGraph = () => {
         const mappedData = result.map((entry, index) => {
           const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
           const date = new Date(entry.date);
-          const month = monthNames[date.getMonth()];  
+          const month = monthNames[date.getMonth()];
 
           return {
             name: month,
@@ -50,28 +50,30 @@ const TemperatureGraph = () => {
     link.click();
     document.body.removeChild(link);
   };
+
+
   const downloadLogs = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/chart_data`);
       const blob = await response.blob(); // Get the response as a Blob
-  
+
       // Create a link element
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
       link.download = 'chart_data'; // Set the file name (you can add the correct extension here if known, e.g., 'chart_data.csv')
-  
+
       // Append the link to the body and trigger the download
       document.body.appendChild(link);
       link.click();
-  
+
       // Remove the link after download
       document.body.removeChild(link);
-      
+
     } catch (error) {
       console.error('Error fetching data:', error);
     }
   };
-  
+
 
   return (
     <div className="graph-container">
@@ -81,7 +83,7 @@ const TemperatureGraph = () => {
           <LineChart data={data}>
             <CartesianGrid stroke="#4c5c77" strokeDasharray="3 3" />
             <XAxis dataKey="name" stroke="#dddddd">
-              <Label value="Month" offset={-5} position="insideBottom" fill="#dddddd" style={{textAnchor:'middle'}}/>
+              <Label value="Month" offset={-5} position="insideBottom" fill="#dddddd" style={{ textAnchor: 'middle' }} />
             </XAxis>
             <YAxis domain={[30, 90]} stroke="#dddddd">
               <Label value="Temperature" angle={-90} position="insideLeft" fill="#dddddd" style={{ textAnchor: 'middle' }} />
@@ -93,7 +95,7 @@ const TemperatureGraph = () => {
           </LineChart>
         </ResponsiveContainer>
         <button className="download-button" onClick={downloadCSV}>Download logs csv</button>
-        <button className="download-button" style={{marginLeft:"20px"}} onClick={downloadLogs}>Download logs json</button>
+        <button className="download-button" style={{ marginLeft: "20px" }} onClick={downloadLogs}>Download logs json</button>
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, StreamingResponse
+from src.api.dto.dashboard import UpdateSettings, UpdateState
 from src.core.chronos import Chronos
 from src.core.chronos.constant import TO_SUMMER, TO_WINTER
 from src.features.dashboard.dashboard_service import DashboardService
@@ -23,11 +24,11 @@ def dump_log():
 
 
 @router.post("/update_settings")
-def update_settings(request: Request):
-    for key, value in request.form.items():
+async def update_settings(data: UpdateSettings):
+    for key, value in data.dict().items():
         if value:
-            setattr(chronos, key, float(value))
-    return JSONResponse(content={"data": request.form})
+            setattr(chronos, key, value)
+    return JSONResponse(content={"message": "Updated settings successfully"})
 
 
 @router.post("/switch_mode")
@@ -50,31 +51,30 @@ def switch_mode(request: Request):
 @router.get("/")
 def index(request: Request):
     data = dashboard_service.get_data()
-    mode = int(data["results"]["mode"])
-    return JSONResponse(content={"data": data, "mode": mode})
+    return JSONResponse(content=data)
 
 
 @router.post("/update_state")
-def update_state(request: Request):
-    device_number = int(request.form["device"])
-    manual_override_value = int(request.form["manual_override"])
+def update_state(data: UpdateState):
+    device_number = data.device
+    manual_override_value = data.manual_override
     chronos.devices[device_number].manual_override = manual_override_value
     return JSONResponse(content={"message": "Updated state successfully"})
 
 
 @router.get("/winter")
-async def winter():
-    data = await dashboard_service.get_data()
-    return JSONResponse(content={"data": data})
+def winter():
+    data = dashboard_service.get_data()
+    return JSONResponse(content=data)
 
 
 @router.get("/summer")
-async def summer():
-    data = await dashboard_service.get_data()
-    return JSONResponse(content={"data": data})
+def summer():
+    data = dashboard_service.get_data()
+    return JSONResponse(content=data)
 
 
 @router.get("/chart_data")
 def chart_data():
     data = dashboard_service.get_chart_data()
-    return JSONResponse(content={"data": data})
+    return JSONResponse(content=data)
