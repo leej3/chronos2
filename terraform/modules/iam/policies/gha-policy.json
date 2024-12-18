@@ -59,6 +59,7 @@
         "ecr:InitiateLayerUpload",
         "ecr:PutImage",
         "ecr:UploadLayerPart",
+        "ecr:DescribeRepositories",
         "iam:AddRoleToInstanceProfile",
         "iam:AttachRolePolicy",
         "iam:AttachUserPolicy",
@@ -75,6 +76,9 @@
         "iam:DetachRolePolicy",
         "iam:RemoveRoleFromInstanceProfile",
         "iam:UpdateAssumeRolePolicy",
+        "iam:GetRole",
+        "iam:GetPolicy",
+        "iam:GetOpenIDConnectProvider",
         "s3:CreateBucket",
         "s3:DeleteBucket",
         "s3:DeleteBucketEncryption",
@@ -87,7 +91,9 @@
         "s3:PutBucketPublicAccessBlock",
         "s3:PutBucketTagging",
         "s3:HeadObject",
-        "s3:PutBucketVersioning"
+        "s3:PutBucketVersioning",
+        "ec2:DescribeVpcs",
+        "ec2:DescribeDhcpOptions"
       ],
       "Resource": "*"
     }
