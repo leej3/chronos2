@@ -29,7 +29,7 @@ axiosApi.interceptors.response.use(
     const status = error.response?.status;
     if (status === 400) {
       toast.error(error.response?.data?.message);
-    } else if (statusCode === 401) {
+    } else if (status === 401) {
       toast.error('Login session has expired, please log in again');
       localStorage.removeItem('token');
       const navigate = useNavigate();

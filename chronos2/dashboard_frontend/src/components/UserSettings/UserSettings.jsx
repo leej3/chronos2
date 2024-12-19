@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import "./UserSettings.css";
 import { updateSettings } from "../../api/updateSetting";
+import { toast } from "react-toastify";
 
 const UserSettings = ({ data }) => {
   const [formData, setFormData] = useState({
@@ -49,9 +50,11 @@ const UserSettings = ({ data }) => {
       .then((response) => response.data)
       .then((data) => {
         console.log("Settings updated:", data);
+        toast.success('User settings updated successfully');
       })
       .catch((error) => {
         console.error("Error updating settings:", error);
+        toast.error('Some thing went wrong!');
       });
   };
 
