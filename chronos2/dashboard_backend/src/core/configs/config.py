@@ -9,6 +9,10 @@ class Settings(BaseSettings):
     )
     DOMAIN: str = "localhost"
     ENVIRONMENT: Literal["local", "staging", "production"] = "local"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 60
+    REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 60 * 7
+    JWT_SECRET_KEY: str = "abcd"
+    JWT_ALGORITHM: str = "HS256"
 
 
 settings = Settings()

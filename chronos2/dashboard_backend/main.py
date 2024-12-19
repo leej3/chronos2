@@ -1,11 +1,24 @@
 import uvicorn
-from fastapi import FastAPI, APIRouter
-from src.api.routers import dashboard_router
+from fastapi import APIRouter, FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from src.api.dependencies import exception_handler
+from src.api.routers import auth_router, dashboard_router
+from src.core.common.exceptions import GenericError
 
 app = FastAPI()
+
+
+@app.exception_handler(GenericError)
+async def generic_exception_handler(
+    request: Request, exc: GenericError
+) -> JSONResponse:
+    return await exception_handler(request, exc)
+
+
 api_router = APIRouter(prefix="/api")
 api_router.include_router(dashboard_router.router)
+api_router.include_router(auth_router.router)
 
 app.include_router(api_router)
 
