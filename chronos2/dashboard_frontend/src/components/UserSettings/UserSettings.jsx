@@ -1,30 +1,32 @@
+/* eslint-disable react/prop-types */
 import React, { useState, useEffect } from "react";
 import "./UserSettings.css";
-import { API_BASE_URL } from "../../utils/constant";
+import { updateSettings } from "../../api/updateSetting";
+import { toast } from "react-toastify";
 
 const UserSettings = ({ data }) => {
   const [formData, setFormData] = useState({
-    tolerance: "",
-    setpoint_min: "",
-    setpoint_max: "",
-    setpoint_offset_summer: "",
-    setpoint_offset_winter: "",
-    mode_change_delta_temp: "",
-    mode_switch_lockout_time: "",
-    cascade_time: "",
+    tolerance: null,
+    setpoint_min: null,
+    setpoint_max: null,
+    setpoint_offset_summer: null,
+    setpoint_offset_winter: null,
+    mode_change_delta_temp: null,
+    mode_switch_lockout_time: null,
+    cascade_time: null,
   });
 
   useEffect(() => {
     if (data && data.results) {
       setFormData({
-        tolerance: data.results.tolerance || "",
-        setpoint_min: data.results.setpoint_min || "",
-        setpoint_max: data.results.setpoint_max || "",
-        setpoint_offset_summer: data.results.setpoint_offset_summer || "",
-        setpoint_offset_winter: data.results.setpoint_offset_winter || "",
-        mode_change_delta_temp: data.results.mode_change_delta_temp || "",
-        mode_switch_lockout_time: data.results.mode_switch_lockout_time || "",
-        cascade_time: "", // Assuming `cascade_time` isn't in the data object
+        tolerance: data.results.tolerance || null,
+        setpoint_min: data.results.setpoint_min || null,
+        setpoint_max: data.results.setpoint_max || null,
+        setpoint_offset_summer: data.results.setpoint_offset_summer || null,
+        setpoint_offset_winter: data.results.setpoint_offset_winter || null,
+        mode_change_delta_temp: data.results.mode_change_delta_temp || null,
+        mode_switch_lockout_time: data.results.mode_switch_lockout_time || null,
+        cascade_time: data.results.cascade_time || null,
       });
     }
   }, [data]);
@@ -41,23 +43,18 @@ const UserSettings = ({ data }) => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    fetch(`${API_BASE_URL}/update_settings`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: new URLSearchParams(formData).toString(),
-    })
-      .then((response) => response.json())
+    updateSettings(JSON.stringify(formData))
+      .then((response) => response.data)
       .then((data) => {
         console.log("Settings updated:", data);
-        // Handle success or error response
+        toast.success('User settings updated successfully');
       })
       .catch((error) => {
         console.error("Error updating settings:", error);
+        toast.error('Some thing went wrong!');
       });
   };
 

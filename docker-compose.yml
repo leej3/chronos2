@@ -5,7 +5,6 @@ services:
     container_name: dashboard_backend
     env_file:
       - .env
-    entrypoint: ["sh", "-c", "poetry run alembic upgrade head"]
     restart: always
     depends_on:
       - postgres
@@ -13,6 +12,8 @@ services:
       - traefik-public
 
   dashboard_frontend:
+    env_file:
+      - ./chronos2/dashboard_frontend/.env
     build:
       context: ./chronos2/dashboard_frontend
     container_name: dashboard_frontend

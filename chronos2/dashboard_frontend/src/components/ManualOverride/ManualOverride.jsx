@@ -1,12 +1,13 @@
+/* eslint-disable react/prop-types */
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import io from 'socket.io-client';
 import './ManualOverride.css';
 import { setOverride, setInitialState } from '../../features/state/ManualOverrideSlice';
-import { API_BASE_URL } from '../../utils/constant';
+import { updateState } from '../../api/updateState'
 
 const ManualOverride = ({ data, season }) => {
-  
+
   const dispatch = useDispatch();
   const state = useSelector((state) => state.manualOverride);
   const [alertMessage, setAlertMessage] = useState('');
@@ -27,9 +28,8 @@ const ManualOverride = ({ data, season }) => {
 
   const getStatus = (value) => (value === 0 ? 'auto' : value === 1 ? 'on' : 'off');
 
-  const handleRadioChange = (device, value) => {
+  const handleRadioChange = async (device, value) => {
     dispatch(setOverride({ name: device, value }));
-    
 
     const deviceNumber = {
       boiler: 0,
@@ -41,18 +41,15 @@ const ManualOverride = ({ data, season }) => {
 
     const overrideValue = value === 'on' ? 1 : value === 'off' ? 2 : 0;
 
-    const formData = new URLSearchParams();
-    formData.append('device', deviceNumber);
-    formData.append('manual_override', overrideValue);
+    const payload = {
+      device: deviceNumber,
+      manual_override: overrideValue
+    }
 
-    fetch(`${API_BASE_URL}/update_state`, {
-      method: 'POST',
-      body: formData,
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    })
+    updateState(payload)
       .then((response) => {
-        if (!response.ok) throw new Error('Network response was not ok');
-        return response.json();
+        if (!response.status) throw new Error('Network response was not ok');
+        return response.data;
       })
       .then((data) => {
         if (data.error) setAlertMessage('Relay switching has failed.');
@@ -62,8 +59,6 @@ const ManualOverride = ({ data, season }) => {
         setAlertMessage('Relay switching has failed.');
       });
   };
-
-
 
   useEffect(() => {
     const socketInstance = io('http://localhost', { path: '/socket.io', transports: ['websocket'] });
@@ -89,7 +84,6 @@ const ManualOverride = ({ data, season }) => {
     <div className="manual-override">
       <div className="manual-override-body">
         <h2>Manual Override</h2>
-        {console.log(state)}
         {alertMessage && (
           <div className="alert alert-danger">
             <a href="#" className="close" data-dismiss="alert" aria-label="close">
@@ -102,9 +96,7 @@ const ManualOverride = ({ data, season }) => {
           {Object.keys(state)
             .filter((device, index) => index <= 4 && (device === 'boiler' || device.startsWith('chiller')))
             .map((device) => (
-              
               <div key={device} className="control-group">
-                {console.log(device)}
                 <label>{device.charAt(0).toUpperCase() + device.slice(1)}</label>
                 <div className="radio-group">
                   {['auto', 'on', 'off'].map((value) => (
