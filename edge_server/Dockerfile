@@ -14,8 +14,6 @@ COPY pyproject.toml .
 # Create the virtual environment
 RUN uv sync
 # Copy the application code
-COPY . .
-
 COPY chronos.sql /home/pi/chronos_db/
 COPY . .
 RUN chmod +x entrypoint.sh
