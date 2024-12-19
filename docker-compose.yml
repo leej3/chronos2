@@ -12,6 +12,8 @@ services:
       - traefik-public
 
   dashboard_frontend:
+    env_file:
+      - ./chronos2/dashboard_frontend/.env
     build:
       context: ./chronos2/dashboard_frontend
     container_name: dashboard_frontend
