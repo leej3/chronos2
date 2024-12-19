@@ -26,7 +26,6 @@ RUN poetry config virtualenvs.create false && \
     poetry install --no-root --no-dev
 
 COPY . /app
+RUN chmod +x entrypoint.sh
 
-EXPOSE 5172
-
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5172"]
+ENTRYPOINT [ "./entrypoint.sh" ]
