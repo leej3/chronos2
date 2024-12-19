@@ -10,4 +10,4 @@ echo -e "YES\nt=100" > /tmp/water_in
 echo -e "YES\nt=150" > /tmp/water_out
 
 
-flask run
+fastapi run --host 0.0.0.0 --port 5171 --reload
