@@ -1,24 +1,57 @@
 import os
-from .lib import db_queries
 from .lib.config_parser import cfg
-from .lib import Chronos, WINTER, SUMMER, TO_WINTER, TO_SUMMER
+from .lib.actuators import Boiler, Chiller
 from flask import Flask, render_template, Response, jsonify, request, make_response
 from flask_cors import CORS
 import logging
+import serial
+import time
+import sys
+from datetime import datetime
 
 app = Flask(__name__)
 CORS(app)
-chronos = Chronos()
-chronos.scheduler.start()
 logging.basicConfig(level=logging.INFO)
-log = logging.getLogger()
+logger = logging.getLogger()
 
+boiler = Boiler()
+chiller1 = Chiller(1)
+chiller2 = Chiller(2)
+chiller3 = Chiller(3)
+chiller4 = Chiller(4)
+DEVICES = [boiler, chiller1, chiller2, chiller3, chiller4]
+
+def c_to_f(t):
+    return round(((9.0 / 5.0) * t + 32.0), 1)
+
+def _read_temperature_sensor(sensor_id):
+        #return 50
+        device_file = os.path.join("/sys/bus/w1/devices", sensor_id, "w1_slave")
+        while True:
+            try:
+                with open(device_file) as content:
+                    lines = content.readlines()
+            except IOError as e:
+                logger.error("Temp sensor error: {}".format(e))
+                sys.exit(1)
+            else:
+                if lines[0].strip()[-3:] == "YES":
+                    break
+                else:
+                    time.sleep(0.2)
+        equals_pos = lines[1].find("t=")
+        if equals_pos != -1:
+            temp_string = lines[1][equals_pos + 2:]
+            # Divide by 1000 for proper decimal point
+            temp = float(temp_string) / 1000.0
+            # Convert to degF
+            return c_to_f(temp)
 
 def get_return_temp():
-    read_temp_sensor(cfg.in_id)
+    _read_temperature_sensor(cfg.sensors.in_id)
 
 def get_water_out_temp():
-    read_temp_sensor(cfg.out_id)
+    _read_temperature_sensor(cfg.sensors.out_id)
 
 def get_data():
 
@@ -32,22 +65,23 @@ def get_data():
     # boiler may need get methods for the modbus data and perhaps setpoint
     #  Device class has serial port communication. determine if this is needed.
     #  Remove all db logic. Try to keep the logic for the devices the same.
+    # TODO: consider instantiating them along with the app
+
     actStream = [{
         "timeStamp": device.switched_timestamp.strftime("%B %d, %I:%M %p"),
         "status": device.status,
-        "MO": device.manual_override} for device in chronos.devices
+        "MO": device.manual_override} for device in DEVICES
     ]
     return {
         "results": results,
         "actStream": actStream,
         "chronos_status": True,
-        
     }
 
 
 @app.route("/download_log")
 def dump_log():
-    resp = # TODO retrieve
+    resp = None# TODO retrieve
     resp.headers["Content-Disposition"] = "attachment; filename=exported-data.csv"
     return resp
 
@@ -59,41 +93,23 @@ def update_settings():
             setattr(chronos, key, float(value))
     return jsonify(data=request.form)
 
-
-@app.route("/settings", methods=["GET"])
-def update_settings():
-    for key, value in request.form.items():
-        if value:
-            setattr(chronos, key, float(value))
-    return jsonify(data=request.form)
-
-
-
-
 @app.route("/")
 def index():
     data = get_data()
     return jsonify(data)
 
 
-@app.route("/state", methods=["POST"])
+@app.route("/update_state", methods=["POST"])
 def update_state():
     device_number = int(request.form["device"])
     manual_override_value = int(request.form["manual_override"])
-    chronos.devices[device_number].manual_override = manual_override_value
+    DEVICES[device_number].manual_override = manual_override_value
     return jsonify({"message": "Override updated successfully"})
 
-@app.route("/state", methods=["GET"])
-def update_state():
-    device_number = int(request.form["device"])
-    # TODO: fetch from device and specify a return format
-    state = get_state(device_number)
-    return jsonify({device_number: state})
 
 
 
 
 
 if __name__ == "__main__":
-    print "App started"
     app.run(host='0.0.0.0', port=5171, debug=True)

@@ -24,7 +24,7 @@ COPY pyproject.toml poetry.lock* /app/
 
 RUN poetry config virtualenvs.create false && \
     poetry install --no-root --no-dev
-
+RUN mkdir -p /app/src/logs; touch /app/src/logs/chronos.log
 COPY . /app
 RUN chmod +x entrypoint.sh
 

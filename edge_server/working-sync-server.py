@@ -11,41 +11,51 @@ logging.basicConfig()
 log = logging.getLogger()
 log.setLevel(logging.DEBUG)
 
-#---------------------------------------------------------------------------# 
+#---------------------------------------------------------------------------#
 # initialize the server information
-#---------------------------------------------------------------------------# 
-# If you don't set this or any fields, they are defaulted to empty strings.
-#---------------------------------------------------------------------------# 
+#---------------------------------------------------------------------------#
 identity = ModbusDeviceIdentification()
-identity.VendorName  = 'Pymodbus'
+identity.VendorName = 'Pymodbus'
 identity.ProductCode = 'PM'
-identity.VendorUrl   = 'http://github.com/riptideio/pymodbus/'
+identity.VendorUrl = 'http://github.com/riptideio/pymodbus/'
 identity.ProductName = 'Pymodbus Server'
-identity.ModelName   = 'Pymodbus Server'
+identity.ModelName = 'Pymodbus Server'
 identity.MajorMinorRevision = '1.0'
 
-
 def setup_server():
+    # Create datablocks for different register types
     datablock = ModbusSequentialDataBlock(address=6, values=[1]*16)
     inpblock = ModbusSequentialDataBlock(address=3, values=[1]*16)
+
+    # Create a single slave context
     slave_1 = ModbusSlaveContext(
-        di = datablock,
-        co = datablock,
-        hr = datablock,
-        ir = inpblock,
+        di=datablock,
+        co=datablock,
+        hr=datablock,
+        ir=inpblock,
     )
 
-    store = slave_1
-    context = ModbusServerContext(slaves=store, single=True)
+    # For a single slave context, just pass the single slave context
+    context = ModbusServerContext(slaves=slave_1, single=True)
 
-    #---------------------------------------------------------------------------#
-    # run the server you want
-    #---------------------------------------------------------------------------# 
-    # RTU:
-    print ("address: 0x00, value=" + str(context[1].getValues(3, 0)))
-    print ("address: 0x01, value=" + str(context[1].getValues(3, 1)))
+    # Test reading some values to ensure everything is set up
+    print("address: 0x00, value=" + str(context[1].getValues(3, 0)))
+    print("address: 0x01, value=" + str(context[1].getValues(3, 1)))
+
     return context
 
 if __name__ == "__main__":
     ctx = setup_server()
-    server = StartSerialServer(context=ctx, framer=ModbusRtuFramer, identity=identity, port=sys.argv[1], timeout=2, baudrate=9600, startbit=1, databits=1, stopbit=2, bytesize=8, parity='N')
+    server = StartSerialServer(
+        context=ctx,
+        framer=ModbusRtuFramer,
+        identity=identity,
+        port=sys.argv[1],
+        timeout=2,
+        baudrate=9600,
+        startbit=1,
+        databits=1,
+        stopbit=2,
+        bytesize=8,
+        parity='N'
+    )
