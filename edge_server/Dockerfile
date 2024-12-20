@@ -14,7 +14,7 @@ COPY --from=ghcr.io/astral-sh/uv:0.5.10 /uv /bin/uv
 # every code changes
 COPY pyproject.toml .
 # Create the virtual environment
-RUN uv sync
+RUN uv sync --no-dev
 # Copy the application code
 COPY . .
 RUN chmod +x entrypoint.sh
