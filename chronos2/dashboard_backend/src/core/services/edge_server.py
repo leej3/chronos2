@@ -1,6 +1,20 @@
 import requests
-from src.core.common.exceptions import EdgeServerError, ErrorReadDataEdgeServer
+from src.core.common.exceptions import (
+    ConnectToEdgeServerError,
+    EdgeServerError,
+    ErrorReadDataEdgeServer,
+)
 from src.core.configs.config import settings
+
+
+def catch_connection_error(func):
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except requests.exceptions.ConnectionError as e:
+            raise ConnectToEdgeServerError()
+
+    return wrapper
 
 
 class EdgeServer:
@@ -18,20 +32,24 @@ class EdgeServer:
         except Exception as e:
             raise ErrorReadDataEdgeServer()
 
+    @catch_connection_error
     def get_data(self):
         response = requests.get(f"{self.url}/")
         return self._handle_response(response)
 
+    @catch_connection_error
     def device_state(self, device):
         response = requests.get(f"{self.url}/device_state", params={"device": device})
         return self._handle_response(response)
 
+    @catch_connection_error
     def update_device_state(self, device, state):
         response = requests.post(
             f"{self.url}/device_state", data={"id": device, state: state}
         )
         return self._handle_response(response)
 
+    @catch_connection_error
     def download_log(self):
         response = requests.get(f"{self.url}/download_log")
         return self._handle_response(response)

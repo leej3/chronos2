@@ -51,16 +51,16 @@ const Home = () => {
 
     fetchData();
 
-    // Re-check every second until season is 'Winter' or 'Summer'
-    const interval = setInterval(() => {
-      if (season !== 'Winter' && season !== 'Summer') {
-        fetchData();
-      } else {
-        clearInterval(interval); // Stop the interval when season is 'Winter' or 'Summer'
-      }
-    }, 2000);
+    // // Re-check every second until season is 'Winter' or 'Summer'
+    // const interval = setInterval(() => {
+    //   if (season !== 'Winter' && season !== 'Summer') {
+    //     fetchData();
+    //   } else {
+    //     clearInterval(interval); // Stop the interval when season is 'Winter' or 'Summer'
+    //   }
+    // }, 2000);
 
-    return () => clearInterval(interval); // Cleanup interval on unmount
+    // return () => clearInterval(interval); // Cleanup interval on unmount
   }, [season]);
 
   return (
