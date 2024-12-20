@@ -1,9 +1,9 @@
 import serial
 from contextlib import contextmanager
-from chronos.lib.config_parser import cfg
+from chronos.lib.config import cfg
 from pymodbus.exceptions import ModbusException
 from pymodbus.client.sync import ModbusSerialClient
-from chronos.lib.root_logger import root_logger as logger
+from chronos.lib.logging import root_logger as logger
 
 
 @contextmanager

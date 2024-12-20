@@ -7,7 +7,7 @@ services:
     networks:
       - traefik-public
     ports:
-      - "5171:80"
+      - "5171:5171"
   dashboard_frontend:
     ports:
       - "5173:5173"

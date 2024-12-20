@@ -1,4 +1,8 @@
 .DS_Store
+.env
+.venv
 .terraform
 .terraform.lock.hcl
 *.tfstate
+*egg-info
+__pycache__
