@@ -1,0 +1,34 @@
+[project]
+name = "edge-server"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi",
+    "pyserial",
+    "pymodbus",
+    "python-dotenv",
+    "pydantic",
+    "pydantic-settings",
+    "requests>=2.32.3",
+    "uvicorn>=0.34.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.4",
+]
+ipython = [
+    "pytest>=8.3.4",
+]
+pdbpp = [
+    "pytest>=8.3.4",
+]
+[build-system]
+requires = ["setuptools>=42", "wheel", "setuptools_scm[toml]>=3.4"]
+build-backend = "setuptools.build_meta"
+
+
+[tool.setuptools.packages.find]
+where = ["."]

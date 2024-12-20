@@ -4,7 +4,7 @@ services:
     labels:
     - traefik.enable=true
     - traefik.docker.network=chronos2_traefik-public
-    - traefik.http.routers.dashboard.rule=Host("`${DEPLOYMENT_URI}`")
+    - traefik.http.routers.dashboard.rule=Host("${DEPLOYMENT_URI}")
     - traefik.http.routers.dashboard.entrypoints=web,websecure
     - traefik.http.services.dashboard.loadbalancer.server.port=5173
     - traefik.http.routers.dashboard.tls=true
@@ -13,7 +13,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=chronos2_traefik-public
-      - traefik.http.routers.chronos2_web_api.rule=Host("`${DEPLOYMENT_URI}`") && PathPrefix(`/api`)
+      - traefik.http.routers.chronos2_web_api.rule=Host("${DEPLOYMENT_URI}") && PathPrefix(`/api`)
       - "traefik.http.routers.chronos2_web_api.entrypoints=web,websecure"
       - traefik.http.services.chronos2_web_api.loadbalancer.server.port=5172
       - traefik.http.routers.chronos2_web_api.tls=true
@@ -46,6 +46,9 @@ services:
   frps:
     image: frps
     container_name: frps
+    build:
+      dockerfile: ./dockerfiles/Dockerfile-for-frps
+      context: ./external/frp
     command: -c /etc/frp/frps.toml
     volumes:
       - ./frp_config:/etc/frp
@@ -53,3 +56,5 @@ services:
       - traefik-public
     ports:
       - "7005:7005"
+      - "7006:7006"
+      - "5171:5171"

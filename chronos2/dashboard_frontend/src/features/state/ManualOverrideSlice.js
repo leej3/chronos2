@@ -1,4 +1,3 @@
-// src/features/state/ManualOverrideSlice.js
 import { createSlice } from '@reduxjs/toolkit';
 
 const manualOverrideSlice = createSlice({

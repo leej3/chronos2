@@ -68,3 +68,12 @@
     gap: 1.2rem;
   }
 }
+.manual-override {
+  background-color: #333645;
+  border-radius: 16px;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+  color: #ffffff;
+  border: 2px solid #4c5c77;
+  text-align: center;
+  width: 100%;
+}

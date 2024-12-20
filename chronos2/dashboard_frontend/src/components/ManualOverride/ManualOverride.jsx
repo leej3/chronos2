@@ -1,134 +1,156 @@
+/* eslint-disable react/prop-types */
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import io from 'socket.io-client';
 import './ManualOverride.css';
-import { setOverride, setInitialState } from '../../features/state/ManualOverrideSlice';
-import { API_BASE_URL } from '../../utils/constant';
+import {
+  setOverride,
+  setInitialState,
+} from '../../features/state/ManualOverrideSlice';
+import { updateDeviceState } from '../../api/updateState';
+import {
+  CCard,
+  CCardBody,
+  CAlert,
+  CFormSwitch,
+  CRow,
+  CCol,
+} from '@coreui/react';
+import { getDeviceId } from '../../utils/constant';
 
 const ManualOverride = ({ data, season }) => {
-  
   const dispatch = useDispatch();
   const state = useSelector((state) => state.manualOverride);
   const [alertMessage, setAlertMessage] = useState('');
   const [socket, setSocket] = useState(null);
 
   useEffect(() => {
-    if (data?.actStream) {
+    console.log(data);
+    if (data?.devices) {
+      const devices = data.devices;
       const initialState = {
-        boiler: getStatus(data.actStream[0].MO),
-        chiller1: getStatus(data.actStream[1].MO),
-        chiller2: getStatus(data.actStream[2].MO),
-        chiller3: getStatus(data.actStream[3].MO),
-        chiller4: getStatus(data.actStream[4].MO),
+        boiler: devices[0].state,
+        chiller1: devices[1].state,
+        chiller2: devices[2].state,
+        chiller3: devices[3].state,
+        chiller4: devices[4].state,
       };
       dispatch(setInitialState(initialState));
     }
   }, [data, dispatch]);
 
-  const getStatus = (value) => (value === 0 ? 'auto' : value === 1 ? 'on' : 'off');
+  const handleRadioChange = async (device, state) => {
+    console.log(device, state);
+    dispatch(setOverride({ name: device, value: state }));
 
-  const handleRadioChange = (device, value) => {
-    dispatch(setOverride({ name: device, value }));
-    
+    const payload = {
+      id: getDeviceId(device),
+      state: state,
+    };
 
-    const deviceNumber = {
-      boiler: 0,
-      chiller1: 1,
-      chiller2: 2,
-      chiller3: 3,
-      chiller4: 4,
-    }[device];
-
-    const overrideValue = value === 'on' ? 1 : value === 'off' ? 2 : 0;
-
-    const formData = new URLSearchParams();
-    formData.append('device', deviceNumber);
-    formData.append('manual_override', overrideValue);
-
-    fetch(`${API_BASE_URL}/update_state`, {
-      method: 'POST',
-      body: formData,
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    })
+    updateDeviceState(payload)
       .then((response) => {
-        if (!response.ok) throw new Error('Network response was not ok');
-        return response.json();
+        if (!response.status) throw new Error('Network response was not ok');
+        return response.data;
       })
       .then((data) => {
         if (data.error) setAlertMessage('Relay switching has failed.');
       })
-      .catch((error) => {
-        console.error('Error:', error);
+      .catch(() => {
         setAlertMessage('Relay switching has failed.');
       });
   };
 
 
+  // useEffect(() => {
+  //   const socketInstance = io('http://localhost', {
+  //     path: '/socket.io',
+  //     transports: ['websocket'],
+  //   });
+  //   setSocket(socketInstance);
 
-  useEffect(() => {
-    const socketInstance = io('http://localhost', { path: '/socket.io', transports: ['websocket'] });
-    setSocket(socketInstance);
+  //   socketInstance.on('connect', () =>
+  //     console.log('Connected to WebSocket server')
+  //   );
 
-    socketInstance.on('connect', () => console.log('Connected to WebSocket server'));
+  //   socketInstance.on('manual_override', (data) => {
+  //     const deviceMap = [
+  //       'boiler',
+  //       'chiller1',
+  //       'chiller2',
+  //       'chiller3',
+  //       'chiller4',
+  //     ];
+  //     const deviceName = deviceMap[data.device];
+  //     const status = getStatus(data.manual_override);
+  //     dispatch(setOverride({ name: deviceName, value: status }));
+  //   });
 
-    socketInstance.on('manual_override', (data) => {
-      const deviceMap = ['boiler', 'chiller1', 'chiller2', 'chiller3', 'chiller4'];
-      const deviceName = deviceMap[data.device];
-      const status = getStatus(data.manual_override);
-      dispatch(setOverride({ name: deviceName, value: status }));
-    });
+  //   socketInstance.on('connect_error', (err) =>
+  //     console.error('Connection error:', err)
+  //   );
 
-    socketInstance.on('connect_error', (err) => console.error('Connection error:', err));
-
-    return () => {
-      socketInstance.disconnect();
-    };
-  }, [dispatch]);
+  //   return () => {
+  //     socketInstance.disconnect();
+  //   };
+  // }, [dispatch]);
 
   return (
-    <div className="manual-override">
-      <div className="manual-override-body">
-        <h2>Manual Override</h2>
-        {console.log(state)}
+    <CCard
+      className="manual-override"
+      style={{ maxWidth: '100%', padding: '1rem' }}
+    >
+      <h2 className="section-title">Manual Override</h2>
+      <CCardBody className="">
         {alertMessage && (
-          <div className="alert alert-danger">
-            <a href="#" className="close" data-dismiss="alert" aria-label="close">
-              &times;
-            </a>
+          <CAlert color="danger"
+            dismissible
+            onClose={() => {
+              setAlertMessage('');
+            }}
+          >
             <strong>Error!</strong> {alertMessage}
-          </div>
+          </CAlert>
         )}
-        <div className="override-controls">
+        <CRow className="override-controls" style={{ gap: '1rem' }}>
           {Object.keys(state)
-            .filter((device, index) => index <= 4 && (device === 'boiler' || device.startsWith('chiller')))
+            .filter(
+              (device, index) =>
+                index <= 4 &&
+                (device === 'boiler' || device.startsWith('chiller'))
+            )
             .map((device) => (
-              
-              <div key={device} className="control-group">
-                {console.log(device)}
-                <label>{device.charAt(0).toUpperCase() + device.slice(1)}</label>
-                <div className="radio-group">
-                  {['auto', 'on', 'off'].map((value) => (
-                    <label key={value}>
-                      <input
-                        type="radio"
-                        name={device}
-                        value={value}
-                        checked={state[device] === value}
-                        onChange={() => handleRadioChange(device, value)}
-                        disabled={
-                          (season === 'Winter' && device.startsWith('chiller')) ||
-                          (season === 'Summer' && device === 'boiler')
-                        }
-                      />{' '}
-                      {value.charAt(0).toUpperCase() + value.slice(1)}
-                    </label>
-                  ))}
+              <CCol
+                xs={12}
+                sm={6}
+                md={4}
+                lg={3}
+                key={device}
+                className="control-group"
+                style={{ minWidth: '200px' }}
+              >
+                <p className="mb-3 h5">
+                  {device.charAt(0).toUpperCase() + device.slice(1)}
+                </p>
+                <div className="switch-group d-flex gap-2 align-items-center">
+                  <label>OFF</label>
+                  <CFormSwitch
+                    checked={state[device]}
+                    className="cursor-pointer"
+                    onChange={(e) => handleRadioChange(device, e.target.checked)}
+                    size='xl'
+                    disabled={
+                      (season === 'Winter' && device.startsWith('chiller')) ||
+                      (season === 'Summer' && device === 'boiler')
+                    }
+                  />
+                  <label>ON</label>
                 </div>
-              </div>
+              </CCol>
             ))}
-        </div>
-      </div>
-    </div>
+        </CRow>
+      </CCardBody>
+    </CCard>
   );
 };
 

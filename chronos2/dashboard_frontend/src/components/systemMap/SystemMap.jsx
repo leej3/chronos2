@@ -4,6 +4,8 @@ import { useSelector } from 'react-redux'
 
 const SystemMap = ({ homedata }) => {
   const results = homedata?.results
+  const sensors = homedata?.sensors
+
   const season = useSelector(state => state.season.season)
   const manualOverride = useSelector(state => state.manualOverride)
 
@@ -18,33 +20,33 @@ const SystemMap = ({ homedata }) => {
           <div className='tank-container'>
             <div className='tank'>
               <div className='tank-image'>
-              {
-                   manualOverride.boiler === 'on' ? (
+                {
+                  manualOverride.boiler === true ? (
                     <img src='images/Icons/Boiler/Boiler-ON.png' alt='Tank' />
                   ) : (
-                      
+
                     <img src='images/Icons/Boiler/Boiler-OFF.png' alt='Tank' />
 
-                    ) }
+                  )}
               </div>
               {/* <div className="temperature">{results?.water_out_temp} °F</div> */}
             </div>
             <div className='tankRight'>
               <div className='tankRightArrow-wrapper'>
                 <div className='arrowUpTemp'>
-                  <span>0 F</span>
-                  <span>0 F</span>
+                  {/* <span>0 F</span>
+                  <span>0 F</span> */}
                 </div>
                 <img src='/images/Icons/Boiler/arrow4.png' alt='' srcSet='' />
-                <span>32.3 F</span>
+                <span>{sensors?.water_out_temp}°F</span>
               </div>
 
               <div className='tankRightArrow-wrapper'>
                 <div className='arrowUpTemp'>
-                  <span>0 F</span>
+                  {/* <span>0 F</span> */}
                 </div>
                 <img src='/images/Icons/Boiler/arrow3.png' alt='' srcSet='' />
-                <span>32.3 F</span>
+                <span>{sensors?.return_temp}°F</span>
               </div>
             </div>
 
@@ -62,7 +64,7 @@ const SystemMap = ({ homedata }) => {
             <div className='tank-container1'>
               <div className='tank'>
                 <div className='tank-image'>
-                  {manualOverride.chiller1 === 'on' ? (
+                  {manualOverride.chiller1 === true ? (
                     <img src='images/Icons/Boiler/Chiller-ON.png' alt='Tank' />
                   ) : (
                     <img src='images/Icons/Boiler/Chiller-OFF.png' alt='' />
@@ -71,7 +73,7 @@ const SystemMap = ({ homedata }) => {
               </div>
               <div className='tank'>
                 <div className='tank-image'>
-                  {manualOverride.chiller2 === 'on' ? (
+                  {manualOverride.chiller2 === true ? (
                     <img src='images/Icons/Boiler/Chiller-ON.png' alt='Tank' />
                   ) : (
                     <img src='images/Icons/Boiler/Chiller-OFF.png' alt='' />
@@ -80,7 +82,7 @@ const SystemMap = ({ homedata }) => {
               </div>
               <div className='tank'>
                 <div className='tank-image'>
-                  {manualOverride.chiller3 === 'on' ? (
+                  {manualOverride.chiller3 === true ? (
                     <img src='images/Icons/Boiler/Chiller-ON.png' alt='Tank' />
                   ) : (
                     <img src='images/Icons/Boiler/Chiller-OFF.png' alt='' />
@@ -89,7 +91,7 @@ const SystemMap = ({ homedata }) => {
               </div>
               <div className='tank'>
                 <div className='tank-image'>
-                  {manualOverride.chiller4 === 'on' ? (
+                  {manualOverride.chiller4 === true ? (
                     <img src='images/Icons/Boiler/Chiller-ON.png' alt='Tank' />
                   ) : (
                     <img src='images/Icons/Boiler/Chiller-OFF.png' alt='' />

@@ -1,7 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit'
 import { createAsyncThunk } from '@reduxjs/toolkit'
-import axios from 'axios';
-import { API_BASE_URL } from '../../utils/constant';
+import { getDashboardData } from '../../api/getDashboardData';
 
 const initialState = {
     data: {},
@@ -10,16 +9,16 @@ const initialState = {
 }
 
 export const fetchSummerData = createAsyncThunk("", async () => {
-    const response = await axios.get(API_BASE_URL)
+    const response = await getDashboardData()
     return response?.data
 })
 
 
 export const summerSlice = createSlice({
-  name: 'summer',
-  initialState,
-  reducers: {},
-  extraReducers(builder) {
+    name: 'summer',
+    initialState,
+    reducers: {},
+    extraReducers(builder) {
         builder
             .addCase(fetchSummerData.pending, (state, action) => {
                 state.status = "loading"
@@ -32,7 +31,7 @@ export const summerSlice = createSlice({
                 state.status = "failed"
                 state.error = action.error.message
             })
-           
+
     }
 })
 
