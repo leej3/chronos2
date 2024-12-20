@@ -30,7 +30,7 @@ def update_state(
     data: UpdateDeviceState,
     current_user: Annotated[UserToken, Security(get_current_user)],
 ):
-    edge_server.update_device_state(device=data.device, state=data.state)
+    edge_server.update_device_state(id=data.id, state=data.state)
     return JSONResponse(content={"message": "Updated state successfully"})
 
 

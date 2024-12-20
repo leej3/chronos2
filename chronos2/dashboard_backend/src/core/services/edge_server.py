@@ -28,7 +28,8 @@ class EdgeServer:
             response.raise_for_status()
             return response.json()
         except requests.exceptions.HTTPError as e:
-            raise EdgeServerError()
+            msg = f"Failure when get data in Edge server. Detail error: {e}"
+            raise EdgeServerError(message=msg)
         except Exception as e:
             raise ErrorReadDataEdgeServer()
 
@@ -43,9 +44,9 @@ class EdgeServer:
         return self._handle_response(response)
 
     @catch_connection_error
-    def update_device_state(self, device, state):
+    def update_device_state(self, id, state):
         response = requests.post(
-            f"{self.url}/device_state", data={"id": device, state: state}
+            f"{self.url}/device_state", data={"id": id, state: state}
         )
         return self._handle_response(response)
 

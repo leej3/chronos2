@@ -35,6 +35,7 @@ class DashboardService:
         settings = self.setting_repository.get_last_settings()
 
         edge_server_data = self.edge_server.get_data()
+        # edge_server_data["devices"][0]["state"] = True
 
         results = {
             "outside_temp": history.outside_temp if history else 0,

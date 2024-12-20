@@ -45,7 +45,6 @@ const Login = () => {
 
       if (token) {
         localStorage.setItem('token', token.access);
-        localStorage.setItem('coreui-free-react-admin-template-theme', 'dark');
         dispatch(login(token.access));
         navigate('/');
       } else {

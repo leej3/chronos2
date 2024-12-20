@@ -16,7 +16,7 @@ class ServiceUnavailable(GenericError):
 
 
 class EdgeServerError(GenericError):
-    def __init__(self, message: str = "Failure when get dataa in Edge server.") -> None:
+    def __init__(self, message: str = "Failure when get data in Edge server.") -> None:
         super().__init__(error_code=1, message=message)
 
 

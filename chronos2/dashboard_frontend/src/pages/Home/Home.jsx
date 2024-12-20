@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import UserSettings from '../../components/UserSettings/UserSettings';
-import SummerMode from '../../components/SummerMode/SummerMode';
 import SystemMap from '../../components/systemMap/SystemMap';
 import './Home.css';
-import TableTemplate from '../../components/Sensor/TableTemplate';
 import ManualOverride from '../../components/ManualOverride/ManualOverride';
 import TemperatureGraph from '../../components/TemperatureGraph/TemperatureGraph';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchSummerData } from '../../features/summer/summerSlice';
-import Modbus from '../../components/Modebus/Modbus';
 import { setSeason } from '../../features/state/seasonSlice';
-import Ontime from '../../components/OnTime/Ontime';
+import { CContainer, CRow, CCol, CCardBody } from '@coreui/react';
 
 const Home = () => {
   const [homedata, setHomeData] = useState();
@@ -64,34 +61,28 @@ const Home = () => {
   }, [season]);
 
   return (
-    <>
-      <div className="home-container">
-        <div className="left">
-          <div className="item1n2">
-            <div className="item1">
-              <SummerMode homedata={homedata} />
-              <TableTemplate homedata={homedata} />
-              {season === 'Summer' ? (
-                <Ontime homedata={homedata} />
-              ) : season === 'Winter' ? (
-                <Modbus homedata={homedata} />
-              ) : (
-                ''
-              )}
-            </div>
-            <div className="item2">
+    <CContainer fluid className="home-container">
+      <CRow>
+        <CCol lg={9}>
+          <div className="mb-3 p-0 border-0">
+            <CCardBody>
               <SystemMap homedata={homedata} />
-            </div>
+            </CCardBody>
           </div>
-
-          <ManualOverride data={homedata} season={season} />
-          <TemperatureGraph />
-        </div>
-        <div className="right">
-          <UserSettings data={homedata} />
-        </div>
-      </div>
-    </>
+          <div className="mb-3 p-0 border-0">
+            <ManualOverride data={homedata} season={season} />
+          </div>
+          <div className="mb-3 p-0 border-0">
+            <TemperatureGraph className="p-0" />
+          </div>
+        </CCol>
+        <CCol lg={3}>
+          <div className="mb-3 p-0 border-0">
+            <UserSettings data={homedata} />
+          </div>
+        </CCol>
+      </CRow>
+    </CContainer>
   );
 };
 
