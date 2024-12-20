@@ -16,7 +16,7 @@ config_dict = {
     "sensors": {
         "mount_point": os.getenv("W1_MOUNT_POINT", "/sys/bus/w1/devices"),
         "in_id": "28-00000677d509",
-        "out_id": "28-0000067841b0"
+        "out_id": "28-011927cd8e7d",
     },
     "files": {
         "log_path": "/var/log/chronos/chronos.log"
