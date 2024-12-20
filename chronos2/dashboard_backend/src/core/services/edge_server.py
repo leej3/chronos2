@@ -1,3 +1,5 @@
+import json
+
 import requests
 from src.core.common.exceptions import (
     ConnectToEdgeServerError,
@@ -44,10 +46,9 @@ class EdgeServer:
         return self._handle_response(response)
 
     @catch_connection_error
-    def update_device_state(self, id, state):
-        response = requests.post(
-            f"{self.url}/device_state", data={"id": id, state: state}
-        )
+    def update_device_state(self, id: int, state: bool):
+        data = {"id": id, "state": state}
+        response = requests.post(f"{self.url}/device_state", data=json.dumps(data))
         return self._handle_response(response)
 
     @catch_connection_error
