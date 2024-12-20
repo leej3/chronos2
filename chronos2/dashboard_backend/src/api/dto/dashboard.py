@@ -3,9 +3,9 @@ from typing import Optional
 from pydantic import BaseModel
 
 
-class UpdateState(BaseModel):
+class UpdateDeviceState(BaseModel):
     device: int
-    manual_override: int
+    state: bool
 
 
 class UpdateSettings(BaseModel):

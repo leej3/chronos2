@@ -9,10 +9,14 @@ class Settings(BaseSettings):
     )
     DOMAIN: str = "localhost"
     ENVIRONMENT: Literal["local", "staging", "production"] = "local"
+    # JWT config
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 60
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 60 * 7
-    JWT_SECRET_KEY: str = "abcd"
-    JWT_ALGORITHM: str = "HS256"
+    JWT_SECRET_KEY: str
+    JWT_ALGORITHM: str
+    # Edge server
+    EDGE_SERVER_IP: str
+    EDGE_SERVER_PORT: str
 
 
 settings = Settings()

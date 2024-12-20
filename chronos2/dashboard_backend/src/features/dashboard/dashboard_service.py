@@ -1,13 +1,15 @@
 import os
 from datetime import datetime, timedelta
-from src.core.chronos import Chronos
-from src.core.utils.config_parser import cfg
-from src.core.repositories.history_repository import HistoryRepository
-from src.core.repositories.setting_repository import SettingRepository
-from src.core.models import History
-from src.core.configs.database import session_scope
+
 from sqlalchemy import desc, or_
 from sqlalchemy.sql import func
+from src.core.chronos import Chronos
+from src.core.configs.database import session_scope
+from src.core.models import History
+from src.core.repositories.history_repository import HistoryRepository
+from src.core.repositories.setting_repository import SettingRepository
+from src.core.services.edge_server import EdgeServer
+from src.core.utils.config_parser import cfg
 
 
 class DashboardService:
@@ -15,6 +17,7 @@ class DashboardService:
         self.chronos = Chronos()
         self.history_repository = HistoryRepository()
         self.setting_repository = SettingRepository()
+        self.edge_server = EdgeServer()
 
     def get_chronos_status():
         chronos_status = True
@@ -30,6 +33,8 @@ class DashboardService:
     def get_data(self):
         history = self.history_repository.get_last_history()
         settings = self.setting_repository.get_last_settings()
+
+        edge_server_data = self.edge_server.get_data()
 
         results = {
             "outside_temp": history.outside_temp if history else 0,
@@ -63,18 +68,9 @@ class DashboardService:
             self.chronos.cascade_fire_rate_avg, 1
         )
         efficiency["hours"] = cfg.efficiency.hours
-        # actStream = [
-        #     {
-        #         "timeStamp": device.switched_timestamp.strftime("%B %d, %I:%M %p"),
-        #         "status": device.status,
-        #         "MO": device.manual_override,
-        #     }
-        #     for device in self.chronos.devices
-        # ]
         return {
+            **edge_server_data,
             "results": results,
-            # "actStream": actStream,
-            # "chronos_status": self.get_chronos_status(),
             "efficiency": efficiency,
         }
 

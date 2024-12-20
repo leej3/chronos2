@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from fastapi import Depends, FastAPI, HTTPException, status
 from jose import JWTError, jwt
 from pydantic import BaseModel
-from src.core.configs.config import Settings
+from src.core.configs.config import settings
 from src.core.configs.database import session_scope
 from src.core.models import User
 from src.features.auth.jwt_handler import (
@@ -21,7 +21,6 @@ class Tokens(BaseModel):
 
 class AuthService:
     def __init__(self):
-        settings = Settings()
         self.jwt_secret_key = settings.JWT_SECRET_KEY
         self.jwt_algorithm = settings.JWT_ALGORITHM
         self.password_manager = PasswordManager()
