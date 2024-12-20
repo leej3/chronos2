@@ -5,20 +5,25 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "fastapi[standard]",
-    "uvicorn",
+    "fastapi",
     "pyserial",
     "pymodbus",
     "python-dotenv",
     "pydantic",
     "pydantic-settings",
-    "loguru",
-    "pytest",
-    "httpx",
-    "ipython>=8.30.0",
-    "pdbpp>=0.10.3",
-    "sqlalchemy>=2.0.36",
     "requests>=2.32.3",
+    "uvicorn>=0.34.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.4",
+]
+ipython = [
+    "pytest>=8.3.4",
+]
+pdbpp = [
+    "pytest>=8.3.4",
 ]
 [build-system]
 requires = ["setuptools>=42", "wheel", "setuptools_scm[toml]>=3.4"]
