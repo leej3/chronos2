@@ -7,6 +7,11 @@ from pathlib import Path
 import time
 import asyncio
 from pymodbus.client import ModbusSerialClient
+from pymodbus.exceptions import ModbusException
+
+def c_to_f(celsius):
+    """Convert Celsius to Fahrenheit."""
+    return round(((9.0 / 5.0) * celsius + 32.0), 1)
 
 def _ensure_event_loop():
     """Ensure there is an event loop available."""
@@ -21,10 +26,10 @@ class ModbusDevice:
     """
     A simple example class for a Modbus device using PyModbus 3.x
     """
-    def __init__(self, port="/dev/ttyUSB0", baudrate=9600, parity='E'):
+    def __init__(self, port="/dev/ttyUSB0", baudrate=9600, parity='E', unit=1):
         # Ensure we have an event loop (needed for PyModbus internals)
         _ensure_event_loop()
-        
+        self.unit = unit
         self.client = ModbusSerialClient(
             port=port,
             baudrate=baudrate,
@@ -60,6 +65,89 @@ class ModbusDevice:
             logger.error(f"Error writing coil {address}: {result}")
             return None
         return True
+
+    def set_boiler_setpoint(self, effective_setpoint, max_retries=3):
+        """
+        Set the boiler's temperature setpoint.
+        
+        Args:
+            effective_setpoint (float): The desired temperature setpoint
+            max_retries (int): Maximum number of retry attempts
+            
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        # Convert the setpoint using the provided formula
+        setpoint = int(-101.4856 + 1.7363171 * float(effective_setpoint))
+        
+        if not (0 < setpoint < 100):
+            logger.error(f"Calculated setpoint {setpoint} is out of valid range (0-100)")
+            return False
+            
+        for attempt in range(max_retries):
+            try:
+                # Write mode (4) to register 0
+                result1 = self.client.write_register(0, 4, unit=self.unit)
+                if result1.isError():
+                    raise ModbusException("Failed to write mode")
+                    
+                # Write setpoint to register 2
+                result2 = self.client.write_register(2, setpoint, unit=self.unit)
+                if result2.isError():
+                    raise ModbusException("Failed to write setpoint")
+                    
+                logger.info(f"Successfully set boiler setpoint to {setpoint} (attempt {attempt + 1})")
+                return True
+                
+            except (ModbusException, OSError) as e:
+                logger.error(f"Failed to set boiler setpoint (attempt {attempt + 1}): {str(e)}")
+                if attempt < max_retries - 1:
+                    time.sleep(0.5)
+                    
+        logger.error(f"Failed to set boiler setpoint after {max_retries} attempts")
+        return False
+
+    def read_boiler_data(self, max_retries=3):
+        """
+        Read various temperature and status data from the boiler.
+        
+        Args:
+            max_retries (int): Maximum number of retry attempts
+            
+        Returns:
+            dict: Dictionary containing boiler statistics, or None if read failed
+        """
+        for attempt in range(max_retries):
+            try:
+                # Read system supply temperature (holding register 40006)
+                h_result = self.client.read_holding_registers(6, count=1, unit=self.unit)
+                if h_result.isError():
+                    raise ModbusException("Failed to read holding registers")
+
+                # Read input registers (30003-30011)
+                i_result = self.client.read_input_registers(3, count=9, unit=self.unit)
+                if i_result.isError():
+                    raise ModbusException("Failed to read input registers")
+
+                boiler_stats = {
+                    "system_supply_temp": c_to_f(h_result.registers[0] / 10.0),
+                    "outlet_temp": c_to_f(i_result.registers[5] / 10.0),
+                    "inlet_temp": c_to_f(i_result.registers[6] / 10.0),
+                    "flue_temp": c_to_f(i_result.registers[7] / 10.0),
+                    "cascade_current_power": float(i_result.registers[3]),
+                    "lead_firing_rate": float(i_result.registers[8])
+                }
+                
+                logger.info(f"Successfully read boiler data (attempt {attempt + 1}): {boiler_stats}")
+                return boiler_stats
+
+            except (ModbusException, OSError, AttributeError, IndexError) as e:
+                logger.error(f"Failed to read boiler data (attempt {attempt + 1}): {str(e)}")
+                if attempt < max_retries - 1:
+                    time.sleep(1)
+
+        logger.error(f"Failed to read boiler data after {max_retries} attempts")
+        return None
 
     def close(self):
         """
@@ -119,9 +207,6 @@ class SerialDevice:
             parts = command.strip().split()
             device_id = parts[2] if len(parts) >= 3 else "0"
             return f"relay read {device_id} \n\n\roff\n\r>"
-
-def c_to_f(t):
-    return round(((9.0 / 5.0) * t + 32.0), 1)
 
 def read_temperature_sensor(sensor_id):
     device_file = Path(cfg.sensors.mount_point, sensor_id, "w1_slave")
