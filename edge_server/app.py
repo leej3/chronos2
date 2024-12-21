@@ -8,7 +8,7 @@ from pathlib import Path
 
 import serial
 from chronos.lib.config import cfg
-from chronos.lib.devices import Device, read_temperature_sensor
+from chronos.lib.devices import SerialDevice, read_temperature_sensor
 from fastapi import FastAPI, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -19,7 +19,7 @@ logger = logging.getLogger()
 DeviceTuple = namedtuple(
     "DeviceTuple", ["boiler", "chiller1", "chiller2", "chiller3", "chiller4"]
 )
-DEVICES = DeviceTuple(*[Device(i) for i in range(5)])
+DEVICES = DeviceTuple(*[SerialDevice(i) for i in range(5)])
 
 app = FastAPI()
 app.add_middleware(
