@@ -11,7 +11,6 @@ config_dict = {
         "portname": "/dev/ttyUSB0",
         "parity": "E",
         "timeout": 1,
-        "method": "rtu",
         "unit": 1
     },
     "sensors": {
