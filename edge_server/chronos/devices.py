@@ -9,6 +9,7 @@ import asyncio
 from contextlib import contextmanager
 from pymodbus.client import ModbusSerialClient
 from pymodbus.exceptions import ModbusException
+from typing import Optional
 
 def c_to_f(celsius):
     """Convert Celsius to Fahrenheit."""
@@ -89,7 +90,7 @@ class ModbusDevice:
 
     def _connect(self):
         if not self.client.connect():
-            logger.warning(f"Unable to connect to Modbus device on {self.client.port}")
+            logger.warning(f"Unable to connect to Modbus device")
 
     def is_connected(self):
         return self.client.is_socket_open()
@@ -383,7 +384,7 @@ def read_temperature_sensor(sensor_id):
                 lines = content.readlines()
         except IOError as e:
             logger.error("Temp sensor error: {}".format(e))
-            sys.exit(1)
+            raise e
         else:
             if lines[0].strip()[-3:] == "YES":
                 break
@@ -396,3 +397,10 @@ def read_temperature_sensor(sensor_id):
         return c_to_f(temp)
 
 
+def safe_read_temperature(sensor_id: str) -> Optional[float]:
+    """Safely read temperature sensor with error handling."""
+    try:
+        return read_temperature_sensor(sensor_id)
+    except Exception as e:
+        logger.error(f"Error reading temperature sensor {sensor_id}: {e}")
+        return None
