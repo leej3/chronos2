@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import patch, MagicMock
-from chronos.lib.devices import SerialDevice
-from chronos.lib.logging import root_logger as logger
+from chronos.devices import SerialDevice
+from chronos.logging import root_logger as logger
 
 @pytest.fixture
 def device():
@@ -16,7 +16,7 @@ def test_initial_state_is_none_before_reading(device):
     # If _send_command is still not mocked, no real hardware call should happen
     # unless you actually have a device plugged in.
 
-@patch("chronos.lib.devices.Serial")
+@patch("chronos.devices.Serial")
 def test_read_state_from_device_on(mock_serial, device):
     """
     Mock the serial response to simulate a device that's turned 'on'.
@@ -29,7 +29,7 @@ def test_read_state_from_device_on(mock_serial, device):
     assert current_state is True
     assert device._state is True
 
-@patch("chronos.lib.devices.Serial")
+@patch("chronos.devices.Serial")
 def test_read_state_from_device_off(mock_serial, device):
     """
     Mock the serial response to simulate a device that's turned 'off'.
@@ -42,7 +42,7 @@ def test_read_state_from_device_off(mock_serial, device):
     assert current_state is False
     assert device._state is False
 
-@patch("chronos.lib.devices.Serial")
+@patch("chronos.devices.Serial")
 def test_set_state_to_on(mock_serial, device):
     """
     Test setting the device state to 'on'. We mock the serial so no real hardware is needed.
@@ -54,7 +54,7 @@ def test_set_state_to_on(mock_serial, device):
     assert device._state is True
     mock_port.write.assert_any_call(b"relay on 0\n\r")
 
-@patch("chronos.lib.devices.Serial")
+@patch("chronos.devices.Serial")
 def test_set_state_to_off(mock_serial, device):
     mock_port = MagicMock()
     mock_serial.return_value.__enter__.return_value = mock_port
@@ -63,7 +63,7 @@ def test_set_state_to_off(mock_serial, device):
     assert device._state is False
     mock_port.write.assert_any_call(b"relay off 0\n\r")
 
-@patch("chronos.lib.devices.Serial", side_effect=Exception("Serial not accessible"))
+@patch("chronos.devices.Serial", side_effect=Exception("Serial not accessible"))
 def test_send_command_exception(mock_serial, device, caplog):
     """
     Test behavior when the serial connection is absent/unusable (e.g., cable unplugged).

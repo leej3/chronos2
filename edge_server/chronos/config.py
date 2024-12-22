@@ -48,13 +48,17 @@ config_dict = {
             }
         },
         "operating_modes": {
-            "0": "Standby",
-            "1": "Anti-condensate",
-            "2": "Test",
-            "3": "Central Heat",
-            "4": "Domestic Hot Water",
-            "5": "Frost Protection",
-            "6": "Warm Weather Shutdown"
+            "0": "Initialization",
+            "1": "Standby",
+            "2": "CH Demand",  # Central Heat Demand
+            "3": "DHW Demand",  # Domestic Hot Water Demand
+            "4": "CH & DHW Demand",
+            "5": "Manual Operation",
+            "6": "Shutdown",
+            "7": "Error",
+            "8": "Manual Operation 2",
+            "9": "Freeze Protection",
+            "10": "Sensor Test"
         },
         "cascade_modes": {
             "0": "Single Boiler",
@@ -133,8 +137,7 @@ config_dict = {
     }
 }
 
-class Struct(object):
-
+class Struct:
     def __init__(self, data):
         for name, value in data.items():
             setattr(self, name, self._wrap(value))
