@@ -7,8 +7,8 @@ from datetime import datetime
 from pathlib import Path
 
 import serial
-from chronos.lib.config import cfg
-from chronos.lib.devices import SerialDevice, read_temperature_sensor
+from chronos.config import cfg
+from chronos.devices import SerialDevice, read_temperature_sensor
 from fastapi import FastAPI, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
