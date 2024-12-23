@@ -4,6 +4,9 @@ from fastapi.testclient import TestClient
 from unittest.mock import patch, MagicMock
 from chronos.devices import ModbusDevice, ModbusException
 from chronos.app import app, DEVICES, DeviceTuple, SerialDevice
+from chronos.config import cfg
+import tempfile
+from pathlib import Path
 
 # Constants for testing
 TEST_SERIAL_PORT = "/dev/ttyACM0"
@@ -86,6 +89,26 @@ def mock_temperature_sensor():
     with patch('chronos.devices.read_temperature_sensor') as mock:
         mock.return_value = 72.5  # Default test temperature in °F
         yield mock
+
+@pytest.fixture
+def mock_log_file():
+    """Create a temporary log file for testing."""
+    with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
+        f.write("Test log content\n")
+        temp_path = f.name
+    
+    # Mock the config to use our temporary file
+    original_path = cfg.files.log_path
+    cfg.files.log_path = temp_path
+    
+    yield temp_path
+    
+    # Cleanup
+    cfg.files.log_path = original_path
+    try:
+        os.unlink(temp_path)
+    except OSError:
+        pass
 
 def has_modbus_connection():
     """Check if we can connect to the real modbus device."""
@@ -284,10 +307,22 @@ def test_set_boiler_setpoint_connection_error(client, mock_modbus_device):
     assert response.status_code == 500
     assert "Connection failed" in response.json()["detail"]
 
-def test_download_log_not_implemented(client):
-    """Test the not implemented download_log endpoint."""
+def test_download_log_success(client, mock_log_file):
+    """Test successful log file download."""
     response = client.get("/download_log")
-    assert response.status_code == 501  # Not Implemented
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "text/plain; charset=utf-8"
+    assert "Test log content" in response.text
+
+def test_download_log_file_not_found(client, mock_log_file):
+    """Test log file download when file doesn't exist."""
+    # Remove the log file
+    os.unlink(mock_log_file)
+    
+    response = client.get("/download_log")
+    assert response.status_code == 500
+    assert "Failed to read log file" in response.json()["detail"]
+    assert "does not exist" in response.json()["detail"]
 
 # Hardware tests (skipped by default)
 @pytest.mark.skipif(not has_modbus_connection(), reason="No modbus connection available")

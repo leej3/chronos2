@@ -136,6 +136,26 @@ config_dict = {
         "hours": 12
     }
 }
+def ensure_log_path(path: Path):
+    candidates = [
+        path,
+        Path.cwd() / path.name,
+        Path("/tmp") / path.name
+    ]
+    for p in candidates:
+        try:
+            p.parent.mkdir(parents=True, exist_ok=True)
+            # Test writing the file to ensure we have permission
+            with p.open('a'):
+                pass
+            return p
+        except Exception as e:
+            print(f"Warning:log file won't work at {p}: {e}")
+
+    # If all fail, exit or raise an exception
+    print("Could not create a suitable log file path.")
+    sys.exit(1)
+
 
 class Struct:
     def __init__(self, data):
