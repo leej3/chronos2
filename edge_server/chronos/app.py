@@ -12,6 +12,7 @@ from chronos.devices import SerialDevice, safe_read_temperature, ModbusDevice, c
 from chronos.data_models import SystemStatus, DeviceModel, BoilerStats, OperatingStatus, ErrorHistory, SetpointUpdate, ModelInfo
 from fastapi import FastAPI, Query, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, List
 
@@ -141,8 +142,15 @@ async def set_setpoint(data: SetpointUpdate):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to set temperature: {str(e)}")
 
-@app.get("/download_log")
-async def dump_log():
-    """Endpoint for downloading log file (not implemented)."""
-    raise HTTPException(status_code=501, detail="Not implemented")
-  
+
+
+@app.get("/download_log", response_class=FileResponse)
+async def download_log():
+    """Endpoint for downloading log file"""
+    log_path = cfg.files.log_path
+    try:
+        if not os.path.exists(log_path):
+            raise FileNotFoundError(f"File at path {log_path} does not exist.")
+        return FileResponse(log_path, media_type="text/plain; charset=utf-8", filename="chronos_log.txt")
+    except (FileNotFoundError, RuntimeError) as e:
+        raise HTTPException(status_code=500, detail=f"Failed to read log file: {str(e)}")
