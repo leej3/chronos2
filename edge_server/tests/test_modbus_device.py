@@ -7,24 +7,6 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-@pytest.fixture
-def mock_modbus_client():
-    """Fixture to provide a mocked ModbusSerialClient."""
-    with patch("chronos.devices.ModbusSerialClient") as mock_class:
-        mock_instance = MagicMock()
-        mock_class.return_value = mock_instance
-        # Default to successful connection
-        mock_instance.connect.return_value = True
-        mock_instance.is_socket_open.return_value = True
-        yield mock_class  # Return the class mock, not the instance
-
-@pytest.fixture
-def device(mock_modbus_client):
-    """Fixture to provide a ModbusDevice instance with mocked client."""
-    device = ModbusDevice(port="/dev/ttyUSB0", baudrate=9600, parity='E')
-    yield device
-    device.close()
-
 def test_device_initialization(mock_modbus_client):
     """Test device initialization and connection."""
     device = ModbusDevice(port="/dev/ttyUSB0", baudrate=9600, parity='E')

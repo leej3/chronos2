@@ -3,21 +3,16 @@ from unittest.mock import patch, MagicMock
 from chronos.devices import SerialDevice
 from chronos.logging import root_logger as logger
 
-@pytest.fixture
-def device():
-    # Create a Device instance for testing. The ID is arbitrary here.
-    return SerialDevice(id=0, portname="/dev/ttyACM0", baudrate=19200)
-
-def test_initial_state_is_none_before_reading(device):
+def test_initial_state_is_none_before_reading(device_serial):
     # Check internal state is initially None
-    assert device._state is None  
+    assert device_serial._state is None  
     # This triggers a read from the mock device (if mocked)
-    _ = device.state  
+    _ = device_serial.state  
     # If _send_command is still not mocked, no real hardware call should happen
     # unless you actually have a device plugged in.
 
 @patch("chronos.devices.Serial")
-def test_read_state_from_device_on(mock_serial, device):
+def test_read_state_from_device_on(mock_serial, device_serial):
     """
     Mock the serial response to simulate a device that's turned 'on'.
     """
@@ -25,12 +20,12 @@ def test_read_state_from_device_on(mock_serial, device):
     mock_port.readall.return_value = b"relay read 0 \n\n\ron\n\r>"
     mock_serial.return_value.__enter__.return_value = mock_port
     
-    current_state = device.read_state_from_device()
+    current_state = device_serial.read_state_from_device()
     assert current_state is True
-    assert device._state is True
+    assert device_serial._state is True
 
 @patch("chronos.devices.Serial")
-def test_read_state_from_device_off(mock_serial, device):
+def test_read_state_from_device_off(mock_serial, device_serial):
     """
     Mock the serial response to simulate a device that's turned 'off'.
     """
@@ -38,42 +33,42 @@ def test_read_state_from_device_off(mock_serial, device):
     mock_port.readall.return_value = b"relay read 0 \n\n\roff\n\r>"
     mock_serial.return_value.__enter__.return_value = mock_port
     
-    current_state = device.read_state_from_device()
+    current_state = device_serial.read_state_from_device()
     assert current_state is False
-    assert device._state is False
+    assert device_serial._state is False
 
 @patch("chronos.devices.Serial")
-def test_set_state_to_on(mock_serial, device):
+def test_set_state_to_on(mock_serial, device_serial):
     """
     Test setting the device state to 'on'. We mock the serial so no real hardware is needed.
     """
     mock_port = MagicMock()
     mock_serial.return_value.__enter__.return_value = mock_port
     
-    device.state = True
-    assert device._state is True
+    device_serial.state = True
+    assert device_serial._state is True
     mock_port.write.assert_any_call(b"relay on 0\n\r")
 
 @patch("chronos.devices.Serial")
-def test_set_state_to_off(mock_serial, device):
+def test_set_state_to_off(mock_serial, device_serial):
     mock_port = MagicMock()
     mock_serial.return_value.__enter__.return_value = mock_port
     
-    device.state = False
-    assert device._state is False
+    device_serial.state = False
+    assert device_serial._state is False
     mock_port.write.assert_any_call(b"relay off 0\n\r")
 
 @patch("chronos.devices.Serial", side_effect=Exception("Serial not accessible"))
-def test_send_command_exception(mock_serial, device, caplog):
+def test_send_command_exception(mock_serial, device_serial, caplog):
     """
     Test behavior when the serial connection is absent/unusable (e.g., cable unplugged).
     The code should gracefully handle the exception, log a warning, and return an "off" response
     that includes the correct device ID.
     """
     # This should trigger the exception and fallback to mock response for device 0
-    response0 = device._send_command("relay read 0\n\r")
+    response0 = device_serial._send_command("relay read 0\n\r")
     # This should trigger the exception and fallback for device 1
-    response1 = device._send_command("relay read 1\n\r")
+    response1 = device_serial._send_command("relay read 1\n\r")
 
     # Check that each response includes relay read <device_id> and "off"
     assert "relay read 0" in response0
