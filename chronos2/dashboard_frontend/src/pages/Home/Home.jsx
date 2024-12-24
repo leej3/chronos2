@@ -66,7 +66,7 @@ const Home = () => {
   return (
     <CContainer fluid className="home-container">
       <CRow>
-        <CCol lg={9}>
+        <CCol lg={12}>
           <div className="mb-3 p-0 border-0">
             <CCardBody>
               <SystemMap homedata={homedata} />
@@ -79,11 +79,11 @@ const Home = () => {
             <TemperatureGraph className="p-0" />
           </div>
         </CCol>
-        <CCol lg={3}>
+        {/* <CCol lg={3}>
           <div className="mb-3 p-0 border-0">
             <UserSettings data={homedata} />
           </div>
-        </CCol>
+        </CCol> */}
       </CRow>
     </CContainer>
   );
