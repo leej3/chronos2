@@ -250,3 +250,7 @@ async def download_log():
         return FileResponse(log_path, media_type="text/plain; charset=utf-8", filename="chronos_log.txt")
     except (FileNotFoundError, RuntimeError) as e:
         raise HTTPException(status_code=500, detail=f"Failed to read log file: {str(e)}")
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=5171)
