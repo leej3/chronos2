@@ -18,6 +18,6 @@ RUN uv sync --no-dev
 # Copy the application code
 COPY . .
 RUN chmod +x entrypoint.sh
-ENTRYPOINT ["tini", "--"]
-CMD ["./entrypoint.sh"]
+
+ENTRYPOINT ["./entrypoint.sh"]
 

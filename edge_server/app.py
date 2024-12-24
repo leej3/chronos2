@@ -41,7 +41,7 @@ class SystemStatus(BaseModel):
     devices: list[DeviceModel]
 
 
-@app.get("/", response_model=SystemStatus)
+@app.get("/api/", response_model=SystemStatus)
 async def get_data():
     sensors = {
         "return_temp": read_temperature_sensor(cfg.sensors.in_id),
