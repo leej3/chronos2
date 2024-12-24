@@ -32,7 +32,13 @@ const UserSettings = ({ data }) => {
   }, [data]);
 
   if (!data || !data.results) {
-    return <div>Loading...</div>;
+    if (!data || !data.results) {
+      return (
+        <div className="loading-container">
+          <div className="spinner"></div>
+        </div>
+      );
+    }
   }
 
   const handleInputChange = (e) => {
