@@ -8,6 +8,9 @@
   gap: 1.2rem;
   flex-wrap: wrap;
 }
+.home-container .row {
+  align-items: flex-start
+}
 
 .home-container .left {
   display: flex;
