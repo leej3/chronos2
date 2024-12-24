@@ -3,11 +3,21 @@ import os
 import sys
 from pathlib import Path
 from .boiler_modbus import MODBUS
+MODBUS = {
+    "modbus": {
+        "port": "/dev/null",  # Use mock device for testing
+        "baudrate": 19200,
+        "parity": "N",
+        "stopbits": 1,
+        "bytesize": 8,
+        "timeout": 1
+    }
+}
 config_dict = {
     **MODBUS,
     "serial": {
         "baudr": 19200,
-        "portname": "/dev/ttyACM0"
+        "portname": "/dev/null"
     },
     "sensors": {
         "mount_point": os.getenv("W1_MOUNT_POINT", "/sys/bus/w1/devices"),

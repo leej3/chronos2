@@ -7,7 +7,7 @@ RUN mkdir -p /var/log/chronos; touch /var/log/chronos/chronos.log
 ENV W1_MOUNT_POINT=/mock_1wire/sys/bus/w1/devices/
 RUN mkdir -p ${W1_MOUNT_POINT}
 # The installer requires curl (and certificates) to download the release archive
-RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates socat tini
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates socat tini wget
 
 COPY --from=ghcr.io/astral-sh/uv:0.5.10 /uv /bin/uv
 # Install requirements first in a separate layer to avoid re-installing them on

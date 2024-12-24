@@ -11,7 +11,8 @@ import asyncio
 
 import serial
 from chronos.config import cfg
-from chronos.devices import SerialDevice, safe_read_temperature, ModbusDevice, create_modbus_connection, ModbusException
+from chronos.devices import SerialDevice, safe_read_temperature, create_modbus_connection, ModbusException
+from chronos.mock_devices import MockModbusDevice
 from chronos.data_models import SystemStatus, DeviceModel, BoilerStats, OperatingStatus, ErrorHistory, SetpointUpdate, ModelInfo
 from fastapi import FastAPI, Query, Request, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
