@@ -1,8 +1,8 @@
 /* eslint-disable react/prop-types */
-import React, { useState, useEffect } from "react";
-import "./UserSettings.css";
-import { updateSettings } from "../../api/updateSetting";
-import { toast } from "react-toastify";
+import React, { useState, useEffect } from 'react';
+import './UserSettings.css';
+import { updateSettings } from '../../api/updateSetting';
+import { toast } from 'react-toastify';
 
 const UserSettings = ({ data }) => {
   const [formData, setFormData] = useState({
@@ -32,7 +32,13 @@ const UserSettings = ({ data }) => {
   }, [data]);
 
   if (!data || !data.results) {
-    return <div>Loading...</div>;
+    if (!data || !data.results) {
+      return (
+        <div className="loading-container">
+          <div className="spinner"></div>
+        </div>
+      );
+    }
   }
 
   const handleInputChange = (e) => {
@@ -49,11 +55,11 @@ const UserSettings = ({ data }) => {
     updateSettings(JSON.stringify(formData))
       .then((response) => response.data)
       .then((data) => {
-        console.log("Settings updated:", data);
+        console.log('Settings updated:', data);
         toast.success('User settings updated successfully');
       })
       .catch((error) => {
-        console.error("Error updating settings:", error);
+        console.error('Error updating settings:', error);
         toast.error('Some thing went wrong!');
       });
   };
@@ -61,12 +67,12 @@ const UserSettings = ({ data }) => {
   return (
     <div className="user-settings">
       <h2 className="section-title">User Settings</h2>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="d-flex">
         <div className="settings-group">
           <label>Baseline Setpoint</label>
           <input
             type="number"
-            value={data.results.baseline_setpoint || "0.0"}
+            value={data.results.baseline_setpoint || '0.0'}
             readOnly
             placeholder={`${data.results.baseline_setpoint} °F`}
           />
@@ -75,7 +81,7 @@ const UserSettings = ({ data }) => {
           <label>THA Setpoint</label>
           <input
             type="number"
-            value={data.results.tha_setpoint || "0.0"}
+            value={data.results.tha_setpoint || '0.0'}
             readOnly
             placeholder={`${data.results.tha_setpoint} °F`}
           />
@@ -84,7 +90,7 @@ const UserSettings = ({ data }) => {
           <label>Effective Setpoint</label>
           <input
             type="number"
-            value={data.results.effective_setpoint || "0.0"}
+            value={data.results.effective_setpoint || '0.0'}
             readOnly
             placeholder={`${data.results.effective_setpoint} °F`}
           />
@@ -169,7 +175,9 @@ const UserSettings = ({ data }) => {
             placeholder="0.0 min"
           />
         </div>
-        <button type="submit" className="update-btn">Update</button>
+        <button type="submit" className="update-btn">
+          Update
+        </button>
       </form>
     </div>
   );

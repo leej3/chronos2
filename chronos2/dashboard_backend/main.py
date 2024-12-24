@@ -5,8 +5,15 @@ from fastapi.responses import JSONResponse
 from src.api.dependencies import exception_handler
 from src.api.routers import auth_router, dashboard_router
 from src.core.common.exceptions import GenericError
+from src.features.auth.auth_service import AuthService
 
+auth_service = AuthService()
 app = FastAPI()
+
+
+@app.on_event("startup")
+async def startup():
+    auth_service.create_or_update_user()
 
 
 @app.exception_handler(GenericError)
