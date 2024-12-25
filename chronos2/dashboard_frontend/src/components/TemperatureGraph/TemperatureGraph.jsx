@@ -20,7 +20,7 @@ const TemperatureGraph = () => {
     const fetchData = async () => {
       try {
         const response = await getCharData();
-        const result = await response.json();
+        const result = await response.data;
 
         // Transform the API response into the desired format
         const mappedData = result.map((entry, index) => {
@@ -47,7 +47,6 @@ const TemperatureGraph = () => {
             outlet: entry['column-1'],
           };
         });
-
         setData(mappedData);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -94,7 +93,6 @@ const TemperatureGraph = () => {
       console.error('Error fetching data:', error);
     }
   };
-
   return (
     <div className="graph-container">
       <div className="graphbody">

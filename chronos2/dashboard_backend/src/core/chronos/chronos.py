@@ -18,6 +18,7 @@ from src.core.repositories.history_repository import HistoryRepository
 from src.core.repositories.setting_repository import SettingRepository
 from src.core.utils.config_parser import cfg
 from src.core.utils.helpers import c_to_f
+from src.core.services.edge_server import EdgeServer
 
 
 class Chronos(object):
@@ -49,6 +50,7 @@ class Chronos(object):
         #
         self.history_repository = HistoryRepository()
         self.setting_repository = SettingRepository()
+        self.edge_server = EdgeServer()
 
     @staticmethod
     def _read_temperature_sensor(sensor_id):
@@ -481,6 +483,22 @@ class Chronos(object):
                     avg_outside_temp=self.wind_chill_avg,
                     avg_cascade_fire_rate=self.cascade_fire_rate_avg,
                     delta=self.current_delta,
+                )
+                session.add(parameters)
+
+    def create_update_history(self):
+        logger.debug("Updating history")
+        edge_server_data = self.edge_server.get_data()
+        sensors = edge_server_data["sensors"]
+        mode = self.mode
+        if mode in (WINTER, SUMMER):
+            with session_scope() as session:
+                parameters = History(
+                    timestamp=datetime.now(),
+                    outside_temp=self.outside_temp,
+                    water_out_temp=sensors["water_out_temp"],
+                    return_temp=sensors["return_temp"],
+                    mode=mode,
                 )
                 session.add(parameters)
 

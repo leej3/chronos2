@@ -6,14 +6,22 @@ from src.api.dependencies import exception_handler
 from src.api.routers import auth_router, dashboard_router
 from src.core.common.exceptions import GenericError
 from src.features.auth.auth_service import AuthService
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from src.core.chronos import Chronos
+
+chronos = Chronos()
 
 auth_service = AuthService()
 app = FastAPI()
+scheduler = AsyncIOScheduler()
 
 
 @app.on_event("startup")
 async def startup():
     auth_service.create_or_update_user()
+    scheduler.add_job(chronos.create_update_history, "cron", minute="*")
+    scheduler.add_job(chronos.get_data_from_web, "cron", minute="*")
+    scheduler.start()
 
 
 @app.exception_handler(GenericError)
