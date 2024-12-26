@@ -49,11 +49,15 @@ const Login = () => {
         email: isEmail,
         password: isPassword,
       });
-      const token = response.data.tokens;
 
-      if (token) {
-        localStorage.setItem('token', token.access);
-        dispatch(login(token.access));
+      const tokens = response.data.tokens;
+
+      if (tokens && tokens.access && tokens.refresh) {
+        localStorage.setItem('access_token', tokens.access);
+        localStorage.setItem('refresh_token', tokens.refresh);
+        dispatch(
+          login({ accessToken: tokens.access, refreshToken: tokens.refresh })
+        );
         navigate('/');
       } else {
         setError('Error. Please try again');

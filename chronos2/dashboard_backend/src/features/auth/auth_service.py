@@ -12,6 +12,7 @@ from src.features.auth.jwt_handler import (
     UserToken,
     create_access_token,
     create_refresh_token,
+    verify_refresh_token,
 )
 from src.features.auth.password_manager import PasswordManager
 
@@ -87,3 +88,22 @@ class AuthService:
                 user_index += 1
             else:
                 break
+
+    def refresh_access_token(self, refresh_token: str):
+        try:
+            payload = verify_refresh_token(refresh_token)
+        except JWTError:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
+            )
+
+        if payload["exp"] < datetime.utcnow().timestamp():
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Refresh token has expired",
+            )
+
+        user_id = payload["sub"]
+        new_access_token = create_access_token(UserToken(user_id=user_id))
+
+        return Tokens(access=new_access_token, refresh=refresh_token)
