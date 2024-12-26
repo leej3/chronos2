@@ -8,11 +8,11 @@ from src.core.configs.root_logger import root_logger as logger
 
 load_dotenv()
 
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_USER = os.getenv("POSTGRES_USER")
+DB_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 DB_HOST = os.getenv("DB_HOST")
 DB_PORT = os.getenv("DB_PORT")
-DB_NAME = os.getenv("DB_NAME")
+DB_NAME = os.getenv("POSTGRES_DB")
 
 # Replace with your own PostgreSQL instance
 DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
