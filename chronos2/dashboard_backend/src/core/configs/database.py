@@ -15,7 +15,7 @@ DB_PORT = os.getenv("DB_PORT")
 DB_NAME = os.getenv("POSTGRES_DB")
 
 # Replace with your own PostgreSQL instance
-DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/postgres"
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine)
