@@ -130,7 +130,7 @@ const TemperatureGraph = () => {
               tick={{ fill: '#dddddd', fontSize: 12 }}
             >
               <Label
-                value="Temperature (°C)"
+                value="Temperature (°F)"
                 angle={-90}
                 position="insideLeft"
                 fill="#dddddd"
