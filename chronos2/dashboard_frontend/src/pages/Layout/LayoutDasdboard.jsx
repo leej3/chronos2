@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
-import { useNavigate, Outlet } from 'react-router-dom';
-import UseTokenRefresh from '../../hook/UseTokenRefresh';
+import React, { useEffect } from "react";
+import { useNavigate, Outlet } from "react-router-dom";
+import UseTokenRefresh from "../../hook/UseTokenRefresh";
 
 const Layout = () => {
   const navigate = useNavigate();
@@ -8,25 +8,25 @@ const Layout = () => {
 
   useEffect(() => {
     const checkToken = async () => {
-      const accessToken = localStorage.getItem('access_token');
-      const refreshToken = localStorage.getItem('refresh_token');
-      
+      const accessToken = localStorage.getItem("access_token");
+      const refreshToken = localStorage.getItem("refresh_token");
+
       if (accessToken) {
-        navigate('/');
+        navigate("/");
       } else if (refreshToken) {
         try {
           const newAccessToken = await refreshAccessToken(refreshToken);
-          navigate(newAccessToken ? '/' : '/login');
+          navigate(newAccessToken ? "/" : "/login");
         } catch {
-          navigate('/login');
+          navigate("/login");
         }
       } else {
-        navigate('/login');
+        navigate("/login");
       }
     };
 
     checkToken();
-  }, [navigate, refreshAccessToken]);
+  }, []);
 
   return (
     <div className="wrapper d-flex flex-column min-vh-100">
