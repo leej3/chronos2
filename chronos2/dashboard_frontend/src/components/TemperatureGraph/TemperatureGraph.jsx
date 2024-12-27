@@ -26,10 +26,18 @@ const TemperatureGraph = () => {
         // Map the data to the correct format for the chart
         const mappedData = result.map((entry) => {
           const date = new Date(entry.date);
-          const formattedDate = date.toLocaleString(); 
+          const formattedDate = date.toLocaleString('en-US', {
+            timeZone: 'America/Chicago',
+            year: 'numeric',
+            month: 'numeric',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+          });
 
           return {
-            name: formattedDate, 
+            name: formattedDate,
             inlet: entry['column-2'],
             outlet: entry['column-1'],
           };
@@ -45,18 +53,15 @@ const TemperatureGraph = () => {
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
-      const [date, time] = label.split(', '); 
-      const formattedTime = time.slice(0, 5); 
-  
+      const [date, time] = label.split(', ');
       return (
         <div className="custom-tooltip" style={{ backgroundColor: '#333645', padding: '10px', borderRadius: '5px' }}>
-          <p style={{ color: '#fff' }}><strong>Time: </strong>{date}, {formattedTime}</p> {/* Hiển thị ngày và giờ */}
-          <p style={{ color: '#ffca28' }}><strong>Inlet: </strong>{payload[0].value}°C</p>
-          <p style={{ color: '#ff7043' }}><strong>Outlet: </strong>{payload[1].value}°C</p>
+          <p style={{ color: '#fff' }}><strong>Time: </strong>{label}</p>
+          <p style={{ color: '#ffca28' }}><strong>Inlet: </strong>{payload[0].value}°F</p>
+          <p style={{ color: '#ff7043' }}><strong>Outlet: </strong>{payload[1].value}°F</p>
         </div>
       );
     }
-  
     return null;
   };
 
@@ -111,7 +116,7 @@ const TemperatureGraph = () => {
               tick={{ fill: '#dddddd', fontSize: 12 }}
               tickFormatter={(tick) => {
                 const [date, time] = tick.split(', ');
-                return time.slice(0, 5); 
+                return time;
               }}
               angle={-45} 
               textAnchor="end" 
