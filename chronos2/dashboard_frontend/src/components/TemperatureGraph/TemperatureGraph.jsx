@@ -162,13 +162,13 @@ const TemperatureGraph = () => {
         <button className="download-button" onClick={downloadCSV}>
           Download logs csv
         </button>
-        <button
+        {/* <button
           className="download-button"
           style={{ marginLeft: '20px' }}
           onClick={downloadLogs}
         >
           Download logs json
-        </button>
+        </button> */}
       </div>
     </div>
   );
