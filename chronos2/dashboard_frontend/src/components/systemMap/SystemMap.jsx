@@ -26,30 +26,17 @@ const SystemMap = ({ homedata }) => {
                   <img src="images/Icons/Boiler/Boiler-OFF.png" alt="Tank" />
                 )}
               </div>
-              {/* <div className="temperature">{results?.water_out_temp} °F</div> */}
             </div>
             <div className="tankRight">
               <div className="tankRightArrow-wrapper">
-                <div className="arrowUpTemp">
-                  {/* <span>0 F</span>
-                  <span>0 F</span> */}
-                </div>
                 <img src="/images/Icons/Boiler/arrow4.png" alt="" srcSet="" />
-                <span>{sensors?.water_out_temp}°F</span>
+                <span className="large-temp">{sensors?.water_out_temp}°F</span>
               </div>
-
               <div className="tankRightArrow-wrapper">
-                <div className="arrowUpTemp">{/* <span>0 F</span> */}</div>
                 <img src="/images/Icons/Boiler/arrow3.png" alt="" srcSet="" />
                 <span>{sensors?.return_temp}°F</span>
               </div>
             </div>
-
-            {/* <div className="arrow">
-              <span>{results?.return_temp || "N/A"} °F</span>
-              <div className="arrow-line"></div>
-              <span>{results?.water_out_temp} °F</span>
-            </div> */}
           </div>
         </div>
       ) : season === 'Summer' ? (
@@ -97,7 +84,7 @@ const SystemMap = ({ homedata }) => {
             <div className="arrow">
               <span>{results?.return_temp} °F</span>
               <div className="arrow-line"></div>
-              <span>{results?.water_out_temp || 'N/A'} °F</span>
+              <span className="large-temp">{results?.water_out_temp || 'N/A'} °F</span>
             </div>
           </div>
         </div>
