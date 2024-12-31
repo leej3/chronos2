@@ -9,19 +9,14 @@ The backend of the **Chronos** project provides the core API and server-side fun
 The project relies on environment variables for configuration. To ensure all components run smoothly, follow these steps:
 
 ### Setting Up the Environment Variables
-1. Navigate to the `dashboard_backend` directory:
+
+1. **Copy the example environment file**:
 
    ```bash
-   cd /chronos2/dashboard_backend  
+   cp chronos2/dashboard_backend/.env.sample chronos2/dashboard_backend/.env
    ```
 
-2. **Copy the example environment file**:
-
-   ```bash
-   cp .env.example .env
-   ```
-
-3. **Modify the `.env` file**: Open the `.env` file and adjust the values based on your local or production setup. The most important variables to configure are listed below.
+2. **Modify the `.env` file**: Open the `.env` file and adjust the values based on your local or production setup. The most important variables to configure are listed below.
 
 ### Required Environment Variables
 

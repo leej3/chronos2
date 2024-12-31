@@ -175,8 +175,6 @@ SocketIO server managing:
 
 ## AUTOMATION & TESTING
 
-This repo uses a self-hosted git-runner on AWS. The .github/workflows/main.yaml file automatically kicks off a new deployment whenever any code changes have been committed to the master branch.
-
 Follow these steps to add a new runner as shown in git
 https://docs.github.com/en/actions/hosting-your-own-runners/adding-self-hosted-runners
 
