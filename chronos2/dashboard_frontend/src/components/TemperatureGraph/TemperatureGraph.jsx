@@ -13,6 +13,7 @@ import {
 import './TemperatureGraph.css';
 import { API_BASE_URL } from '../../utils/constant';
 import { getCharData } from '../../api/getCharData';
+
 const TemperatureGraph = () => {
   const [data, setData] = useState([]);
 
@@ -20,34 +21,27 @@ const TemperatureGraph = () => {
     const fetchData = async () => {
       try {
         const response = await getCharData();
-        const result = await response.json();
+        const result = await response.data;
 
-        // Transform the API response into the desired format
-        const mappedData = result.map((entry, index) => {
-          const monthNames = [
-            'Jan',
-            'Feb',
-            'Mar',
-            'Apr',
-            'May',
-            'Jun',
-            'Jul',
-            'Aug',
-            'Sep',
-            'Oct',
-            'Nov',
-            'Dec',
-          ];
+        // Map the data to the correct format for the chart
+        const mappedData = result.map((entry) => {
           const date = new Date(entry.date);
-          const month = monthNames[date.getMonth()];
+          const formattedDate = date.toLocaleString('en-US', {
+            timeZone: 'America/Chicago',
+            year: 'numeric',
+            month: 'numeric',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+          });
 
           return {
-            name: month,
+            name: formattedDate,
             inlet: entry['column-2'],
             outlet: entry['column-1'],
           };
         });
-
         setData(mappedData);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -56,6 +50,20 @@ const TemperatureGraph = () => {
 
     fetchData();
   }, []);
+
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      const [date, time] = label.split(', ');
+      return (
+        <div className="custom-tooltip" style={{ backgroundColor: '#333645', padding: '10px', borderRadius: '5px' }}>
+          <p style={{ color: '#fff' }}><strong>Time: </strong>{label}</p>
+          <p style={{ color: '#ffca28' }}><strong>Inlet: </strong>{payload[0].value}°F</p>
+          <p style={{ color: '#ff7043' }}><strong>Outlet: </strong>{payload[1].value}°F</p>
+        </div>
+      );
+    }
+    return null;
+  };
 
   const convertToCSV = (arr) => {
     const array = [Object.keys(arr[0])].concat(arr);
@@ -99,34 +107,42 @@ const TemperatureGraph = () => {
     <div className="graph-container">
       <div className="graphbody">
         <h3>Inlet/Outlet Temperature History</h3>
-        <ResponsiveContainer width="100%" height={400}>
+        <ResponsiveContainer width="100%" height={600}>
           <LineChart data={data}>
             <CartesianGrid stroke="#4c5c77" strokeDasharray="3 3" />
-            <XAxis dataKey="name" stroke="#dddddd">
+            <XAxis 
+              dataKey="name" 
+              stroke="#dddddd"
+              tick={{ fill: '#dddddd', fontSize: 12 }}
+              tickFormatter={(tick) => {
+                const [date, time] = tick.split(', ');
+                return time;
+              }}
+              angle={-45} 
+              textAnchor="end" 
+            >
               <Label
-                value="Month"
-                offset={-5}
+                value="Time"
+                offset={10} 
                 position="insideBottom"
                 fill="#dddddd"
-                style={{ textAnchor: 'middle' }}
+                style={{ textAnchor: 'middle', fontSize: 14 }}
               />
             </XAxis>
-            <YAxis domain={[30, 90]} stroke="#dddddd">
+            <YAxis 
+              domain={[30, 90]} 
+              stroke="#dddddd"
+              tick={{ fill: '#dddddd', fontSize: 12 }}
+            >
               <Label
-                value="Temperature"
+                value="Temperature (°F)"
                 angle={-90}
                 position="insideLeft"
                 fill="#dddddd"
-                style={{ textAnchor: 'middle' }}
+                style={{ textAnchor: 'middle', fontSize: 14 }}
               />
             </YAxis>
-            <Tooltip
-              contentStyle={{
-                backgroundColor: '#333645',
-                borderColor: '#4c5c77',
-                color: '#ffffff',
-              }}
-            />
+            <Tooltip content={<CustomTooltip />} />
             <Legend
               verticalAlign="top"
               align="right"
@@ -151,13 +167,13 @@ const TemperatureGraph = () => {
         <button className="download-button" onClick={downloadCSV}>
           Download logs csv
         </button>
-        <button
+        {/* <button
           className="download-button"
           style={{ marginLeft: '20px' }}
           onClick={downloadLogs}
         >
           Download logs json
-        </button>
+        </button> */}
       </div>
     </div>
   );

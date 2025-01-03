@@ -1,5 +1,6 @@
 import json
 import os
+from pathlib import Path
 config_dict = {
     "serial": {
         "baudr": 19200,
@@ -54,5 +55,11 @@ class Struct(object):
         else:
             return Struct(value) if isinstance(value, dict) else value
 
-
+import random
+sensors = config_dict["sensors"]
+mount_point = sensors["mount_point"]
+for name,sensor in sensors.items():
+    spath = Path(mount_point, sensor, "w1_slave")
+    spath.parent.mkdir(parents=True, exist_ok=True)
+    spath.write_text(f"YES\nt={random.randint(100,140)}")
 cfg = Struct(config_dict)

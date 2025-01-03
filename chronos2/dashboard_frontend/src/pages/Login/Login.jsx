@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import './Login.css';
 import {
   CButton,
   CCard,
@@ -12,6 +12,7 @@ import {
   CInputGroup,
   CInputGroupText,
   CRow,
+  CSpinner,
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -22,11 +23,18 @@ import { login } from '../../redux/AuthSlice';
 import axiosApi from '../../api/axios';
 const Login = () => {
   const dispatch = useDispatch();
+  const { isLoggedIn } = useSelector((state) => state.auth);
   const [isEmail, setEmail] = useState('');
   const [isPassword, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  useEffect(() => {
+    if (isLoggedIn) {
+      navigate('/');
+    }
+  }, [isLoggedIn, navigate]);
+
   const handleLogin = async (e) => {
     e.preventDefault();
 
@@ -41,11 +49,15 @@ const Login = () => {
         email: isEmail,
         password: isPassword,
       });
-      const token = response.data.tokens;
 
-      if (token) {
-        localStorage.setItem('token', token.access);
-        dispatch(login(token.access));
+      const tokens = response.data.tokens;
+
+      if (tokens && tokens.access && tokens.refresh) {
+        localStorage.setItem('access_token', tokens.access);
+        localStorage.setItem('refresh_token', tokens.refresh);
+        dispatch(
+          login({ accessToken: tokens.access, refreshToken: tokens.refresh })
+        );
         navigate('/');
       } else {
         setError('Error. Please try again');
@@ -129,6 +141,11 @@ const Login = () => {
           </CCol>
         </CRow>
       </CContainer>
+      {loading && (
+        <div className="spinner-overlay">
+          <CSpinner color="primary" size="lg" />
+        </div>
+      )}
     </div>
   );
 };

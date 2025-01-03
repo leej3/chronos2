@@ -1,7 +1,5 @@
 import axios from 'axios';
 import { API_BASE_URL } from '../utils/constant';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
 
 const axiosApi = axios.create({
   baseURL: API_BASE_URL,
@@ -10,10 +8,10 @@ const axiosApi = axios.create({
 
 axiosApi.interceptors.request.use(
   async function (config) {
-    const token = await localStorage.getItem('token');
+    const access_token = await localStorage.getItem('access_token');
 
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    if (access_token) {
+      config.headers.Authorization = `Bearer ${access_token}`;
     }
     return config;
   },
@@ -21,20 +19,34 @@ axiosApi.interceptors.request.use(
     return Promise.reject(error);
   }
 );
+
 axiosApi.interceptors.response.use(
-  function (response) {
-    return response;
-  },
-  function (error) {
-    const status = error.response?.status;
-    if (status === 400) {
-      toast.error(error.response?.data?.message);
-    } else if (status === 401) {
-      toast.error('Login session has expired, please log in again');
-      localStorage.removeItem('token');
-      const navigate = useNavigate();
-      navigate('/login');
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    if (
+      error.response?.status === 401 &&
+      localStorage.getItem('refresh_token')
+    ) {
+      const refresh_token = localStorage.getItem('refresh_token');
+
+      try {
+        const response = await axiosApi.post('auth/token/refresh', {
+          refresh_token: refresh_token,
+        });
+        const { access, refresh } = response.data.tokens;
+        localStorage.setItem('access_token', access);
+        localStorage.setItem('refresh_token', refresh);
+        originalRequest.headers.Authorization = `Bearer ${response.data.tokens.access}`;
+
+        return axiosApi(originalRequest);
+      } catch (refreshError) {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        return Promise.reject(refreshError);
+      }
     }
+
     return Promise.reject(error);
   }
 );

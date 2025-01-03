@@ -1,4 +1,6 @@
 from datetime import datetime, timedelta
+import os
+
 
 from fastapi import Depends, FastAPI, HTTPException, status
 from jose import JWTError, jwt
@@ -10,6 +12,7 @@ from src.features.auth.jwt_handler import (
     UserToken,
     create_access_token,
     create_refresh_token,
+    verify_refresh_token,
 )
 from src.features.auth.password_manager import PasswordManager
 
@@ -27,14 +30,20 @@ class AuthService:
 
     def create_user(self, email: str, password: str):
         with session_scope() as session:
-            if session.query(User).filter(User.email == email).first():
-                return None
+            user = session.query(User).filter(User.email == email).first()
 
-            user = User(
-                email=email, password=self.password_manager.hash_password(password)
-            )
-            session.add(user)
-            return user
+            if user:
+                user.password = self.password_manager.hash_password(password)
+                session.commit()
+                return user
+            else:
+                hashed_password = self.password_manager.hash_password(password)
+                new_user = User(
+                    email=email, password=hashed_password, created_at=datetime.utcnow()
+                )
+                session.add(new_user)
+                session.commit()
+                return new_user
 
     def authenticate_user(self, email: str, password: str):
         with session_scope() as session:
@@ -64,3 +73,37 @@ class AuthService:
         refresh_token = create_refresh_token(user_token)
         tokens = Tokens(access=access_token, refresh=refresh_token)
         return tokens
+
+    def create_or_update_user(self):
+        user_index = 1
+        while True:
+            email_key = f"USER_{user_index}_EMAIL"
+            password_key = f"USER_{user_index}_PASSWORD"
+
+            email = os.getenv(email_key)
+            password = os.getenv(password_key)
+
+            if email and password:
+                self.create_user(email=email, password=password)
+                user_index += 1
+            else:
+                break
+
+    def refresh_access_token(self, refresh_token: str):
+        try:
+            payload = verify_refresh_token(refresh_token)
+        except JWTError:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
+            )
+
+        if payload["exp"] < datetime.utcnow().timestamp():
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Refresh token has expired",
+            )
+
+        user_id = payload["sub"]
+        new_access_token = create_access_token(UserToken(user_id=user_id))
+
+        return Tokens(access=new_access_token, refresh=refresh_token)

@@ -4,7 +4,7 @@ services:
       context: ./chronos2/dashboard_backend
     container_name: dashboard_backend
     env_file:
-      - .env
+      - ./chronos2/dashboard_backend/.env
     restart: always
     depends_on:
       - postgres
@@ -25,7 +25,8 @@ services:
   postgres:
     image: postgres:15
     container_name: postgres
-    env_file: ".env"
+    env_file: 
+      - ./chronos2/dashboard_backend/.env
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s

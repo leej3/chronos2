@@ -1,34 +1,38 @@
 .manual-override {
-  background-color: #333645;
+  background-color: #1a1a1a; 
   border-radius: 16px;
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
-  color: #ffffff;
-  border: 2px solid #4c5c77;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3); 
+  color: #f0f0f0; 
+  border: 2px solid #6c7a96; 
   text-align: center;
   width: 100%;
 }
-.manual-override-body{
+
+.manual-override-body {
   width: 90%;
-    padding: 20px;
+  padding: 20px;
 }
 
 .manual-override h2 {
-  margin-bottom: 20px;
-  font-size: 1.5rem;
-  color: #ffffff;
+  margin-bottom: 25px; 
+  font-size: 1.8rem; 
+  color: #ffffff; 
+  font-weight: bold; 
 }
 
 .override-controls {
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr); 
+  gap: 10px; 
+  justify-items: center
 }
+
 
 .control-group {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 15px; 
   text-align: start;
 }
 
@@ -39,16 +43,22 @@
 }
 
 .radio-group label {
-  margin-bottom: 5px;
-  color: #dddddd;
+  margin-bottom: 8px; 
+  color: #ffffff; 
+  font-size: 1rem; 
 }
 
 .radio-group input[type="radio"] {
-  margin-right: 8px;
+  margin-right: 10px;
 }
 
 label {
-  font-size: 0.9rem;
-  color: #dddddd;
-  font-weight: 600;
+  font-size: 1rem; 
+  color: #ffffff; 
+  font-weight: 700; 
+}
+@media (max-width: 1280px) {
+  .override-controls {
+    grid-template-columns: repeat(2, 1fr); 
+  }
 }

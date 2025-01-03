@@ -1,205 +1,54 @@
-# Chronos #
-## README ##
+# Chronos Project
 
-### What is this repository for? ###
+## Overview
 
-Chronos is a boiling/cooling water system working on Raspberry Pi. Chronos has a web interface to control the system and tracking for the state.
+The Chronos project has been structured into three distinct components: frontend, backend, and edge server. These components operate independently, enabling better scalability and maintainability. Docker Compose is used to integrate and manage these services for seamless deployment. Detailed information about each component is available in their respective README files:
 
-![Alt text](https://cdn-images-1.medium.com/v2/resize:fit:800/1*Yk7RuJxn_PqkQ146k9tRug.png "A screenshot of the Chronos web interface")
-## Frontend and Backend Separation
+- [Frontend README](./chronos2/dashboard_frontend/README.md)
+- [Backend README](./chronos2/dashboard_backend/README.md)
+- [Edge Server README](./edge_server/README.md)
 
-### Overview
+## Installation with Docker
 
-The Chronos project has been refactored to separate the frontend and backend components. The backend operates as a standalone service providing APIs, while the frontend is handled separately. 
+Follow the steps below to build and start the Chronos project using Docker Compose:
 
-### New Project Structure  
+### Build and Start Services
 
-The **Chronos2** folder contains both the **server** (backend) and **client** (frontend). The **client** is built with **React**. The project is configured to run both components **simultaneously** using a single Docker command.  
+Run the following command to build and start all services in detached mode:
 
-### Summary of set up ###
-
-#### Installation with Docker ####
-This repository consists of a docker container that has all the dependencies and simulators built-in. Just run using these two commands:
-```
-sudo docker-compose up --build -d chronos
-sudo docker restart chronosBackend
+```bash
+sudo docker-compose up -d
 ```
 
+### Stop and Remove Services
 
-> **Important:**  
-> <span style="color:red;">**The backend service must be restarted manually using:**</span>  
-> ```bash  
-> sudo docker restart chronosBackend  
-> ```  
-> **Make sure to wait until the restart completes to ensure everything runs correctly.**
+To stop and remove all running containers, use:
 
-
-
-
-### API Endpoints
-
-The backend provides the following API endpoints:
-
-#### Base URL
-- **Base URL**: `http://<backend-server-url>:80`
-
-#### Endpoints
-
-- **Get System Data**:
-  - **URL**: `/`
-  - **Method**: `GET`
-  - **Description**: Retrieves the current system data, including temperature settings and mode status.
-  - **Response**: JSON object containing system data.
-
-- **Get Rendered Season Templates**:
-  - **URL**: `/season_templates`
-  - **Method**: `GET`
-  - **Description**: Retrieves data for rendering season templates.
-  - **Response**: JSON object with system results, activity stream, and efficiency details.
-
-- **Download Log**:
-  - **URL**: `/download_log`
-  - **Method**: `GET`
-  - **Description**: Downloads the system log as a CSV file.
-  - **Response**: CSV file download.
-
-- **Update Settings**:
-  - **URL**: `/update_settings`
-  - **Method**: `POST`
-  - **Description**: Updates system settings based on provided form data.
-  - **Request Body**: Form data with settings to update.
-  - **Response**: JSON object with the updated form data.
-
-- **Switch Mode**:
-  - **URL**: `/switch_mode`
-  - **Method**: `POST`
-  - **Description**: Switches the system mode between winter and summer.
-  - **Request Body**: Form data with the new mode (`TO_WINTER` or `TO_SUMMER`).
-  - **Response**: JSON object with error status and mode switch lockout time.
-
-- **Update Device State**:
-  - **URL**: `/update_state`
-  - **Method**: `POST`
-  - **Description**: Updates the state of a specific device based on provided form data.
-  - **Request Body**: Form data with device number and manual override value.
-  - **Response**: Empty response.
-
-- **Winter Mode Data**:
-  - **URL**: `/winter`
-  - **Method**: `GET`
-  - **Description**: Retrieves data specific to the winter mode.
-  - **Response**: JSON object with system data.
-
-- **Summer Mode Data**:
-  - **URL**: `/summer`
-  - **Method**: `GET`
-  - **Description**: Retrieves data specific to the summer mode.
-  - **Response**: JSON object with system data.
-
-- **Chart Data**:
-  - **URL**: `/chart_data`
-  - **Method**: `GET`
-  - **Description**: Retrieves data for charts.
-  - **Response**: JSON object containing chart data.
-  
-
-
-### SIMULATORS
-
-Chronos talks to the following components on the RPI. 
-
-These devices are specified in data_files/chronos_config.json
-- Boiler via modbus connected to /dev/ttyUSB0
-- Chillers via relays talking to serial port /dev/ttyACM0
-- Relays to the Chillers via /tmp/pty0 and /tmp/pty1
-- Water temperature in and out via /tmp/water_in and /tmp/water_out
-
-#### Test Chillers  
-The relays to the chillers are emulated using socat. socat creates virtual pty devices that can respond as serial ports.
-The following command in entrypoint.sh brings up a virtual ptyp1 device to respond to relays
-```
-socat -d -d PTY,link=/tmp/ptyp1,raw,echo=0 PTY,link=/tmp/ttyp1,raw,echo=0 &
+```bash
+sudo docker-compose down
 ```
 
-#### Test Boiler  
-The following commands in entrypoint.sh bring up a virtual ptyp0 device and then runs working-sync-server to emulate the boiler.
-```
-socat -d -d PTY,link=/tmp/ptyp0,raw,echo=0 PTY,link=/tmp/ttyp0,raw,echo=0 &
-python2 working-sync-server.py /tmp/ttyp0 &
-```
-Actual device to simulator mappings are as follows, the chronos_config.json needs to be changed on the automation QA server to run as follows:
-Boiler --> /dev/ttyUSB0 --> /tmp/ptyp0
-Chillers --> /dev/ttyACM0 --> /tmp/ptyp1
+## Docker Services
 
-#### Test water temperature
-The water temperature is provided in Centigrade. In order to provide a test incoming water temperature of 100C, use:
-```
-echo -e "YES\nt=100" > /tmp/water_in
-```
-In order to provide a test out water temperature of 140C, use:
-```
-echo -e "YES\nt=140" > /tmp/water_out
-```
+The Chronos project consists of the following services managed by Docker Compose:
 
-#### Python packages dependencies ####
+### Frontend
 
-* Flask
-* pyserial
-* apscheduler
-* pymodbus
-* sqlalchemy
-* python-socketio
-* socketIO_client
-* uwsgi
+- **Service Name:** `dashboard_frontend`
+- **Port:** `5173`
+- **Access URL:** [http://localhost:5173](http://localhost:5173)
 
-#### System dependencies ####
+### Backend
 
-* nginx
-* uwsgi-plug-python
+- **Service Name:** `dashboard_backend`
+- **Port:** `5172`
+- **Access URL:** [http://localhost:5172/api](http://localhost:5172/api)
+- **API Documentation:** [http://localhost:5172/docs](http://localhost:5172/docs)
 
-#### Hardware dependencies ####
+### Edge Server
 
-* Raspberry Pi
-* USB to RS4485 adapter such as the GearMo Mini USB to RS485 / RS422 Converter FTDI CHIP
-* Relay array such as the Numato 16 Channel USB Relay Module https://numato.com/product/16-channel-usb-relay-module
-* Two DS18B20 temperature sensors connected to GPIO 
+- **Service Name:** `edge_server`
+- **Port:** `5171`
+- **Access URL:** Configured via `.env` files in the backend and frontend components.
 
-#### Database configuration ####
-
-TODO
-#### Deployment instructions ####
-
-To work with shared log and access to the db file www-data and pi users have to be added in one group.
-Installation script does all required actions.
-
-#### Files locations ####
-
-chronos log directory: `/var/log/chronos`
-
-chronos database directory: `/home/pi/chronos_db`
-
-chronos config path: `/etc/chronos_config.json`
-
-#### Managing ####
-Chronos has a daemon which controlled by the following command:
-
-`# service chronos start|stop|restart`
-
-Web UI managed by uwsgi app server:
-
-`# service uwsgi start|stop|restart|reload`
-
-SocketIO server managing:
-
-`# service uwsgi-socketio start|stop|restart|reload`
-
-## AUTOMATION & TESTING
-
-This repo uses a self-hosted git-runner on AWS. The .github/workflows/main.yaml file automatically kicks off a new deployment whenever any code changes have been committed to the master branch.
-
-Follow these steps to add a new runner as shown in git
-https://docs.github.com/en/actions/hosting-your-own-runners/adding-self-hosted-runners
-
-- Install docker.io and docker-compose on the Runner
-  - sudo apt update
-  - sudo apt install docker.io docker-compose -y
+For further details, please refer to the respective README files linked above.
