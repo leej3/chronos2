@@ -65,6 +65,7 @@ class DashboardService:
             "wind_chill_avg": history.avg_outside_temp if history else 0,
         }
         efficiency = self.calculate_efficiency()
+        stats = self.get_boiler_stats()
         efficiency["cascade_fire_rate_avg"] = round(
             self.chronos.cascade_fire_rate_avg, 1
         )
@@ -73,6 +74,7 @@ class DashboardService:
             **edge_server_data,
             "results": results,
             "efficiency": efficiency,
+            "stats":stats
         }
 
     def get_chart_data(self):
@@ -239,3 +241,8 @@ class DashboardService:
             old_history.delete()
 
             session.expunge_all()
+
+    def get_boiler_stats(self):
+        return self.edge_server.get_data_boiler_stats()
+
+

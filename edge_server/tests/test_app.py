@@ -107,7 +107,7 @@ def test_get_boiler_stats_mock(client, mock_modbus_device):
         "flame_status": True
     }
 
-    response = client.get("/boiler/stats")
+    response = client.get("/boiler_stats")
     assert response.status_code == 200
     data = response.json()
     assert data["system_supply_temp"] == 154.4
@@ -118,7 +118,7 @@ def test_get_boiler_stats_error(client, mock_modbus_device):
     """Test error handling when getting boiler stats."""
     mock_modbus_device.read_boiler_data.side_effect = ModbusException("Connection failed")
 
-    response = client.get("/boiler/stats")
+    response = client.get("/boiler_stats")
     assert response.status_code == 500
     assert "Connection failed" in response.json()["detail"]
 

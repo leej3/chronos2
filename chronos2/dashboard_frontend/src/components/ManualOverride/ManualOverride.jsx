@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import io from 'socket.io-client';
-import './ManualOverride.css';
 import {
   setOverride,
   setInitialState,
@@ -61,58 +60,16 @@ const ManualOverride = ({ data, season }) => {
       });
   };
 
-
-  // useEffect(() => {
-  //   const socketInstance = io('http://localhost', {
-  //     path: '/socket.io',
-  //     transports: ['websocket'],
-  //   });
-  //   setSocket(socketInstance);
-
-  //   socketInstance.on('connect', () =>
-  //     console.log('Connected to WebSocket server')
-  //   );
-
-  //   socketInstance.on('manual_override', (data) => {
-  //     const deviceMap = [
-  //       'boiler',
-  //       'chiller1',
-  //       'chiller2',
-  //       'chiller3',
-  //       'chiller4',
-  //     ];
-  //     const deviceName = deviceMap[data.device];
-  //     const status = getStatus(data.manual_override);
-  //     dispatch(setOverride({ name: deviceName, value: status }));
-  //   });
-
-  //   socketInstance.on('connect_error', (err) =>
-  //     console.error('Connection error:', err)
-  //   );
-
-  //   return () => {
-  //     socketInstance.disconnect();
-  //   };
-  // }, [dispatch]);
-
   return (
-    <CCard
-      className="manual-override"
-      style={{ maxWidth: '100%', padding: '1rem' }}
-    >
+    <CCard className="bgr">
       <h2 className="section-title">Manual Override</h2>
-      <CCardBody className="">
+      <CCardBody className="p-0">
         {alertMessage && (
-          <CAlert color="danger"
-            dismissible
-            onClose={() => {
-              setAlertMessage('');
-            }}
-          >
+          <CAlert color="danger" dismissible onClose={() => setAlertMessage('')}>
             <strong>Error!</strong> {alertMessage}
           </CAlert>
         )}
-        <CRow className="override-controls" style={{ gap: '1rem' }}>
+        <CRow className="g-3">
           {Object.keys(state)
             .filter(
               (device, index) =>
@@ -121,24 +78,20 @@ const ManualOverride = ({ data, season }) => {
             )
             .map((device) => (
               <CCol
-                xs={12}
-                sm={6}
-                md={4}
-                lg={3}
+                xs={12} sm={6} md={4} lg={2.4}  // Adjusted lg={3} to lg={2.4} for 5 items per row
                 key={device}
-                className="control-group"
-                style={{ minWidth: '200px' }}
+                className="d-flex flex-column align-items-center"
               >
-                <p className="mb-3 h5">
+                <p className="mb-3 h5 text-center">
                   {device.charAt(0).toUpperCase() + device.slice(1)}
                 </p>
-                <div className="switch-group d-flex gap-2 align-items-center">
+                <div className="d-flex gap-2 align-items-center">
                   <label>OFF</label>
                   <CFormSwitch
                     checked={state[device]}
                     className="cursor-pointer"
                     onChange={(e) => handleRadioChange(device, e.target.checked)}
-                    size='xl'
+                    size="xl"
                     disabled={
                       (season === 'Winter' && device.startsWith('chiller')) ||
                       (season === 'Summer' && device === 'boiler')

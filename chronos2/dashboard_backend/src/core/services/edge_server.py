@@ -37,7 +37,7 @@ class EdgeServer:
 
     @catch_connection_error
     def get_data(self):
-        response = requests.get(f"{self.url}/")
+        response = requests.get(f"{self.url}/get_data")
         return self._handle_response(response)
 
     @catch_connection_error
@@ -54,4 +54,9 @@ class EdgeServer:
     @catch_connection_error
     def download_log(self):
         response = requests.get(f"{self.url}/download_log")
+        return self._handle_response(response)
+
+    @catch_connection_error
+    def get_data_boiler_stats(self):
+        response = requests.get(f"{self.url}/boiler_stats")
         return self._handle_response(response)

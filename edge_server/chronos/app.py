@@ -17,7 +17,6 @@ from fastapi import FastAPI, Query, Request, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
@@ -133,8 +132,8 @@ async def get_data():
     """Legacy endpoint for system status."""
     try:
         sensors = {
-            "supply": safe_read_temperature(cfg.sensors.in_id),
-            "return": safe_read_temperature(cfg.sensors.out_id),
+            "return_temp": safe_read_temperature(cfg.sensors.in_id),
+            "water_out_temp": safe_read_temperature(cfg.sensors.out_id),
         }
         devices = {i: DEVICES[i].state for i in range(len(DEVICES))}
         return SystemStatus(sensors=sensors, devices=devices)
@@ -158,10 +157,12 @@ async def update_device_state(data: DeviceModel):
     return DeviceModel(id=device_obj.id, state=device_obj.state)
 
 # New boiler endpoints
-@app.get("/boiler/stats", response_model=BoilerStats)
+@app.get("/boiler_stats", response_model=BoilerStats)
 @with_circuit_breaker
 async def get_boiler_stats():
     """Get current boiler statistics."""
+    #Mock_data
+    # return BoilerStats(**mock_boiler_data())
     try:
         with create_modbus_connection() as device:
             stats = device.read_boiler_data()
