@@ -129,7 +129,7 @@ def test_set_boiler_setpoint_mock(client, mock_modbus_device):
     
     try:
         mock_modbus_device.set_boiler_setpoint.return_value = True
-        response = client.post("/boiler/set_setpoint", json={"temperature": 140.0})
+        response = client.post("/boiler_set_setpoint", json={"temperature": 140.0})
         assert response.status_code == 200
         assert "140.0°F" in response.json()["message"]
         
@@ -145,11 +145,11 @@ def test_set_boiler_setpoint_mock(client, mock_modbus_device):
 def test_set_boiler_setpoint_validation(client):
     """Test setpoint temperature validation."""
     # Test temperature too low
-    response = client.post("/boiler/set_setpoint", json={"temperature": 110.0})
+    response = client.post("/boiler_set_setpoint", json={"temperature": 110.0})
     assert response.status_code == 422
 
     # Test temperature too high
-    response = client.post("/boiler/set_setpoint", json={"temperature": 190.0})
+    response = client.post("/boiler_set_setpoint", json={"temperature": 190.0})
     assert response.status_code == 422
 
 def test_get_boiler_operating_status_mock(client, mock_modbus_device):
@@ -162,7 +162,7 @@ def test_get_boiler_operating_status_mock(client, mock_modbus_device):
         "current_setpoint": 158.0
     }
 
-    response = client.get("/boiler/status")
+    response = client.get("/boiler_status")
     assert response.status_code == 200
     data = response.json()
     assert data["operating_mode"] == 3
@@ -178,7 +178,7 @@ def test_get_boiler_model_info_mock(client, mock_modbus_device):
         "hardware_version": "3.4"
     }
 
-    response = client.get("/boiler/info")
+    response = client.get("/boiler_info")
     assert response.status_code == 200
     data = response.json()
     assert data["model_id"] == 1
@@ -190,7 +190,7 @@ def test_get_boiler_model_info_error(client, mock_modbus_device):
     """Test error handling when getting boiler model info."""
     mock_modbus_device.read_model_info.return_value = {}
 
-    response = client.get("/boiler/info")
+    response = client.get("/boiler_info")
     assert response.status_code == 500
     assert "Failed to read model info" in response.json()["detail"]
 
@@ -203,7 +203,7 @@ def test_get_boiler_error_history_mock(client, mock_modbus_device):
         "last_blockout_str": "Sensor Failure"
     }
 
-    response = client.get("/boiler/errors")
+    response = client.get("/boiler_errors")
     assert response.status_code == 200
     data = response.json()
     assert data["last_lockout_code"] == 3
@@ -229,7 +229,7 @@ def test_set_boiler_setpoint_failure(client, mock_modbus_device):
     """Test failure when setting boiler setpoint."""
     mock_modbus_device.set_boiler_setpoint.return_value = False
     
-    response = client.post("/boiler/set_setpoint", json={"temperature": 140.0})
+    response = client.post("/boiler_set_setpoint", json={"temperature": 140.0})
     assert response.status_code == 500
     assert "Failed to set temperature" in response.json()["detail"]
 
@@ -237,13 +237,13 @@ def test_set_boiler_setpoint_connection_error(client, mock_modbus_device):
     """Test connection error when setting boiler setpoint."""
     mock_modbus_device.set_boiler_setpoint.side_effect = ModbusException("Connection failed")
     
-    response = client.post("/boiler/set_setpoint", json={"temperature": 140.0})
+    response = client.post("/boiler_set_setpoint", json={"temperature": 140.0})
     assert response.status_code == 500
     assert "Connection failed" in response.json()["detail"]
     
     # Test circuit breaker after multiple failures
     for _ in range(5):
-        response = client.post("/boiler/set_setpoint", json={"temperature": 140.0})
+        response = client.post("/boiler_set_setpoint", json={"temperature": 140.0})
     
     # Circuit breaker should be open now
     response = client.post("/boiler/set_setpoint", json={"temperature": 140.0})
@@ -271,7 +271,7 @@ def test_download_log_file_not_found(client, mock_log_file):
 @pytest.mark.skipif(not has_modbus_connection(), reason="No modbus connection available")
 def test_get_boiler_stats_hardware(client):
     """Test getting boiler stats with real hardware."""
-    response = client.get("/boiler/stats")
+    response = client.get("/boiler_stats")
     assert response.status_code == 200
     data = response.json()
     # Basic validation of returned data structure
@@ -285,34 +285,34 @@ def test_get_boiler_stats_hardware(client):
 def test_set_boiler_setpoint_hardware(client):
     """Test setting boiler setpoint with real hardware."""
     # Get original setpoint
-    status_response = client.get("/boiler/status")
+    status_response = client.get("/boiler_status")
     assert status_response.status_code == 200
     original_setpoint = status_response.json()["current_setpoint"]
 
     try:
         test_temp = 140.0
-        response = client.post("/boiler/set_setpoint", json={"temperature": test_temp})
+        response = client.post("/boiler_set_setpoint", json={"temperature": test_temp})
         assert response.status_code == 200
 
         # Verify the setpoint was actually set
-        status_response = client.get("/boiler/status")
+        status_response = client.get("/boiler_status")
         assert status_response.status_code == 200
         status_data = status_response.json()
         assert abs(status_data["current_setpoint"] - test_temp) < 2.0  # Allow small difference due to conversion
     finally:
         # Restore original setpoint
-        restore_response = client.post("/boiler/set_setpoint", json={"temperature": original_setpoint})
+        restore_response = client.post("/boiler_set_setpoint", json={"temperature": original_setpoint})
         assert restore_response.status_code == 200
 
         # Verify restoration
-        final_status = client.get("/boiler/status")
+        final_status = client.get("/boiler_status")
         assert final_status.status_code == 200
         assert abs(final_status.json()["current_setpoint"] - original_setpoint) < 2.0
 
 @pytest.mark.skipif(not has_modbus_connection(), reason="No modbus connection available")
 def test_get_boiler_error_history_hardware(client):
     """Test getting error history with real hardware."""
-    response = client.get("/boiler/errors")
+    response = client.get("/boiler_errors")
     assert response.status_code == 200
     data = response.json()
     # Verify the structure of the response
@@ -324,7 +324,7 @@ def test_get_boiler_error_history_hardware(client):
 @pytest.mark.skipif(not has_modbus_connection(), reason="No modbus connection available")
 def test_get_boiler_model_info_hardware(client):
     """Test getting model info with real hardware."""
-    response = client.get("/boiler/info")
+    response = client.get("/boiler_info")
     assert response.status_code == 200
     data = response.json()
     # Verify the structure and basic validation of the response
@@ -343,17 +343,17 @@ def test_get_boiler_model_info_hardware(client):
 def test_invalid_setpoint_range_hardware(client):
     """Test setting invalid setpoint ranges with real hardware."""
     # Test minimum boundary
-    response = client.post("/boiler/set_setpoint", json={"temperature": 119.9})
+    response = client.post("/boiler_set_setpoint", json={"temperature": 119.9})
     assert response.status_code == 422
 
     # Test maximum boundary
-    response = client.post("/boiler/set_setpoint", json={"temperature": 180.1})
+    response = client.post("/boiler_set_setpoint", json={"temperature": 180.1})
     assert response.status_code == 422
 
     # Test valid boundary conditions
-    response = client.post("/boiler/set_setpoint", json={"temperature": 120.0})
+    response = client.post("/boiler_set_setpoint", json={"temperature": 120.0})
     assert response.status_code == 200
-    response = client.post("/boiler/set_setpoint", json={"temperature": 180.0})
+    response = client.post("/boiler_set_setpoint", json={"temperature": 180.0})
     assert response.status_code == 200
 
 @pytest.mark.parametrize("temperature,description", VALID_SETPOINTS)
@@ -363,7 +363,7 @@ def test_valid_setpoint_ranges(client, mock_modbus_device, temperature, descript
     
     try:
         mock_modbus_device.set_boiler_setpoint.return_value = True
-        response = client.post("/boiler/set_setpoint", json={"temperature": temperature})
+        response = client.post("/boiler_set_setpoint", json={"temperature": temperature})
         assert response.status_code == 200
         assert f"{temperature}°F" in response.json()["message"]
     finally:
@@ -372,7 +372,7 @@ def test_valid_setpoint_ranges(client, mock_modbus_device, temperature, descript
 @pytest.mark.parametrize("temperature,description", INVALID_SETPOINTS)
 def test_invalid_setpoint_ranges(client, temperature, description):
     """Test various invalid setpoint temperatures."""
-    response = client.post("/boiler/set_setpoint", json={"temperature": temperature})
+    response = client.post("/boiler_set_setpoint", json={"temperature": temperature})
     assert response.status_code == 422
     
 @pytest.mark.parametrize("error,status_code,error_message", ERROR_SCENARIOS)
@@ -381,16 +381,16 @@ def test_error_handling_scenarios(client, mock_modbus_device, error, status_code
     mock_modbus_device.read_boiler_data.side_effect = error
     
     # First call should return the original error
-    response = client.get("/boiler/stats")
+    response = client.get("/boiler_stats")
     assert response.status_code == status_code
     assert error_message in response.json()["detail"]
     
     # After multiple failures, circuit breaker should open
     for _ in range(4):  # Already had one failure
-        response = client.get("/boiler/stats")
+        response = client.get("/boiler_stats")
     
     # Circuit breaker should be open now
-    response = client.get("/boiler/stats")
+    response = client.get("/boiler_stats")
     assert response.status_code == 503  # Service Unavailable
     assert "Service temporarily unavailable" in response.json()["detail"]
 
@@ -398,12 +398,12 @@ def test_error_handling_scenarios(client, mock_modbus_device, error, status_code
 def test_complete_boiler_flow(client, mock_modbus_device):
     """Test the complete flow of boiler operations."""
     # 1. Get initial stats
-    response = client.get("/boiler/stats")
+    response = client.get("/boiler_stats")
     assert response.status_code == 200
     initial_stats = response.json()
     
     # 2. Get current operating status
-    response = client.get("/boiler/status")
+    response = client.get("/boiler_status")
     assert response.status_code == 200
     initial_status = response.json()
     
@@ -420,29 +420,29 @@ def test_complete_boiler_flow(client, mock_modbus_device):
             "current_setpoint": new_temp
         }
         
-        response = client.post("/boiler/set_setpoint", json={"temperature": new_temp})
+        response = client.post("/boiler_set_setpoint", json={"temperature": new_temp})
         assert response.status_code == 200
         
         # Test rate limiting
-        response = client.post("/boiler/set_setpoint", json={"temperature": 150.0})
+        response = client.post("/boiler_set_setpoint", json={"temperature": 150.0})
         assert response.status_code == 429  # Too Many Requests
         
         # Wait for rate limit to expire (handled by reset_limiters fixture)
         
         # 4. Verify status changed
-        response = client.get("/boiler/status")
+        response = client.get("/boiler_status")
         assert response.status_code == 200
         new_status = response.json()
         assert abs(new_status["current_setpoint"] - new_temp) < 2.0
         
         # 5. Get model info
-        response = client.get("/boiler/info")
+        response = client.get("/boiler_info")
         assert response.status_code == 200
         model_info = response.json()
         assert model_info["model_id"] > 0
         
         # 6. Check error history
-        response = client.get("/boiler/errors")
+        response = client.get("/boiler_errors")
         assert response.status_code == 200
     finally:
         # Update mock device's operating status back to original setpoint
@@ -454,4 +454,4 @@ def test_complete_boiler_flow(client, mock_modbus_device):
             "current_setpoint": original_setpoint
         }
         # Restore original setpoint
-        client.post("/boiler/set_setpoint", json={"temperature": original_setpoint})
+        client.post("/boiler_set_setpoint", json={"temperature": original_setpoint})

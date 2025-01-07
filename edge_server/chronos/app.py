@@ -17,6 +17,7 @@ from fastapi import FastAPI, Query, Request, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
+from chronos.mock_devices.mock_data import mock_devices_data, mock_boiler_stats, mock_operating_status, mock_error_history, mock_model_info
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
@@ -115,7 +116,7 @@ DeviceTuple = namedtuple(
 DEVICES = DeviceTuple(
     *[SerialDevice(id=i, portname=cfg.serial.portname, baudrate=cfg.serial.baudr) for i in range(5)]
 )
-
+MOCK_DEVICES = cfg.MOCK_DEVICES
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -145,12 +146,16 @@ async def get_data():
 @with_circuit_breaker
 async def get_device_state(device: int = Query(..., ge=0, lt=5, description="The device ID (0-4)")):
     """Legacy endpoint for device state."""
+    if MOCK_DEVICES:
+        return DeviceModel(**mock_devices_data())
     return DeviceModel(id=device, state=DEVICES[device].state)
 
 @app.post("/device_state")
 @with_circuit_breaker
 @with_rate_limit
 async def update_device_state(data: DeviceModel):
+    if MOCK_DEVICES:
+        return DeviceModel(id=data.id, state=mock_devices_data().get(data.id, {}).get("state", "default_state"))
     """Legacy endpoint for updating device state."""
     device_obj = DEVICES[data.id]
     device_obj.state = data.state
@@ -161,8 +166,8 @@ async def update_device_state(data: DeviceModel):
 @with_circuit_breaker
 async def get_boiler_stats():
     """Get current boiler statistics."""
-    #Mock_data
-    # return BoilerStats(**mock_boiler_data())
+    if MOCK_DEVICES:
+        return BoilerStats(**mock_boiler_stats())
     try:
         with create_modbus_connection() as device:
             stats = device.read_boiler_data()
@@ -174,10 +179,12 @@ async def get_boiler_stats():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to read boiler data: {str(e)}")
 
-@app.get("/boiler/status", response_model=OperatingStatus)
+@app.get("/boiler_status", response_model=OperatingStatus)
 @with_circuit_breaker
 async def get_boiler_status():
     """Get current boiler operating status."""
+    if MOCK_DEVICES:
+        return OperatingStatus(**mock_operating_status())
     try:
         with create_modbus_connection() as device:
             status = device.read_operating_status()
@@ -189,10 +196,12 @@ async def get_boiler_status():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to read operating status: {str(e)}")
 
-@app.get("/boiler/errors", response_model=ErrorHistory)
+@app.get("/boiler_errors", response_model=ErrorHistory)
 @with_circuit_breaker
 async def get_boiler_errors():
     """Get boiler error history."""
+    if MOCK_DEVICES:
+        return ErrorHistory(**mock_error_history())
     try:
         with create_modbus_connection() as device:
             history = device.read_error_history()
@@ -209,10 +218,12 @@ async def get_boiler_errors():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to read error history: {str(e)}")
 
-@app.get("/boiler/info", response_model=ModelInfo)
+@app.get("/boiler_info", response_model=ModelInfo)
 @with_circuit_breaker
 async def get_boiler_info():
     """Get boiler model information."""
+    if MOCK_DEVICES:
+        return ModelInfo(**mock_model_info())
     try:
         with create_modbus_connection() as device:
             info = device.read_model_info()
@@ -224,7 +235,7 @@ async def get_boiler_info():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to read model info: {str(e)}")
 
-@app.post("/boiler/set_setpoint")
+@app.post("/boiler_set_setpoint")
 @with_circuit_breaker
 @with_rate_limit
 async def set_setpoint(data: SetpointUpdate):

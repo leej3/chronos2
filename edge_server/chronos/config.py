@@ -2,6 +2,12 @@ import json
 import os
 from pathlib import Path
 from .boiler_modbus import MODBUS
+from dotenv import load_dotenv
+
+load_dotenv()
+
+MOCK_DEVICES_ENV = os.getenv("MOCK_DEVICES", "false").lower() 
+
 config_dict = {
     **MODBUS,
     "serial": {
@@ -31,7 +37,8 @@ config_dict = {
     },
     "efficiency": {
         "hours": 12
-    }
+    },
+    "MOCK_DEVICES": MOCK_DEVICES_ENV
 }
 def ensure_log_path(path: Path):
     candidates = [
@@ -73,3 +80,4 @@ for name,sensor in sensors.items():
     spath.parent.mkdir(parents=True, exist_ok=True)
     spath.write_text(f"YES\nt={random.randint(100,140)}")
 cfg = Struct(config_dict)
+

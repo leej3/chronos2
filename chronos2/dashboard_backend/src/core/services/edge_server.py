@@ -60,3 +60,19 @@ class EdgeServer:
     def get_data_boiler_stats(self):
         response = requests.get(f"{self.url}/boiler_stats")
         return self._handle_response(response)
+    
+    @catch_connection_error
+    def get_boiler_status(self):
+        response = requests.get(f"{self.url}/boiler_status")
+        return self._handle_response(response)
+    
+    @catch_connection_error
+    def get_boiler_errors(self):
+        response = requests.get(f"{self.url}/boiler_errors")
+        return self._handle_response(response)
+    
+    @catch_connection_error
+    def get_boiler_info(self):
+        response = requests.get(f"{self.url}/boiler_info")
+        return self._handle_response(response)
+    
