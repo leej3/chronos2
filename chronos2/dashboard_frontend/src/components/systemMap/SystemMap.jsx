@@ -1,17 +1,22 @@
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import Modbus from '../Modebus/Modbus';
-import { CButton, CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle, CRow, CCol, CCard, CCardBody, CContainer } from '@coreui/react';
+import TableTemplate from '../Sensor/TableTemplate'; 
+import TypeMode from '../TypeMode/TypeMode'; 
+
+import { CButton, CModal, CModalBody, CModalFooter, CRow, CCol, CCard, CCardBody, CContainer } from '@coreui/react';
 import './SystemMap.css';
 
 const SystemMap = ({ homedata }) => {
   const { results, sensors, stats } = homedata || {};
   const [isModalOpen, setIsModalOpen] = useState(false); 
+  const [modalContent, setModalContent] = useState(null); 
   const season = useSelector((state) => state.season.season);
   const manualOverride = useSelector((state) => state.manualOverride);
-  
-  const handleButtonClick = () => {
-    setIsModalOpen(true); 
+
+  const handleButtonClick = (contentType) => {
+    setModalContent(contentType);  
+    setIsModalOpen(true);          
   };
 
   const closeModal = () => {
@@ -24,7 +29,7 @@ const SystemMap = ({ homedata }) => {
         <CCol xs={12}>
           <CCard className="mb-4 bgr p-0">
             <CCardBody>
-              <h2 className="text-center mb-4">System Map</h2>
+              <h2 className="text-center mb-4">{season === 'Winter' ? 'System Map - Winter' : 'System Map - Summer'}</h2>
               <CRow className="mb-4">
                 <CCol xs={12} md={6} className="d-flex justify-content-center justify-content-md-end align-items-center mb-4">
                   <img
@@ -42,10 +47,20 @@ const SystemMap = ({ homedata }) => {
                   </div>
                 </CCol>
               </CRow>
-              <CRow className="mb-4">
-                <CCol xs={12} className="d-flex justify-content-center">
-                  <CButton className="w-auto" color="primary" onClick={handleButtonClick}>
-                    Show Modbus
+              <CRow className="d-flex justify-content-center mb-4 w-100">
+                <CCol xs="auto" className="px-1">
+                  <CButton color="primary" onClick={() => handleButtonClick('modbus')} block>
+                    Modbus
+                  </CButton>
+                </CCol>
+                <CCol xs="auto" className="px-1">
+                  <CButton color="primary" onClick={() => handleButtonClick('table')} block>
+                    Sensors
+                  </CButton>
+                </CCol>
+                <CCol xs="auto" className="px-1">
+                  <CButton color="primary" onClick={() => handleButtonClick('typemode')} block>
+                    Mode
                   </CButton>
                 </CCol>
               </CRow>
@@ -62,7 +77,7 @@ const SystemMap = ({ homedata }) => {
         <CCol xs={12}>
           <CCard className="mb-4">
             <CCardBody>
-              <h2 className="text-center mb-4">System Map</h2>
+              <h2 className="text-center mb-4">System Map - Summer</h2>
               <CRow className="mb-4">
                 {[...Array(4)].map((_, index) => (
                   <CCol key={index} xs={6} md={3} className="d-flex justify-content-center align-items-center">
@@ -85,9 +100,23 @@ const SystemMap = ({ homedata }) => {
                   <span className="h4">{results?.water_out_temp || 'N/A'}°F</span>
                 </CCol>
               </CRow>
-              <CButton color="primary" onClick={handleButtonClick} block>
-                Show Modbus
-              </CButton>
+              <CRow className="d-flex justify-content-center mb-4 w-100">
+                <CCol xs="auto" className="px-1">
+                  <CButton color="primary" onClick={() => handleButtonClick('modbus')} block>
+                    Modbus
+                  </CButton>
+                </CCol>
+                <CCol xs="auto" className="px-1 ">
+                  <CButton color="primary" onClick={() => handleButtonClick('table')} block>
+                    Sensors
+                  </CButton>
+                </CCol>
+                <CCol xs="auto" className="px-1 ">
+                  <CButton color="primary" onClick={() => handleButtonClick('typemode')} block>
+                    Mode
+                  </CButton>
+                </CCol>
+              </CRow>
             </CCardBody>
           </CCard>
         </CCol>
@@ -117,11 +146,10 @@ const SystemMap = ({ homedata }) => {
         onClose={closeModal}
         aria-labelledby="ModbusModal"
       >
-        <CModalHeader>
-          <CModalTitle id="ModbusModal">Modbus</CModalTitle>
-        </CModalHeader>
         <CModalBody>
-          <Modbus stats={stats} />
+          {modalContent === 'modbus' && <Modbus stats={stats} />}
+          {modalContent === 'table' && <TableTemplate homedata={homedata} />}
+          {modalContent == 'typemode'&& <TypeMode homedata={homedata} /> } 
         </CModalBody>
         <CModalFooter>
           <CButton color="secondary" onClick={closeModal}>

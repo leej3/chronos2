@@ -1,0 +1,34 @@
+.temp-circle {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 120px;
+  height: 120px;
+  background-color: #f8f9fa; 
+  border-radius: 50%;
+  border: 2px solid #17a2b8; 
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin: 0 auto;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.temp-value {
+  font-size: 1.8rem; 
+  font-weight: bold;
+  color: #17a2b8;  
+  margin-top: 5px;  
+}
+
+.temp-label {
+  margin-top: 10px;
+  font-size: 18px;
+  color: #f0f0f0;
+  flex-shrink: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.temp-circle svg {
+  margin-bottom: 5px; 
+}

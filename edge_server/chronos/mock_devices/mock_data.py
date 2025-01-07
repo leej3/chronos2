@@ -1,10 +1,14 @@
 import random
 
 def mock_devices_data():
-    return {
-        "id": random.randint(0,4),
-        "state" : random.choice([True, False])
-    }
+    return [
+        {"id": 0, "state": True},
+        {"id": 1, "state": False},
+        {"id": 2, "state": False},
+        {"id": 3, "state": False},
+        {"id": 4, "state": False}
+    ]
+
 
 def mock_boiler_stats():
     return {

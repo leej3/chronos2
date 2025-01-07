@@ -22,17 +22,17 @@ const ManualOverride = ({ data, season }) => {
   const state = useSelector((state) => state.manualOverride);
   const [alertMessage, setAlertMessage] = useState('');
   const [socket, setSocket] = useState(null);
-
+  console.log("data",data)
   useEffect(() => {
-    console.log(data);
+    console.log(data?.devices);
     if (data?.devices) {
       const devices = data.devices;
       const initialState = {
-        boiler: devices[0].state,
-        chiller1: devices[1].state,
-        chiller2: devices[2].state,
-        chiller3: devices[3].state,
-        chiller4: devices[4].state,
+        boiler: devices[0],
+        chiller1: devices[1],
+        chiller2: devices[2],
+        chiller3: devices[3],
+        chiller4: devices[4],
       };
       dispatch(setInitialState(initialState));
     }
@@ -58,6 +58,7 @@ const ManualOverride = ({ data, season }) => {
       .catch(() => {
         setAlertMessage('Relay switching has failed.');
       });
+    console.log("data", data);
   };
 
   return (
@@ -78,7 +79,7 @@ const ManualOverride = ({ data, season }) => {
             )
             .map((device) => (
               <CCol
-                xs={12} sm={6} md={4} lg={2.4}  // Adjusted lg={3} to lg={2.4} for 5 items per row
+                xs={12} sm={6} md={4} lg={2.4}  
                 key={device}
                 className="d-flex flex-column align-items-center"
               >
@@ -88,7 +89,7 @@ const ManualOverride = ({ data, season }) => {
                 <div className="d-flex gap-2 align-items-center">
                   <label>OFF</label>
                   <CFormSwitch
-                    checked={state[device]}
+                    checked={state[device] === true} 
                     className="cursor-pointer"
                     onChange={(e) => handleRadioChange(device, e.target.checked)}
                     size="xl"

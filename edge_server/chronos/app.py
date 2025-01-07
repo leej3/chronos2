@@ -131,6 +131,13 @@ app.add_middleware(
 @with_circuit_breaker
 async def get_data():
     """Legacy endpoint for system status."""
+    if MOCK_DEVICES:
+            sensors = {
+                "return_temp": 32,
+                "water_out_temp": 40,
+            }
+            devices = {device["id"]: device["state"] for device in mock_devices_data()}
+            return SystemStatus(sensors=sensors, devices=devices)
     try:
         sensors = {
             "return_temp": safe_read_temperature(cfg.sensors.in_id),
@@ -155,7 +162,7 @@ async def get_device_state(device: int = Query(..., ge=0, lt=5, description="The
 @with_rate_limit
 async def update_device_state(data: DeviceModel):
     if MOCK_DEVICES:
-        return DeviceModel(id=data.id, state=mock_devices_data().get(data.id, {}).get("state", "default_state"))
+        return DeviceModel(id=data.id, state=data.state)
     """Legacy endpoint for updating device state."""
     device_obj = DEVICES[data.id]
     device_obj.state = data.state

@@ -1,5 +1,5 @@
 import React from "react";
-import { CFormInput, CFormLabel, CCol, CRow } from '@coreui/react';
+import { CFormLabel, CCol, CRow } from '@coreui/react';
 import './Modbus.css'; 
 
 const Modbus = ({ stats }) => {
@@ -11,64 +11,35 @@ const Modbus = ({ stats }) => {
 
   return (
     <div className="modbus" style={{ marginTop: '20px' }}>
+      <h2 className="sensor-title text-center">Modbus</h2>
       <CRow>
         <CCol sm="12">
           <div className="season-group">
-            <CFormLabel className="form-label">System Supply Temp</CFormLabel>
-            <CFormInput
-              type="text"
-              value={`${system_supply_temp} °F`}
-              readOnly
-              className="form-input"
-            />
+            <CFormLabel className="form-label"><strong>System Supply Temp:</strong> <span>{`${system_supply_temp} °F`}</span></CFormLabel>
           </div>
         </CCol>
 
         <CCol sm="12">
           <div className="season-group">
-            <CFormLabel className="form-label">Outlet Temp</CFormLabel>
-            <CFormInput
-              type="text"
-              value={`${outlet_temp} °F`}
-              readOnly
-              className="form-input"
-            />
+            <CFormLabel className="form-label"><strong>Outlet Temp:</strong> <span>{`${outlet_temp} °F`}</span></CFormLabel>
           </div>
         </CCol>
 
         <CCol sm="12">
           <div className="season-group">
-            <CFormLabel className="form-label">Inlet Temp</CFormLabel>
-            <CFormInput
-              type="text"
-              value={`${inlet_temp} °F`}
-              readOnly
-              className="form-input"
-            />
+            <CFormLabel className="form-label"><strong>Inlet Temp:</strong> <span>{`${inlet_temp} °F`}</span></CFormLabel>
           </div>
         </CCol>
 
         <CCol sm="12">
           <div className="season-group">
-            <CFormLabel className="form-label">Cascade Power</CFormLabel>
-            <CFormInput
-              type="text"
-              value={`${cascade_current_power} °%`}
-              readOnly
-              className="form-input"
-            />
+            <CFormLabel className="form-label"><strong>Cascade Power:</strong> <span>{`${cascade_current_power} °%`}</span></CFormLabel>
           </div>
         </CCol>
 
         <CCol sm="12">
           <div className="season-group">
-            <CFormLabel className="form-label">Lead Firing Rate</CFormLabel>
-            <CFormInput
-              type="text"
-              value={`${lead_firing_rate} °%`}
-              readOnly
-              className="form-input"
-            />
+            <CFormLabel className="form-label"><strong>Lead Firing Rate:</strong> <span>{`${lead_firing_rate} °%`}</span></CFormLabel>
           </div>
         </CCol>
       </CRow>
