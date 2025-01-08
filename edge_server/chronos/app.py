@@ -260,6 +260,10 @@ async def get_boiler_info():
 @with_circuit_breaker
 @with_rate_limit
 async def set_setpoint(data: SetpointUpdate):
+    print(data)
+    if MOCK_DEVICES:
+        return {"message": f"Temperature setpoint set to {data.temperature}°F"}
+
     """Update boiler temperature setpoint."""
     try:
         with create_modbus_connection() as device:

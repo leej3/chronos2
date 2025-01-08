@@ -35,19 +35,11 @@ class DashboardService:
             "tolerance": settings.tolerance,
             "setpoint_min": settings.setpoint_min,
             "setpoint_max": settings.setpoint_max,
-            "mode_change_delta_temp": (
-                settings.mode_change_delta_temp,
-            ),
-            "mode_switch_lockout_time": (
-                settings.mode_switch_lockout_time,
-            ),
+            "mode_change_delta_temp": settings.mode_change_delta_temp,
+            "mode_switch_lockout_time":settings.mode_switch_lockout_time,
             "mode": settings.mode,
-            "setpoint_offset_summer": (
-                settings.setpoint_offset_summer,
-            ),
-            "setpoint_offset_winter": (
-                settings.setpoint_offset_winter,
-            ),
+            "setpoint_offset_summer": settings.setpoint_offset_summer,
+            "setpoint_offset_winter": settings.setpoint_offset_winter,
             "cascade_time": settings.cascade_time / 60,
             "wind_chill_avg": history.avg_outside_temp,
         }

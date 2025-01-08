@@ -55,14 +55,17 @@ def chart_data(
 async def update_settings(
     data: UpdateSettings,
     current_user: Annotated[UserToken, Security(get_current_user)],
-):
-    # Call to edge server update setting
-    # edge_server.update_settings(data.dict())
-    # Update settings in DB
-    for key, value in data.dict().items():
-        if value:
-            setattr(chronos, key, value)
-    return JSONResponse(content={"message": "Updated settings successfully"})
+):  
+    #Update for winter
+    try:
+        reponse = edge_server.boiler_set_setpoint(data.setpoint_offset_winter)
+        for key, value in data.dict().items():
+            if value is not None:
+                setattr(chronos, key, value)
+        return JSONResponse(content=reponse, status_code=200)
+    
+    except Exception as e:
+        return JSONResponse(content={"message": f"Error updating settings: {str(e)}"}, status_code=400)
 
 @router.get("/boiler_stats")
 async def boiler_stats(

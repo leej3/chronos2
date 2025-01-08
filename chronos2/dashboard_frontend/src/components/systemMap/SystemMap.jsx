@@ -1,26 +1,27 @@
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import Modbus from '../Modebus/Modbus';
-import TableTemplate from '../Sensor/TableTemplate'; 
-import TypeMode from '../TypeMode/TypeMode'; 
+import TableTemplate from '../Sensor/TableTemplate';
+import TypeMode from '../TypeMode/TypeMode';
+import UserSetting from '../UserSettings/UserSettings'; 
 
 import { CButton, CModal, CModalBody, CModalFooter, CRow, CCol, CCard, CCardBody, CContainer } from '@coreui/react';
 import './SystemMap.css';
 
 const SystemMap = ({ homedata }) => {
   const { results, sensors, stats } = homedata || {};
-  const [isModalOpen, setIsModalOpen] = useState(false); 
-  const [modalContent, setModalContent] = useState(null); 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalContent, setModalContent] = useState(null);
   const season = useSelector((state) => state.season.season);
   const manualOverride = useSelector((state) => state.manualOverride);
 
   const handleButtonClick = (contentType) => {
-    setModalContent(contentType);  
-    setIsModalOpen(true);          
+    setModalContent(contentType);
+    setIsModalOpen(true);
   };
 
   const closeModal = () => {
-    setIsModalOpen(false); 
+    setIsModalOpen(false);
   };
 
   const renderWinterView = () => (
@@ -61,6 +62,11 @@ const SystemMap = ({ homedata }) => {
                 <CCol xs="auto" className="px-1">
                   <CButton color="primary" onClick={() => handleButtonClick('typemode')} block>
                     Mode
+                  </CButton>
+                </CCol>
+                <CCol xs="auto" className="px-1">
+                  <CButton color="primary" onClick={() => handleButtonClick('userSetting')} block>
+                    User Setting
                   </CButton>
                 </CCol>
               </CRow>
@@ -106,14 +112,19 @@ const SystemMap = ({ homedata }) => {
                     Modbus
                   </CButton>
                 </CCol>
-                <CCol xs="auto" className="px-1 ">
+                <CCol xs="auto" className="px-1">
                   <CButton color="primary" onClick={() => handleButtonClick('table')} block>
                     Sensors
                   </CButton>
                 </CCol>
-                <CCol xs="auto" className="px-1 ">
+                <CCol xs="auto" className="px-1">
                   <CButton color="primary" onClick={() => handleButtonClick('typemode')} block>
                     Mode
+                  </CButton>
+                </CCol>
+                <CCol xs="auto" className="px-1">
+                  <CButton color="primary" onClick={() => handleButtonClick('userSetting')} block>
+                    User Setting
                   </CButton>
                 </CCol>
               </CRow>
@@ -140,22 +151,20 @@ const SystemMap = ({ homedata }) => {
     <>
       {season === 'Winter' ? renderWinterView() : season === 'Summer' ? renderSummerView() : renderLoadingView()}
 
-      <CModal
-        alignment="center"
-        visible={isModalOpen}
-        onClose={closeModal}
-        aria-labelledby="ModbusModal"
-      >
+      <CModal alignment="center" visible={isModalOpen} onClose={closeModal} aria-labelledby="ModbusModal">
         <CModalBody>
           {modalContent === 'modbus' && <Modbus stats={stats} />}
           {modalContent === 'table' && <TableTemplate homedata={homedata} />}
-          {modalContent == 'typemode'&& <TypeMode homedata={homedata} /> } 
+          {modalContent === 'typemode' && <TypeMode homedata={homedata} />}
+          {modalContent === 'userSetting' && <UserSetting  data={homedata} />}
         </CModalBody>
-        <CModalFooter>
-          <CButton color="secondary" onClick={closeModal}>
-            Close
-          </CButton>
-        </CModalFooter>
+        {modalContent == 'setting' && (
+          <CModalFooter>
+            <CButton color="secondary" onClick={closeModal}>
+              Close
+            </CButton>
+          </CModalFooter>
+        )}
       </CModal>
     </>
   );

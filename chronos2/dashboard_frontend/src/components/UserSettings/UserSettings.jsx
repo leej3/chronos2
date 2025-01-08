@@ -1,11 +1,11 @@
-/* eslint-disable react/prop-types */
 import React, { useState, useEffect } from 'react';
-import './UserSettings.css';
+import { CForm, CFormInput, CButton, CRow, CCol, CCardBody } from '@coreui/react';
 import { updateSettings } from '../../api/updateSetting';
 import { toast } from 'react-toastify';
-
+import { useSelector } from 'react-redux';
+import "./UserSettings.css"
 const UserSettings = ({ data }) => {
-  const [formData, setFormData] = useState({
+  const initialFormData = {
     tolerance: null,
     setpoint_min: null,
     setpoint_max: null,
@@ -14,31 +14,33 @@ const UserSettings = ({ data }) => {
     mode_change_delta_temp: null,
     mode_switch_lockout_time: null,
     cascade_time: null,
-  });
+  };
+
+  const [formData, setFormData] = useState(initialFormData);
+  const season = useSelector((state) => state.season.season); // Lấy giá trị mùa từ Redux
 
   useEffect(() => {
-    if (data && data.results) {
+    if (data?.results) {
       setFormData({
-        tolerance: data.results.tolerance || null,
-        setpoint_min: data.results.setpoint_min || null,
-        setpoint_max: data.results.setpoint_max || null,
-        setpoint_offset_summer: data.results.setpoint_offset_summer || null,
-        setpoint_offset_winter: data.results.setpoint_offset_winter || null,
-        mode_change_delta_temp: data.results.mode_change_delta_temp || null,
-        mode_switch_lockout_time: data.results.mode_switch_lockout_time || null,
-        cascade_time: data.results.cascade_time || null,
+        tolerance: data.results.tolerance ?? null,
+        setpoint_min: data.results.setpoint_min ?? null,
+        setpoint_max: data.results.setpoint_max ?? null,
+        setpoint_offset_summer: data.results.setpoint_offset_summer ?? null,
+        setpoint_offset_winter: data.results.setpoint_offset_winter ?? null,
+        mode_change_delta_temp: data.results.mode_change_delta_temp ?? null,
+        mode_switch_lockout_time: data.results.mode_switch_lockout_time ?? null,
+        cascade_time: data.results.cascade_time ?? null,
       });
     }
   }, [data]);
 
-  if (!data || !data.results) {
-    if (!data || !data.results) {
-      return (
-        <div className="loading-container">
-          <div className="spinner"></div>
-        </div>
-      );
-    }
+  if (!data?.results) {
+    return (
+      <div className="loading-container">
+        <div className="spinner"></div>
+        <p>Loading user settings...</p>
+      </div>
+    );
   }
 
   const handleInputChange = (e) => {
@@ -51,134 +53,85 @@ const UserSettings = ({ data }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    updateSettings(JSON.stringify(formData))
-      .then((response) => response.data)
-      .then((data) => {
-        console.log('Settings updated:', data);
-        toast.success('User settings updated successfully');
-      })
-      .catch((error) => {
-        console.error('Error updating settings:', error);
-        toast.error('Some thing went wrong!');
-      });
+    try {
+      const response = await updateSettings(JSON.stringify(formData));
+      toast.success(response?.data?.message);
+    } catch (error) {
+      toast.error(response?.data?.message);
+    }
   };
 
   return (
-    <div className="user-settings">
-      <h2 className="section-title">User Settings</h2>
-      <form onSubmit={handleSubmit} className="d-flex">
-        <div className="settings-group">
-          <label>Baseline Setpoint</label>
-          <input
-            type="number"
-            value={data.results.baseline_setpoint || '0.0'}
-            readOnly
-            placeholder={`${data.results.baseline_setpoint} °F`}
-          />
-        </div>
-        <div className="settings-group">
-          <label>THA Setpoint</label>
-          <input
-            type="number"
-            value={data.results.tha_setpoint || '0.0'}
-            readOnly
-            placeholder={`${data.results.tha_setpoint} °F`}
-          />
-        </div>
-        <div className="settings-group">
-          <label>Effective Setpoint</label>
-          <input
-            type="number"
-            value={data.results.effective_setpoint || '0.0'}
-            readOnly
-            placeholder={`${data.results.effective_setpoint} °F`}
-          />
-        </div>
-        <div className="settings-group">
-          <label>Tolerance</label>
-          <input
-            type="number"
-            name="tolerance"
-            value={formData.tolerance}
-            onChange={handleInputChange}
-            placeholder={`${data.results.tolerance} °F`}
-          />
-        </div>
-        <div className="settings-group">
-          <label>Min. Setpoint</label>
-          <input
-            type="number"
-            name="setpoint_min"
-            value={formData.setpoint_min}
-            onChange={handleInputChange}
-            placeholder={`${data.results.setpoint_min} °F`}
-          />
-        </div>
-        <div className="settings-group">
-          <label>Max. Setpoint</label>
-          <input
-            type="number"
-            name="setpoint_max"
-            value={formData.setpoint_max}
-            onChange={handleInputChange}
-            placeholder={`${data.results.setpoint_max} °F`}
-          />
-        </div>
-        <div className="settings-group">
-          <label>Setpoint Offset (Summer)</label>
-          <input
-            type="number"
-            name="setpoint_offset_summer"
-            value={formData.setpoint_offset_summer}
-            onChange={handleInputChange}
-            placeholder={`${data.results.setpoint_offset_summer} °F`}
-          />
-        </div>
-        <div className="settings-group">
-          <label>Setpoint Offset (Winter)</label>
-          <input
-            type="number"
-            name="setpoint_offset_winter"
-            value={formData.setpoint_offset_winter}
-            onChange={handleInputChange}
-            placeholder={`${data.results.setpoint_offset_winter} °F`}
-          />
-        </div>
-        <div className="settings-group">
-          <label>Mode Change Delta Temp</label>
-          <input
-            type="number"
-            name="mode_change_delta_temp"
-            value={formData.mode_change_delta_temp}
-            onChange={handleInputChange}
-            placeholder={`${data.results.mode_change_delta_temp} °F`}
-          />
-        </div>
-        <div className="settings-group">
-          <label>Mode Switch Lockout Time</label>
-          <input
-            type="number"
-            name="mode_switch_lockout_time"
-            value={formData.mode_switch_lockout_time}
-            onChange={handleInputChange}
-            placeholder={`${data.results.mode_switch_lockout_time} min.`}
-          />
-        </div>
-        <div className="settings-group">
-          <label>Cascade Time</label>
-          <input
-            type="number"
-            name="cascade_time"
-            value={formData.cascade_time}
-            onChange={handleInputChange}
-            placeholder="0.0 min"
-          />
-        </div>
-        <button type="submit" className="update-btn">
-          Update
-        </button>
-      </form>
+    <div className='text-start'>
+      <h2 className="sensor-title text-center">User Settings</h2>
+
+      <CCardBody>
+        <CForm onSubmit={handleSubmit}>
+          <CRow>
+          <CRow className='position-relative mb-2'>
+  {[
+    { label: 'Baseline Setpoint', key: 'baseline_setpoint' },
+    { label: 'THA Setpoint', key: 'tha_setpoint' },
+    { label: 'Effective Setpoint', key: 'effective_setpoint' },
+  ].map(({ label, key }) => (
+    <CCol xs="12" key={key} className="mt-2">
+      <label className="font-weight-bold" htmlFor={key} style={{ fontSize: '18px', fontWeight: 'bold' }}>
+        {label}:
+      </label> 
+      <span className="font-italic" style={{ fontSize: '16px', marginLeft: '10px' }}>
+        {data.results[key] ?? '0.0'} <span>°F</span>
+      </span>
+    </CCol>
+  ))}
+  
+  <div className='icon_mode'>
+    {season === 'Summer' ? (
+      <span style={{ color: 'orange', fontSize: '24px' }}>☀️ Summer</span>
+    ) : season === 'Winter' ? (
+      <span style={{ color: 'lightblue', fontSize: '24px' }}>❄️ Winter</span>
+    ) : null}
+  </div>
+</CRow>
+
+{[
+  { label: 'Tolerance', key: 'tolerance' },
+  { label: 'Min. Setpoint', key: 'setpoint_min' },
+  { label: 'Max. Setpoint', key: 'setpoint_max' },
+  season === 'Summer' && { label: 'Setpoint Offset (Summer)', key: 'setpoint_offset_summer' },
+  season === 'Winter' && { label: 'Setpoint Offset (Winter)', key: 'setpoint_offset_winter' },
+  { label: 'Mode Change Delta Temp', key: 'mode_change_delta_temp' },
+  { label: 'Mode Switch Lockout Time', key: 'mode_switch_lockout_time', unit: 'min.' },
+  { label: 'Cascade Time', key: 'cascade_time', unit: 'min.' },
+]
+  .filter(Boolean) 
+  .map(({ label, key, unit = '' }) => (
+    <CCol xs="12" key={key} >
+      <div style={{ marginBottom: '10px' }}>
+        <label htmlFor={key} style={{ fontWeight: 'bold', display: 'block', marginBottom: '5px' }}>
+          {label}:
+        </label>
+        <CFormInput
+          type="number"
+          name={key}
+          id={key}
+          value={formData[key] ?? ''}
+          onChange={handleInputChange}
+          placeholder={`${data.results[key] ?? '0.0'} ${unit}`}
+        />
+      </div>
+    </CCol>
+  ))}
+
+           
+
+            <CCol xs="12" className='text-end'>
+              <CButton type="submit" color="primary" className="update-btn">
+                Update
+              </CButton>
+            </CCol>
+          </CRow>
+        </CForm>
+      </CCardBody>
     </div>
   );
 };
