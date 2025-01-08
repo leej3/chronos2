@@ -22,9 +22,7 @@ const ManualOverride = ({ data, season }) => {
   const state = useSelector((state) => state.manualOverride);
   const [alertMessage, setAlertMessage] = useState('');
   const [socket, setSocket] = useState(null);
-  console.log("data",data)
   useEffect(() => {
-    console.log(data?.devices);
     if (data?.devices) {
       const devices = data.devices;
       const initialState = {
@@ -58,7 +56,6 @@ const ManualOverride = ({ data, season }) => {
       .catch(() => {
         setAlertMessage('Relay switching has failed.');
       });
-    console.log("data", data);
   };
 
   return (

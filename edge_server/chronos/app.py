@@ -127,6 +127,18 @@ app.add_middleware(
 )
 
 # Legacy endpoints
+def get_chronos_status():
+        chronos_status = True
+        try:
+            with open("/var/run/chronos.pid") as pid_file:
+                pid = int(pid_file.readline())
+        except IOError:
+            chronos_status = False
+        else:
+            chronos_status = os.path.exists("/proc/{}".format(pid))
+        return chronos_status
+
+
 @app.get("/get_data", response_model=SystemStatus)
 @with_circuit_breaker
 async def get_data():
@@ -137,14 +149,16 @@ async def get_data():
                 "water_out_temp": 40,
             }
             devices = {device["id"]: device["state"] for device in mock_devices_data()}
-            return SystemStatus(sensors=sensors, devices=devices)
+            status = True
+            return SystemStatus(sensors=sensors, devices=devices, status=status)
     try:
         sensors = {
             "return_temp": safe_read_temperature(cfg.sensors.in_id),
             "water_out_temp": safe_read_temperature(cfg.sensors.out_id),
         }
+        status = get_chronos_status()
         devices = {i: DEVICES[i].state for i in range(len(DEVICES))}
-        return SystemStatus(sensors=sensors, devices=devices)
+        return SystemStatus(sensors=sensors, devices=devices,status=status)
     except Exception as e:
         logger.error(f"Error reading data: {e}")
         return SystemStatus(sensors={}, devices={})

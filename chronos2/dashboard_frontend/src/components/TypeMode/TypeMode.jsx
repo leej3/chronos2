@@ -9,7 +9,7 @@ const TypeMode = ({ homedata }) => {
 
   const outdoorTemp = homedata?.results?.outside_temp || "N/A";
   const avgTemp = homedata?.efficiency?.average_temperature_difference || "N/A";
-  const systemStatus = homedata?.chronos_status ? "ONLINE" : "OFFLINE";
+  const systemStatus = homedata?.status ? "ONLINE" : "OFFLINE";
 
   return (
     <div className="text-center">

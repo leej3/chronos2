@@ -5,6 +5,7 @@ from typing import Optional
 class SystemStatus(BaseModel):
     sensors: dict
     devices: dict
+    status: bool
 
 class DeviceModel(BaseModel):
     id: int = Field(..., ge=0, lt=7, description="Device ID (0-4)")

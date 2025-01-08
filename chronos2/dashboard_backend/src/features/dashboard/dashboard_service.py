@@ -19,16 +19,7 @@ class DashboardService:
         self.setting_repository = SettingRepository()
         self.edge_server = EdgeServer()
 
-    def get_chronos_status(self):
-        chronos_status = True
-        try:
-            with open("/var/run/chronos.pid") as pid_file:
-                pid = int(pid_file.readline())
-        except IOError:
-            chronos_status = False
-        else:
-            chronos_status = os.path.exists("/proc/{}".format(pid))
-        return chronos_status
+    
 
     def get_data(self):
         history = self.history_repository.get_last_history()
@@ -36,7 +27,6 @@ class DashboardService:
 
         edge_server_data = self.edge_server.get_data()
         # edge_server_data["devices"][0]["state"] = True
-        chronos_status = self.get_chronos_status()
         results = {
             "outside_temp": history.outside_temp,
             "baseline_setpoint": self.chronos.baseline_setpoint,
@@ -72,7 +62,6 @@ class DashboardService:
             "results": results,
             "efficiency": efficiency,
             "stats":stats,
-            "chronos_status":chronos_status
         }
 
     def get_chart_data(self):
