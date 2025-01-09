@@ -20,6 +20,7 @@ services:
       - traefik.http.routers.chronos2_web_api.tls.certresolver=le
   reverse_proxy:
     image: traefik
+    container_name: reverse_proxy
     restart: always
     command:
       - --providers.docker=true
