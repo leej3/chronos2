@@ -487,7 +487,6 @@ class Chronos(object):
                 session.add(parameters)
 
     def create_update_history(self):
-        logger.debug("Updating history")
         edge_server_data = self.edge_server.get_data()
         sensors = edge_server_data["sensors"]
         mode = self.mode

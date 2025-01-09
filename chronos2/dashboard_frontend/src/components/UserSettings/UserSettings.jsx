@@ -63,7 +63,6 @@ const UserSettings = ({ data }) => {
 
   return (
     <div className='text-start'>
-      <h2 className="sensor-title text-center">User Settings</h2>
 
       <CCardBody>
         <CForm onSubmit={handleSubmit}>

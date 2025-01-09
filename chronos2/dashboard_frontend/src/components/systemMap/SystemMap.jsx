@@ -4,12 +4,13 @@ import Modbus from '../Modebus/Modbus';
 import TableTemplate from '../Sensor/TableTemplate';
 import TypeMode from '../TypeMode/TypeMode';
 import UserSetting from '../UserSettings/UserSettings'; 
+import {formatNumber} from "../../utils/tranform"
 
-import { CButton, CModal, CModalBody, CModalFooter, CRow, CCol, CCard, CCardBody, CContainer } from '@coreui/react';
+import { CButton, CModal, CModalBody, CModalFooter, CRow, CCol, CCard, CCardBody, CContainer,CModalHeader,CModalTitle } from '@coreui/react';
 import './SystemMap.css';
 
 const SystemMap = ({ homedata }) => {
-  const { results, sensors, stats } = homedata || {};
+  const { results, sensors, boiler } = homedata || {};
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalContent, setModalContent] = useState(null);
   const season = useSelector((state) => state.season.season);
@@ -42,16 +43,16 @@ const SystemMap = ({ homedata }) => {
                 <CCol xs={12} md={6} className="d-flex justify-content-center justify-content-md-start align-items-center">
                   <div className="d-flex flex-column justify-content-center align-items-start">
                     <img src="/images/Icons/Boiler/arrow4.png" alt="Arrow" className="mb-2 responsive-arrow" />
-                    <span className="h4 w-100 text-center">{sensors?.water_out_temp}°F</span>
+                    <span className="h4 w-100 text-center">{formatNumber(sensors?.water_out_temp)}°F</span>
                     <img src="/images/Icons/Boiler/arrow3.png" alt="Arrow" className="mb-2 responsive-arrow" />
-                    <span className="h4 w-100 text-center">{sensors?.return_temp}°F</span>
+                    <span className="h4 w-100 text-center">{formatNumber(sensors?.return_temp)}°F</span>
                   </div>
                 </CCol>
               </CRow>
               <CRow className="d-flex justify-content-center mb-4 w-100">
                 <CCol xs="auto" className="px-1">
-                  <CButton color="primary" onClick={() => handleButtonClick('modbus')} block>
-                    Modbus
+                  <CButton color="primary" onClick={() => handleButtonClick('advanced')} block>
+                  Advanced
                   </CButton>
                 </CCol>
                 <CCol xs="auto" className="px-1">
@@ -108,8 +109,8 @@ const SystemMap = ({ homedata }) => {
               </CRow>
               <CRow className="d-flex justify-content-center mb-4 w-100">
                 <CCol xs="auto" className="px-1">
-                  <CButton color="primary" onClick={() => handleButtonClick('modbus')} block>
-                    Modbus
+                  <CButton color="primary" onClick={() => handleButtonClick('advanced')} block>
+                  Advanced
                   </CButton>
                 </CCol>
                 <CCol xs="auto" className="px-1">
@@ -150,15 +151,23 @@ const SystemMap = ({ homedata }) => {
   return (
     <>
       {season === 'Winter' ? renderWinterView() : season === 'Summer' ? renderSummerView() : renderLoadingView()}
-
-      <CModal alignment="center" visible={isModalOpen} onClose={closeModal} aria-labelledby="ModbusModal">
+    
+      <CModal alignment="center" visible={isModalOpen} onClose={closeModal} aria-labelledby="ModbusModal"  className="modal-lg">
+      <CModalHeader>
+    <CModalTitle>
+      {modalContent === 'advanced' && 'Advanced Boiler'}
+      {modalContent === 'table' && 'Sensors'}
+      {modalContent === 'typemode' && 'Type Mode Settings'}
+      {modalContent === 'userSetting' && 'User Settings'}
+    </CModalTitle>
+  </CModalHeader>
         <CModalBody>
-          {modalContent === 'modbus' && <Modbus stats={stats} />}
+          {modalContent === 'advanced' && <Modbus boiler={boiler} />}
           {modalContent === 'table' && <TableTemplate homedata={homedata} />}
           {modalContent === 'typemode' && <TypeMode homedata={homedata} />}
           {modalContent === 'userSetting' && <UserSetting  data={homedata} />}
         </CModalBody>
-        {modalContent == 'setting' && (
+        {modalContent !== 'userSetting' && (
           <CModalFooter>
             <CButton color="secondary" onClick={closeModal}>
               Close

@@ -12,6 +12,7 @@ import {
 } from 'recharts';
 import './TemperatureGraph.css';
 import { getCharData } from '../../api/getCharData';
+import {formatNumber} from "../../utils/tranform"
 
 const TemperatureGraph = () => {
   const [data, setData] = useState([]);
@@ -37,8 +38,8 @@ const TemperatureGraph = () => {
 
           return {
             name: formattedDate,
-            inlet: entry['column-2'],
-            outlet: entry['column-1'],
+            inlet: formatNumber(entry['column-2']),
+            outlet: formatNumber(entry['column-1']),
           };
         });
 
@@ -49,7 +50,8 @@ const TemperatureGraph = () => {
     };
 
     fetchData();
-    
+    const intervalId = setInterval(fetchData, 120000); 
+
     const handleResize = () => {
       if (window.innerWidth < 768) {
         setInterval(8); 
@@ -65,6 +67,7 @@ const TemperatureGraph = () => {
       window.removeEventListener('resize', handleResize);
     };
   }, []);
+  
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {

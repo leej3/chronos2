@@ -1,5 +1,14 @@
 import random
 
+def mock_sensors():
+    return_temp = random.uniform(10, 80)
+    water_out_temp = random.uniform(return_temp - 20, return_temp + 20)
+    water_out_temp = max(30, min(water_out_temp, 90))
+    return {
+        "return_temp": return_temp,
+        "water_out_temp": water_out_temp
+    }
+
 def mock_devices_data():
     return [
         {"id": 0, "state": True},

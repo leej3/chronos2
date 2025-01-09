@@ -9,7 +9,6 @@
 .item {
     border: 0;
     padding: 0;
-    margin-right: auto;
-    margin-left: auto;
-    width: 100%;
+    margin-right: 10%;
+    margin-left: 10%;
 }

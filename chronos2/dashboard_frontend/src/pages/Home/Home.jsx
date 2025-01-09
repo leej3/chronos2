@@ -15,11 +15,9 @@ const Home = () => {
 
   const fetchData = async () => {
     const resultAction = await dispatch(fetchSummerData());
-
     if (fetchSummerData.fulfilled.match(resultAction)) {
       const data = resultAction.payload;
       setHomeData(data);
-
       // Set season based on data results
       const mode = data?.results?.mode;
       switch (mode) {
@@ -43,6 +41,8 @@ const Home = () => {
       console.error('Failed to fetch summer data');
     }
   };
+
+  
 
   useEffect(() => {
     fetchData();

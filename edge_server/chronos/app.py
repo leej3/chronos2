@@ -17,7 +17,7 @@ from fastapi import FastAPI, Query, Request, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
-from chronos.mock_devices.mock_data import mock_devices_data, mock_boiler_stats, mock_operating_status, mock_error_history, mock_model_info
+from chronos.mock_devices.mock_data import mock_devices_data, mock_boiler_stats, mock_operating_status, mock_error_history, mock_model_info, mock_sensors
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
@@ -144,10 +144,7 @@ def get_chronos_status():
 async def get_data():
     """Legacy endpoint for system status."""
     if MOCK_DEVICES:
-            sensors = {
-                "return_temp": 32,
-                "water_out_temp": 40,
-            }
+            sensors = mock_sensors()
             devices = {device["id"]: device["state"] for device in mock_devices_data()}
             status = True
             return SystemStatus(sensors=sensors, devices=devices, status=status)
@@ -260,7 +257,6 @@ async def get_boiler_info():
 @with_circuit_breaker
 @with_rate_limit
 async def set_setpoint(data: SetpointUpdate):
-    print(data)
     if MOCK_DEVICES:
         return {"message": f"Temperature setpoint set to {data.temperature}°F"}
 
