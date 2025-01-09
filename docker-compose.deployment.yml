@@ -3,7 +3,7 @@ services:
   dashboard_frontend:
     labels:
     - traefik.enable=true
-    - traefik.docker.network=chronos2_traefik-public
+    - traefik.docker.network=chronos_traefik-public
     - traefik.http.routers.dashboard.rule=Host("${DEPLOYMENT_URI}")
     - traefik.http.routers.dashboard.entrypoints=web,websecure
     - traefik.http.services.dashboard.loadbalancer.server.port=5173
@@ -12,7 +12,7 @@ services:
   dashboard_backend:
     labels:
       - traefik.enable=true
-      - traefik.docker.network=chronos2_traefik-public
+      - traefik.docker.network=chronos_traefik-public
       - traefik.http.routers.chronos2_web_api.rule=Host("${DEPLOYMENT_URI}") && PathPrefix(`/api`)
       - "traefik.http.routers.chronos2_web_api.entrypoints=web,websecure"
       - traefik.http.services.chronos2_web_api.loadbalancer.server.port=5172
@@ -20,6 +20,7 @@ services:
       - traefik.http.routers.chronos2_web_api.tls.certresolver=le
   reverse_proxy:
     image: traefik
+    container_name: reverse_proxy
     restart: always
     command:
       - --providers.docker=true

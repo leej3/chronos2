@@ -75,9 +75,10 @@ class Struct:
 import random
 sensors = config_dict["sensors"]
 mount_point = sensors["mount_point"]
-for name,sensor in sensors.items():
-    spath = Path(mount_point, sensor, "w1_slave")
-    spath.parent.mkdir(parents=True, exist_ok=True)
-    spath.write_text(f"YES\nt={random.randint(100,140)}")
+if MOCK_DEVICES_ENV == "true":
+    for name,sensor in sensors.items():
+        spath = Path(mount_point, sensor, "w1_slave")
+        spath.parent.mkdir(parents=True, exist_ok=True)
+        spath.write_text(f"YES\nt={random.randint(100,140)}")
 cfg = Struct(config_dict)
 
