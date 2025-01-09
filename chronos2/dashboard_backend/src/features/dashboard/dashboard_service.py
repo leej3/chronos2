@@ -19,16 +19,7 @@ class DashboardService:
         self.setting_repository = SettingRepository()
         self.edge_server = EdgeServer()
 
-    def get_chronos_status():
-        chronos_status = True
-        try:
-            with open("/var/run/chronos.pid") as pid_file:
-                pid = int(pid_file.readline())
-        except IOError:
-            chronos_status = False
-        else:
-            chronos_status = os.path.exists("/proc/{}".format(pid))
-        return chronos_status
+    
 
     def get_data(self):
         history = self.history_repository.get_last_history()
@@ -36,35 +27,33 @@ class DashboardService:
 
         edge_server_data = self.edge_server.get_data()
         # edge_server_data["devices"][0]["state"] = True
-
         results = {
-            "outside_temp": history.outside_temp if history else 0,
+            "outside_temp": history.outside_temp,
             "baseline_setpoint": self.chronos.baseline_setpoint,
-            "tha_setpoint": history.tha_setpoint if history else 0,
-            "effective_setpoint": history.effective_setpoint if history else 0,
-            "tolerance": settings.tolerance if settings else 0,
-            "setpoint_min": settings.setpoint_min if settings else 0,
-            "setpoint_max": settings.setpoint_max if settings else 0,
-            "mode_change_delta_temp": (
-                settings.mode_change_delta_temp if settings else 0
-            ),
-            "mode_switch_lockout_time": (
-                settings.mode_switch_lockout_time if settings else 0
-            ),
-            # TODO: get data from edge_server
-            # "return_temp": self.chronos.return_temp,
-            # "water_out_temp": self.chronos.water_out_temp,
-            "mode": settings.mode if settings else 0,
-            "setpoint_offset_summer": (
-                settings.setpoint_offset_summer if settings else 0
-            ),
-            "setpoint_offset_winter": (
-                settings.setpoint_offset_winter if settings else 0
-            ),
-            "cascade_time": settings.cascade_time / 60 if settings else 0,
-            "wind_chill_avg": history.avg_outside_temp if history else 0,
+            "tha_setpoint": history.tha_setpoint,
+            "effective_setpoint": history.effective_setpoint,
+            "tolerance": settings.tolerance,
+            "setpoint_min": settings.setpoint_min,
+            "setpoint_max": settings.setpoint_max,
+            "mode_change_delta_temp": settings.mode_change_delta_temp,
+            "mode_switch_lockout_time":settings.mode_switch_lockout_time,
+            "mode": settings.mode,
+            "setpoint_offset_summer": settings.setpoint_offset_summer,
+            "setpoint_offset_winter": settings.setpoint_offset_winter,
+            "cascade_time": settings.cascade_time / 60,
+            "wind_chill_avg": history.avg_outside_temp,
         }
         efficiency = self.calculate_efficiency()
+        boiler_status = self.edge_server.get_boiler_status()
+        boiler_errors = self.edge_server.get_boiler_errors()
+        boiler_info = self.edge_server.get_boiler_info()
+        boiler_stats = self.edge_server.get_data_boiler_stats()
+        boiler = {
+                    "status": boiler_status,
+                    "errors": boiler_errors,
+                    "info": boiler_info,
+                    "stats": boiler_stats
+}
         efficiency["cascade_fire_rate_avg"] = round(
             self.chronos.cascade_fire_rate_avg, 1
         )
@@ -73,6 +62,7 @@ class DashboardService:
             **edge_server_data,
             "results": results,
             "efficiency": efficiency,
+            "boiler":boiler,
         }
 
     def get_chart_data(self):
@@ -239,3 +229,8 @@ class DashboardService:
             old_history.delete()
 
             session.expunge_all()
+
+    def get_boiler_stats(self):
+        return self.edge_server.get_data_boiler_stats()
+
+

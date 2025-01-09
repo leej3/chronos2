@@ -11,11 +11,12 @@ import {
   Label,
 } from 'recharts';
 import './TemperatureGraph.css';
-import { API_BASE_URL } from '../../utils/constant';
 import { getCharData } from '../../api/getCharData';
+import {formatNumber} from "../../utils/tranform"
 
 const TemperatureGraph = () => {
   const [data, setData] = useState([]);
+  const [interval, setInterval] = useState(4); 
 
   useEffect(() => {
     const fetchData = async () => {
@@ -23,7 +24,6 @@ const TemperatureGraph = () => {
         const response = await getCharData();
         const result = await response.data;
 
-        // Map the data to the correct format for the chart
         const mappedData = result.map((entry) => {
           const date = new Date(entry.date);
           const formattedDate = date.toLocaleString('en-US', {
@@ -38,10 +38,11 @@ const TemperatureGraph = () => {
 
           return {
             name: formattedDate,
-            inlet: entry['column-2'],
-            outlet: entry['column-1'],
+            inlet: formatNumber(entry['column-2']),
+            outlet: formatNumber(entry['column-1']),
           };
         });
+
         setData(mappedData);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -49,7 +50,24 @@ const TemperatureGraph = () => {
     };
 
     fetchData();
+    const intervalId = setInterval(fetchData, 120000); 
+
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setInterval(8); 
+      } else {
+        setInterval(4); 
+      }
+    };
+
+    handleResize(); 
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
+  
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -82,27 +100,6 @@ const TemperatureGraph = () => {
     document.body.removeChild(link);
   };
 
-  const downloadLogs = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/chart_data`);
-      const blob = await response.blob(); // Get the response as a Blob
-
-      // Create a link element
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = 'chart_data'; // Set the file name (you can add the correct extension here if known, e.g., 'chart_data.csv')
-
-      // Append the link to the body and trigger the download
-      document.body.appendChild(link);
-      link.click();
-
-      // Remove the link after download
-      document.body.removeChild(link);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    }
-  };
-
   return (
     <div className="graph-container">
       <div className="graphbody">
@@ -113,40 +110,37 @@ const TemperatureGraph = () => {
             <XAxis 
               dataKey="name" 
               stroke="#dddddd"
-              tick={{ fill: '#dddddd', fontSize: 12 }}
-              tickFormatter={(tick) => {
+              tick={{ fill: '#dddddd', fontSize: 14, fontWeight: 'bold' }}
+              tickFormatter={(tick, index) => {
+                if (index === 0) {
+                  return "";
+                }
                 const [date, time] = tick.split(', ');
-                return time;
+                return time; 
               }}
-              angle={-45} 
-              textAnchor="end" 
+              angle={0} 
+              textAnchor="middle" 
+              interval={interval} 
             >
-              <Label
-                value="Time"
-                offset={10} 
-                position="insideBottom"
-                fill="#dddddd"
-                style={{ textAnchor: 'middle', fontSize: 14 }}
-              />
             </XAxis>
             <YAxis 
               domain={[30, 90]} 
               stroke="#dddddd"
-              tick={{ fill: '#dddddd', fontSize: 12 }}
+              tick={{ fill: '#dddddd', fontSize: 14, fontWeight: 'bold' }}
             >
               <Label
                 value="Temperature (°F)"
                 angle={-90}
                 position="insideLeft"
                 fill="#dddddd"
-                style={{ textAnchor: 'middle', fontSize: 14 }}
+                style={{ textAnchor: 'middle', fontSize: 20 }}
               />
             </YAxis>
             <Tooltip content={<CustomTooltip />} />
             <Legend
               verticalAlign="top"
               align="right"
-              wrapperStyle={{ color: '#dddddd' }}
+              wrapperStyle={{ fill: '#dddddd' }}
             />
             <Line
               type="monotone"
@@ -167,13 +161,6 @@ const TemperatureGraph = () => {
         <button className="download-button" onClick={downloadCSV}>
           Download logs csv
         </button>
-        {/* <button
-          className="download-button"
-          style={{ marginLeft: '20px' }}
-          onClick={downloadLogs}
-        >
-          Download logs json
-        </button> */}
       </div>
     </div>
   );

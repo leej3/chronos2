@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useNavigate, Outlet } from "react-router-dom";
 import UseTokenRefresh from "../../hook/UseTokenRefresh";
-
+import { AppHeader } from "../../components/Header/index"
 const Layout = () => {
   const navigate = useNavigate();
   const { refreshAccessToken } = UseTokenRefresh();
@@ -29,9 +29,13 @@ const Layout = () => {
   }, []);
 
   return (
-    <div className="wrapper d-flex flex-column min-vh-100">
-      <Outlet />
-    </div>
+
+    <>
+      <AppHeader></AppHeader>
+      <div className="wrapper d-flex flex-column min-vh-100">
+        <Outlet />
+      </div>
+    </>
   );
 };
 

@@ -1,18 +1,18 @@
 import json
 import os
 from pathlib import Path
+from .boiler_modbus import MODBUS
+from dotenv import load_dotenv
+
+load_dotenv()
+
+MOCK_DEVICES_ENV = os.getenv("MOCK_DEVICES", "false").lower() 
+
 config_dict = {
+    **MODBUS,
     "serial": {
         "baudr": 19200,
         "portname": "/dev/ttyACM0"
-    },
-    "modbus": {
-        "baudr": 9600,
-        "portname": "/dev/ttyUSB0",
-        "parity": "E",
-        "timeout": 1,
-        "method": "rtu",
-        "unit": 1
     },
     "sensors": {
         "mount_point": os.getenv("W1_MOUNT_POINT", "/sys/bus/w1/devices"),
@@ -35,16 +35,33 @@ config_dict = {
         "led_green": 9,
         "led_blue": 10
     },
-    "db": {
-        "path": "/home/pi/chronos_db/chronos.sql"
-    },
     "efficiency": {
         "hours": 12
-    }
+    },
+    "MOCK_DEVICES": MOCK_DEVICES_ENV
 }
+def ensure_log_path(path: Path):
+    candidates = [
+        path,
+        Path.cwd() / path.name,
+        Path("/tmp") / path.name
+    ]
+    for p in candidates:
+        try:
+            p.parent.mkdir(parents=True, exist_ok=True)
+            # Test writing the file to ensure we have permission
+            with p.open('a'):
+                pass
+            return p
+        except Exception as e:
+            print(f"Warning:log file won't work at {p}: {e}")
 
-class Struct(object):
+    # If all fail, exit or raise an exception
+    print("Could not create a suitable log file path.")
+    sys.exit(1)
 
+
+class Struct:
     def __init__(self, data):
         for name, value in data.items():
             setattr(self, name, self._wrap(value))
@@ -63,3 +80,4 @@ for name,sensor in sensors.items():
     spath.parent.mkdir(parents=True, exist_ok=True)
     spath.write_text(f"YES\nt={random.randint(100,140)}")
 cfg = Struct(config_dict)
+
