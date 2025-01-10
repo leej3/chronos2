@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import {
   CContainer,
   CHeader,
@@ -10,11 +10,7 @@ import {
   useColorModes,
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
-import {
-
-  cilFactorySlash
-} from '@coreui/icons';
-
+import { cilFactorySlash } from '@coreui/icons';
 
 const AppHeader = () => {
   const headerRef = useRef();
@@ -22,9 +18,10 @@ const AppHeader = () => {
     'coreui-free-react-admin-template-theme'
   );
 
-  const dispatch = useDispatch();
-  const sidebarShow = useSelector((state) => state.sidebarShow);
+  // Get mockDevices state from Redux store
+  const mockDevices = useSelector((state) => state.season.mockDevices);
 
+  // Add shadow effect on scroll
   useEffect(() => {
     document.addEventListener('scroll', () => {
       headerRef.current &&
@@ -46,22 +43,18 @@ const AppHeader = () => {
           </CNavItem>
         </CHeaderNav>
         <CHeaderNav className="ms-auto">
-          <CNavItem>
-            <CNavLink
-              href="#"
-              className="d-flex align-items-center text-danger m-1"
-            >
-              <CIcon
-                icon={cilFactorySlash}
-                size="lg"
-                className="mr-2"
-              />
-              <span className="font-weight-bold m-2">Mock Devices Mode</span>
-            </CNavLink>
-          </CNavItem>
-
+          {mockDevices && (
+            <CNavItem>
+              <CNavLink
+                href="#"
+                className="d-flex align-items-center text-danger m-1"
+              >
+                <CIcon icon={cilFactorySlash} size="lg" className="mr-2" />
+                <span className="font-weight-bold m-2">Mock Devices Mode</span>
+              </CNavLink>
+            </CNavItem>
+          )}
         </CHeaderNav>
-
       </CContainer>
     </CHeader>
   );

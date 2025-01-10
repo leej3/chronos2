@@ -5,7 +5,7 @@ import ManualOverride from '../../components/ManualOverride/ManualOverride';
 import TemperatureGraph from '../../components/TemperatureGraph/TemperatureGraph';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchSummerData } from '../../features/summer/summerSlice';
-import { setSeason } from '../../features/state/seasonSlice';
+import { setSeason, setMockDevices } from '../../features/state/seasonSlice';
 import { CContainer, CRow, CCol, CCard, CCardBody } from '@coreui/react';
 import "./Home.css"
 const Home = () => {
@@ -20,6 +20,8 @@ const Home = () => {
       setHomeData(data);
       // Set season based on data results
       const mode = data?.results?.mode;
+      const mock_devices = data?.mock_devices;
+      dispatch(setMockDevices(mock_devices));
       switch (mode) {
         case 0:
           dispatch(setSeason('Winter'));

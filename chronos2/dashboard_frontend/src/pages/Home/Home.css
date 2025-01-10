@@ -4,11 +4,31 @@
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
     text-align: center;
     border: 2px solid #6c7a96;
-    padding: 16;
+    padding: 16px; /* Thêm px để tránh lỗi */
 }
+
+/* Mặc định cho màn hình lớn */
 .item {
     border: 0;
     padding: 0;
     margin-right: 10%;
     margin-left: 10%;
+}
+
+@media (max-width: 768px) {
+    .item {
+        margin: 0 auto; 
+        width: 100%; 
+    }
+}
+
+@media (max-width: 480px) {
+    .bgr {
+        padding: 12px;
+    }
+    
+    .item {
+        width: 100%; 
+        margin: 0 auto;
+    }
 }
