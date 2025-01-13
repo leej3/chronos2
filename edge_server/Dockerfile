@@ -3,9 +3,6 @@ SHELL ["/bin/bash", "--login", "-c"]
 WORKDIR /app
 # Add virtual env to the path
 ENV PATH="/app/.venv/bin:$PATH"
-RUN mkdir -p /var/log/chronos; touch /var/log/chronos/chronos.log
-ENV W1_MOUNT_POINT=/mock_1wire/sys/bus/w1/devices/
-RUN mkdir -p ${W1_MOUNT_POINT}
 # The installer requires curl (and certificates) to download the release archive
 RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates socat tini
 
