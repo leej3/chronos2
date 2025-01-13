@@ -14,11 +14,14 @@ const seasonSlice = createSlice({
       state.season = action.payload;
       state.timer = true;
     },
+    setMockDevices: (state, action) => {
+      state.mockDevices = action.payload;
+    },
   },
 });
 
 // Export the action creator
-export const { setSeason } = seasonSlice.actions;
+export const { setSeason, setMockDevices } = seasonSlice.actions;
 
 // Export the reducer
 export default seasonSlice.reducer;

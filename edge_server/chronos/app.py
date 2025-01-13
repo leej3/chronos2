@@ -147,7 +147,7 @@ async def get_data():
             sensors = mock_sensors()
             devices = {device["id"]: device["state"] for device in mock_devices_data()}
             status = True
-            return SystemStatus(sensors=sensors, devices=devices, status=status)
+            return SystemStatus(sensors=sensors, devices=devices, status=status,mock_devices=MOCK_DEVICES)
     try:
         sensors = {
             "return_temp": safe_read_temperature(cfg.sensors.in_id),
@@ -155,10 +155,10 @@ async def get_data():
         }
         status = get_chronos_status()
         devices = {i: DEVICES[i].state for i in range(len(DEVICES))}
-        return SystemStatus(sensors=sensors, devices=devices,status=status)
+        return SystemStatus(sensors=sensors, devices=devices,status=status,mock_devices=False)
     except Exception as e:
         logger.error(f"Error reading data: {e}")
-        return SystemStatus(sensors={}, devices={})
+        return SystemStatus(sensors={}, devices={},mock_devices=False)
 
 @app.get("/device_state", response_model=DeviceModel)
 @with_circuit_breaker

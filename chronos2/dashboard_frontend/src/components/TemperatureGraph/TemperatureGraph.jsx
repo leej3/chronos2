@@ -12,11 +12,12 @@ import {
 } from 'recharts';
 import './TemperatureGraph.css';
 import { getCharData } from '../../api/getCharData';
-import {formatNumber} from "../../utils/tranform"
+import { formatNumber } from '../../utils/tranform';
 
 const TemperatureGraph = () => {
   const [data, setData] = useState([]);
-  const [interval, setInterval] = useState(4); 
+  const [interval, setInterval] = useState(4);
+  const [chartHeight, setChartHeight] = useState(600); // Default chart height
 
   useEffect(() => {
     const fetchData = async () => {
@@ -33,13 +34,13 @@ const TemperatureGraph = () => {
             day: 'numeric',
             hour: 'numeric',
             minute: '2-digit',
-            hour12: true
+            hour12: true,
           });
 
           return {
             name: formattedDate,
-            inlet: formatNumber(entry['column-2']),
-            outlet: formatNumber(entry['column-1']),
+            inlet: formatNumber(entry['column-2'], 0),
+            outlet: formatNumber(entry['column-1'], 0),
           };
         });
 
@@ -50,90 +51,111 @@ const TemperatureGraph = () => {
     };
 
     fetchData();
-    const intervalId = setInterval(fetchData, 120000); 
+    const intervalId = setInterval(fetchData, 120000);
 
     const handleResize = () => {
       if (window.innerWidth < 768) {
-        setInterval(8); 
+        setInterval(8);
+        setChartHeight(400); 
       } else {
-        setInterval(4); 
+        setInterval(4);
+        setChartHeight(600); 
       }
     };
 
-    handleResize(); 
+    handleResize();
     window.addEventListener('resize', handleResize);
 
     return () => {
       window.removeEventListener('resize', handleResize);
     };
   }, []);
-  
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
-      const [date, time] = label.split(', ');
       return (
-        <div className="custom-tooltip" style={{ backgroundColor: '#333645', padding: '10px', borderRadius: '5px' }}>
-          <p style={{ color: '#fff' }}><strong>Time: </strong>{label}</p>
-          <p style={{ color: '#ffca28' }}><strong>Inlet: </strong>{payload[0].value}°F</p>
-          <p style={{ color: '#ff7043' }}><strong>Outlet: </strong>{payload[1].value}°F</p>
+        <div
+          className="custom-tooltip"
+          style={{
+            backgroundColor: '#333645',
+            padding: '8px 12px', 
+            borderRadius: '5px',
+            fontSize: '12px', 
+            maxWidth: '200px', 
+            color: '#fff', 
+          }}
+        >
+          <p style={{ fontSize: '12px', margin: '5px 0' }}>
+            <strong>Time: </strong>{label}
+          </p>
+          <p style={{ fontSize: '12px', margin: '5px 0', color: '#ffca28' }}>
+            <strong>Inlet: </strong>{payload[0].value}°F
+          </p>
+          <p style={{ fontSize: '12px', margin: '5px 0', color: '#ff7043' }}>
+            <strong>Outlet: </strong>{payload[1].value}°F
+          </p>
         </div>
       );
     }
     return null;
   };
 
-  const convertToCSV = (arr) => {
-    const array = [Object.keys(arr[0])].concat(arr);
-    return array.map((it) => Object.values(it).toString()).join('\n');
-  };
-
   const downloadCSV = () => {
-    const csv = convertToCSV(data);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
+    const header = ['Date', 'Inlet Temperature (°F)', 'Outlet Temperature (°F)'];
+    const rows = data.map((entry) => [
+      entry.name,
+      entry.inlet,
+      entry.outlet,
+    ]);
+
+    let csvContent = 'data:text/csv;charset=utf-8,';
+    csvContent += header.join(',') + '\n';
+
+    rows.forEach((row) => {
+      csvContent += row.join(',') + '\n';
+    });
+
+    const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', 'temperature_log.csv');
-    document.body.appendChild(link);
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', 'temperature_data.csv');
     link.click();
-    document.body.removeChild(link);
   };
 
   return (
     <div className="graph-container">
       <div className="graphbody">
         <h3>Inlet/Outlet Temperature History</h3>
-        <ResponsiveContainer width="100%" height={600}>
+        <ResponsiveContainer width="100%" height={chartHeight}>
           <LineChart data={data}>
             <CartesianGrid stroke="#4c5c77" strokeDasharray="3 3" />
-            <XAxis 
-              dataKey="name" 
+            <XAxis
+              dataKey="name"
               stroke="#dddddd"
-              tick={{ fill: '#dddddd', fontSize: 14, fontWeight: 'bold' }}
+              tick={{ fill: '#dddddd', fontSize: 12, fontWeight: 'bold' }}
               tickFormatter={(tick, index) => {
                 if (index === 0) {
-                  return "";
+                  return '';
                 }
                 const [date, time] = tick.split(', ');
-                return time; 
+                return time;
               }}
-              angle={0} 
-              textAnchor="middle" 
-              interval={interval} 
-            >
-            </XAxis>
-            <YAxis 
-              domain={[30, 90]} 
+              angle={0}
+              textAnchor="middle"
+              interval={interval}
+            />
+            <YAxis
+              domain={[30, 90]}
               stroke="#dddddd"
-              tick={{ fill: '#dddddd', fontSize: 14, fontWeight: 'bold' }}
+              tick={{ fill: '#dddddd', fontSize: 12, fontWeight: 'bold' }}
+              tickFormatter={(tick) => Math.round(tick)} 
             >
               <Label
                 value="Temperature (°F)"
                 angle={-90}
                 position="insideLeft"
                 fill="#dddddd"
-                style={{ textAnchor: 'middle', fontSize: 20 }}
+                style={{ textAnchor: 'middle', fontSize: 18 }}
               />
             </YAxis>
             <Tooltip content={<CustomTooltip />} />
@@ -146,15 +168,15 @@ const TemperatureGraph = () => {
               type="monotone"
               dataKey="inlet"
               stroke="#ffca28"
-              strokeWidth={2}
-              dot={{ r: 4 }}
+              strokeWidth={2} 
+              dot={{ r: 3 }} 
             />
             <Line
               type="monotone"
               dataKey="outlet"
               stroke="#ff7043"
-              strokeWidth={2}
-              dot={{ r: 4 }}
+              strokeWidth={2} 
+              dot={{ r: 3 }} 
             />
           </LineChart>
         </ResponsiveContainer>

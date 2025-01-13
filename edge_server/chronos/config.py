@@ -1,45 +1,12 @@
 import json
 import os
+import sys
 from pathlib import Path
 from .boiler_modbus import MODBUS
 from dotenv import load_dotenv
 
 load_dotenv()
 
-MOCK_DEVICES_ENV = os.getenv("MOCK_DEVICES", "false").lower() 
-
-config_dict = {
-    **MODBUS,
-    "serial": {
-        "baudr": 19200,
-        "portname": "/dev/ttyACM0"
-    },
-    "sensors": {
-        "mount_point": os.getenv("W1_MOUNT_POINT", "/sys/bus/w1/devices"),
-        "in_id": "28-00000677d509",
-        "out_id": "28-011927cd8e7d",
-    },
-    "files": {
-        "log_path": "/var/log/chronos/chronos.log"
-    },
-    "relay": {
-        "boiler": 0,
-        "chiller1": 2,
-        "chiller2": 1,
-        "chiller3": 4,
-        "chiller4": 3,
-        "winter_valve": 5,
-        "summer_valve": 6,
-        "led_breather": 7,
-        "led_red": 8,
-        "led_green": 9,
-        "led_blue": 10
-    },
-    "efficiency": {
-        "hours": 12
-    },
-    "MOCK_DEVICES": MOCK_DEVICES_ENV
-}
 def ensure_log_path(path: Path):
     candidates = [
         path,
@@ -72,13 +39,38 @@ class Struct:
         else:
             return Struct(value) if isinstance(value, dict) else value
 
-import random
-sensors = config_dict["sensors"]
-mount_point = sensors["mount_point"]
-if MOCK_DEVICES_ENV == "true":
-    for name,sensor in sensors.items():
-        spath = Path(mount_point, sensor, "w1_slave")
-        spath.parent.mkdir(parents=True, exist_ok=True)
-        spath.write_text(f"YES\nt={random.randint(100,140)}")
+
+config_dict = {
+    **MODBUS,
+    "serial": {
+        "baudr": 19200,
+        "portname": "/dev/ttyACM0"
+    },
+    "sensors": {
+        "mount_point": os.getenv("W1_MOUNT_POINT", "/sys/bus/w1/devices"),
+        "in_id": "28-00000677d509",
+        "out_id": "28-011927cd8e7d",
+    },
+    "files": {
+        "log_path": str(ensure_log_path(Path("/var/log/chronos/chronos.log")))
+    },
+    "relay": {
+        "boiler": 0,
+        "chiller1": 2,
+        "chiller2": 1,
+        "chiller3": 4,
+        "chiller4": 3,
+        "winter_valve": 5,
+        "summer_valve": 6,
+        "led_breather": 7,
+        "led_red": 8,
+        "led_green": 9,
+        "led_blue": 10
+    },
+    "efficiency": {
+        "hours": 12
+    },
+    "MOCK_DEVICES": os.getenv("MOCK_DEVICES", "false").lower() == "true"
+}
 cfg = Struct(config_dict)
 

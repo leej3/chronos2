@@ -42,3 +42,47 @@
   border-radius: 16px; 
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25); 
 }
+
+@media (max-width: 768px) {
+  .graphbody {
+    padding: 20px;
+  }
+
+  .graph-container h3 {
+    font-size: 1.5rem;
+  }
+
+  .download-button {
+    font-size: 0.9rem;
+    padding: 12px 20px;
+    margin-top: 20px;
+  }
+
+  .graphChartWrapper {
+    padding: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .graph-container {
+    padding: 10px;
+  }
+
+  .graphbody {
+    padding: 10px;
+  }
+
+  .graph-container h3 {
+    font-size: 1.2rem;
+  }
+
+  .download-button {
+    font-size: 0.8rem;
+    padding: 10px 18px;
+    margin-top: 15px;
+  }
+
+  .graphChartWrapper {
+    padding: 20px;
+  }
+}
