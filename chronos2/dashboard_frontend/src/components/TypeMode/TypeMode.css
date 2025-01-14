@@ -32,3 +32,16 @@
 .temp-circle svg {
   margin-bottom: 5px; 
 }
+
+@media (max-width: 768px) {
+  .modbus .season-group .form-label {
+    font-size: 16px;
+  }
+  .sensor-title{
+    margin-bottom: 5px !important;
+  }
+  .modbus .season-group .form-input {
+    font-size: 14px;
+    padding: 8px;
+  }
+}
