@@ -1,0 +1,73 @@
+name: CI for Python and React
+
+on:
+  push:
+    branches: [ "*" ]
+  pull_request:
+    branches: [ "*" ]
+
+jobs:
+  edge_server:
+    name: Edge Server CI
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v3
+
+    - name: Install python package manager
+      run: |
+        python -m pip install --upgrade pip
+        pip install uv
+
+    - name: Run Edge Server tests
+      run: |
+        cd edge_server
+        uv sync --all-extras
+        uv run pytest
+
+  dashboard_backend:
+    name: Python CI
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v3
+
+    - name: Run docker-compose to start services
+      run: |
+        for f in $(find . -name .env.sample); do cp "$f" "${f%.sample}"; done
+        docker compose up -d
+
+    - name: Install python package manager
+      run: |
+        python -m pip install --upgrade pip
+        pip install uv
+
+    - name: Run Dashboard Backend tests
+      run: |
+        cd dashboard_backend
+        uv sync --all-extras
+        uv run pytest
+
+  react-ci:
+    name: React CI
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+
+    - name: Install React dependencies
+      run: cd chronos2/dashboard_frontend && npm install
+
+    - name: Run Jest tests
+      run: cd chronos2/dashboard_frontend && npm test
+
+    - name: Build React project
+      run: cd chronos2/dashboard_frontend && npm run build
