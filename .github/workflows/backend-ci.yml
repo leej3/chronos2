@@ -2,9 +2,9 @@ name: CI for Python and React
 
 on:
   push:
-    branches: [ "feature/test_ci" ]
+    branches: [ feature/test_ci ]
   pull_request:
-    branches: [ "feature/test_ci" ]
+    branches: [ feature/test_ci ]
 
 jobs:
   python-ci:
