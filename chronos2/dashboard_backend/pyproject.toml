@@ -6,8 +6,22 @@ authors = [
     {name = "Your Name", email = "your.email@example.com"}
 ]
 dependencies = [
-    "fastapi[standard]",
-    "uvicorn"
+    "fastapi==0.115.6",
+    "alembic==1.14.0",
+    "psycopg2==2.9.10",
+    "python-dotenv==1.0.1",
+    "pyserial==3.5",
+    "requests==2.32.3",
+    "pymodbus==3.8.0",
+    "socketio-client==0.7.2",
+    "apscheduler==3.11.0",
+    "python-socketio==5.11.4",
+    "passlib==1.7.4",
+    "python-jose[cryptography]==3.3.0",
+    "pydantic-settings==2.7.0",
+    "bcrypt==4.2.1",
+    "uvicorn",
+    "httpx>=0.28.1",
 ]
 requires-python = ">=3.11"
 
@@ -15,26 +29,11 @@ requires-python = ">=3.11"
 requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
-[tool.poetry]
-name = "dashboard-backend"
-version = "0.1.0"
-description = "A minimal dashboard backend service"
-authors = ["Your Name <your.email@example.com>"]
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.4",
+    "ipython>=8.31.0",
+    "nest-asyncio>=1.6.0",
+    "pdbpp",
+]
 
-[tool.poetry.dependencies]
-python = "^3.9.0"
-fastapi = "^0.115.6"
-uvicorn = "^0.34.0"
-alembic = "^1.14.0"
-psycopg2 = "^2.9.10"
-python-dotenv = "^1.0.1"
-pyserial = "^3.5"
-requests = "^2.32.3"
-pymodbus = "^3.8.0"
-socketio-client = "^0.7.2"
-apscheduler = "^3.11.0"
-python-socketio = "^5.11.4"
-passlib = "^1.7.4"
-python-jose = {extras = ["cryptography"], version = "^3.3.0"}
-pydantic-settings = "^2.7.0"
-bcrypt = "^4.2.1"
