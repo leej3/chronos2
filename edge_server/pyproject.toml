@@ -21,13 +21,11 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest>=8.3.4",
+    "ipython>=8.31.0",
+    "nest-asyncio>=1.6.0",
+    "pdbpp",
 ]
-ipython = [
-    "pytest>=8.3.4",
-]
-pdbpp = [
-    "pytest>=8.3.4",
-]
+
 [build-system]
 requires = ["setuptools>=42", "wheel", "setuptools_scm[toml]>=3.4"]
 build-backend = "setuptools.build_meta"
