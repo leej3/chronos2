@@ -2,9 +2,9 @@ name: CI for Python and React
 
 on:
   push:
-    branches: [ "*" ]
+    branches: [ feature/test_ci ]
   pull_request:
-    branches: [ "*" ]
+    branches: [ feature/test_ci ]
 
 jobs:
   edge_server:
