@@ -56,6 +56,11 @@ services:
     networks:
       - traefik-public
     ports:
-      - "7005:7005"
-      - "7006:7006"
-      - "5171:5171"
+      - "7005:7005" # frps server
+      - "7006:7006" # deployment
+      - "7007:7007" # debugging
+      - "7008:7008"
+      - "5171:5171" # deployment api
+      - "5172:5172" # debugging api
+      - "5173:5173"
+

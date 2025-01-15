@@ -19,23 +19,3 @@ services:
   postgres:
     ports:
       - "5400:5432"
-
-  # frps:
-  #   image: frps
-  #   container_name: frps
-  #   command: -c /etc/frp/frps.toml
-  #   volumes:
-  #     - ./frp_config:/etc/frp
-  #   networks:
-  #     - traefik-public
-  #   ports:
-  #     - "7005:7005"
-
-  # frpc:
-  #   image: frpc
-  #   container_name: frpc
-  #   command: -c /etc/frp/frpc.toml
-  #   volumes:
-  #     - ./frp_config:/etc/frp
-  #   networks:
-  #     - traefik-public
