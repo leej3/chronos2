@@ -1,4 +1,4 @@
-name: CI for Python and React
+name: Unit tests
 
 on:
   push:
@@ -20,14 +20,14 @@ jobs:
         python -m pip install --upgrade pip
         pip install uv
 
-    - name: Run Edge Server tests
+    - name: Run edge-server tests
       run: |
         cd edge_server
         uv sync --all-extras
         uv run pytest
 
   dashboard_backend:
-    name: Python CI
+    name: Dashboard backend pytest suite
     runs-on: ubuntu-latest
 
     steps:
@@ -44,14 +44,14 @@ jobs:
         python -m pip install --upgrade pip
         pip install uv
 
-    - name: Run Dashboard Backend tests
+    - name: Run dashboard-backend test suite
       run: |
-        cd dashboard_backend
+        cd chronos2/dashboard_backend
         uv sync --all-extras
         uv run pytest
 
   react-ci:
-    name: React CI
+    name: Run frontend test suite
     runs-on: ubuntu-latest
 
     steps:
