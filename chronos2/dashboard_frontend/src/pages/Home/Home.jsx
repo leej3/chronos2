@@ -40,7 +40,7 @@ const Home = () => {
           break;
       }
     } else {
-      console.error('Failed to fetch summer data');
+      console.log('Failed to fetch summer data');
     }
   };
 

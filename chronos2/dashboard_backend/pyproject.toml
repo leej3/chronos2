@@ -22,7 +22,7 @@ description = "A minimal dashboard backend service"
 authors = ["Your Name <your.email@example.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.9.0"
+python = ">=3.11"
 fastapi = "^0.115.6"
 uvicorn = "^0.34.0"
 alembic = "^1.14.0"
@@ -37,4 +37,4 @@ python-socketio = "^5.11.4"
 passlib = "^1.7.4"
 python-jose = {extras = ["cryptography"], version = "^3.3.0"}
 pydantic-settings = "^2.7.0"
-bcrypt = "^4.2.1"
+bcrypt = "^3.1.6"

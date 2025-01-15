@@ -2,9 +2,9 @@ name: CI for Python and React
 
 on:
   push:
-    branches: [ "*" ]
+    branches: [ feature/test_ci ]
   pull_request:
-    branches: [ "*" ]
+    branches: [ feature/test_ci ]
 
 jobs:
   python-ci:
@@ -18,15 +18,56 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.9'
+        python-version: '3.11'
 
-    - name: Install Python dependencies
+    - name: Install Poetry
       run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        curl -sSL https://install.python-poetry.org | python3 -
+        echo "export PATH=\$HOME/.local/bin:\$PATH" >> $GITHUB_ENV
 
-    - name: Run Python tests
-      run: pytest
+    - name: Install dependencies
+      run: |
+        cd chronos2/dashboard_backend
+        source $GITHUB_ENV
+        poetry lock
+        poetry install --no-root
+
+    - name: Create .env file for backend
+      run: |
+        echo "POSTGRES_DB=test" >> chronos2/dashboard_backend/.env
+        echo "POSTGRES_USER=postgres" >> chronos2/dashboard_backend/.env
+        echo "POSTGRES_PASSWORD=yourpassword" >> chronos2/dashboard_backend/.env
+        echo "POSTGRES_HOST=postgres" >> chronos2/dashboard_backend/.env
+        echo "POSTGRES_PORT=5432" >> chronos2/dashboard_backend/.env
+        echo "JWT_SECRET_KEY=abcd" >> chronos2/dashboard_backend/.env
+        echo "JWT_ALGORITHM=HS256" >> chronos2/dashboard_backend/.env
+        echo "EDGE_SERVER_IP=http://localhost" >> chronos2/dashboard_backend/.env
+        echo "EDGE_SERVER_PORT=5171" >> chronos2/dashboard_backend/.env
+        echo "USER_1_EMAIL=admin@gmail.com" >> chronos2/dashboard_backend/.env
+        echo "USER_1_PASSWORD=Aa123456@" >> chronos2/dashboard_backend/.env
+        echo "MOCK_DEVICES=true" >> chronos2/dashboard_backend/.env
+        echo "VITE_API_BASE_URL=http://localhost:5172/api" >> chronos2/dashboard_frontend/.env
+
+
+    - name: Run docker-compose to start services
+      uses: hoverkraft-tech/compose-action@v2.0.1
+      with:
+        compose-file: "./docker-compose.yml"
+      env:
+        services: 
+          postgres 
+          edge_server
+    
+
+    # - name: Start PostgreSQL and Edge Server
+    #   run: |
+    #     docker-compose -f docker-compose.yml up -d postgres edge_server
+
+
+    - name: Run tests
+      run: |
+        cd chronos2/dashboard_backend
+        poetry run pytest
 
   react-ci:
     name: React CI
@@ -36,16 +77,26 @@ jobs:
     - name: Check out code
       uses: actions/checkout@v3
 
+    - name: List directory contents
+      run: |
+        ls -R 
+
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
         node-version: '16'
 
     - name: Install React dependencies
-      run: npm install
+      run: |
+        cd chronos2/dashboard_frontend
+        npm install
 
     - name: Run Jest tests
-      run: npm test -- --ci --coverage
+      run: |
+        cd chronos2/dashboard_frontend
+        npm test 
 
     - name: Build React project
-      run: npm run build
+      run: |
+        cd chronos2/dashboard_frontend
+        npm run build

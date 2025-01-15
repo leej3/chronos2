@@ -47,16 +47,9 @@ h2 ,button{
   }
 }
 
-/* Đảm bảo phần layout căn giữa */
-.responsive-image {
-  max-width: 100%;
-  height: auto;
-  display: block;
-  margin: 0 auto;
-}
 
 .responsive-arrow {
-  width: 50px;
+  width: 100%;
   height: auto;
   display: block;
   margin: 10px auto;
@@ -100,6 +93,9 @@ h2 ,button{
   height: 2px;
   background-color: #000;
   margin: 10px auto;
+}
+.system-map * {
+  padding: 0 !important;
 }
 
 

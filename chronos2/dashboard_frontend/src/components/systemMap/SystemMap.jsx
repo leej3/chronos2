@@ -41,22 +41,22 @@ const SystemMap = ({ homedata }) => {
         <CCol xs={12}>
           <CCard className="mb-4 bgr p-0">
             <CCardBody>
-              <h2 className="text-center mb-4">
-                {season === 'Winter' ? 'System Map - Winter' : 'System Map - Summer'}
-              </h2>
+            <h2 className="text-center mb-4">{season === 'Winter' ? 'System Map - Winter' : 'System Map - Summer'}</h2>
               <CRow className="mb-4">
-                <CCol xs={12} md={6} className="d-flex justify-content-center align-items-center mb-4">
+                <CCol xs={12} md={6} className="d-flex justify-content-center justify-content-md-end align-items-center mb-4">
                   <img
                     src={manualOverride.boiler ? "images/Icons/Boiler/Boiler-ON.png" : "images/Icons/Boiler/Boiler-OFF.png"}
                     alt="Boiler"
                     className="responsive-image"
                   />
                 </CCol>
-                <CCol xs={12} md={6} className="d-flex flex-column justify-content-center align-items-center">
-                  <img src="/images/Icons/Boiler/arrow4.png" alt="Arrow" className="mb-2 responsive-arrow" />
-                  <span className="h4 text-center">{formatNumber(sensors?.water_out_temp)}°F</span>
-                  <img src="/images/Icons/Boiler/arrow3.png" alt="Arrow" className="mb-2 responsive-arrow" />
-                  <span className="h4 text-center">{formatNumber(sensors?.return_temp)}°F</span>
+                <CCol xs={12} md={6} className="d-flex justify-content-center justify-content-md-start align-items-center">
+                  <div className="d-flex flex-column justify-content-center align-items-start">
+                    <img src="/images/Icons/Boiler/arrow4.png" alt="Arrow" className="mb-2 responsive-arrow" />
+                    <span className="h4 w-100 text-center">{formatNumber(sensors?.water_out_temp)}°F</span>
+                    <img src="/images/Icons/Boiler/arrow3.png" alt="Arrow" className="mb-2 responsive-arrow" />
+                    <span className="h4 w-100 text-center">{formatNumber(sensors?.return_temp)}°F</span>
+                  </div>
                 </CCol>
               </CRow>
               <CRow className="d-flex justify-content-center mb-4 w-100">
@@ -65,7 +65,7 @@ const SystemMap = ({ homedata }) => {
                     <CButton
                       color="primary"
                       onClick={() => handleButtonClick(btn.toLowerCase().replace(' ', ''))}
-                      block
+                      block="true"
                     >
                       {btn}
                     </CButton>
@@ -114,7 +114,7 @@ const SystemMap = ({ homedata }) => {
                     <CButton
                       color="primary"
                       onClick={() => handleButtonClick(btn.toLowerCase().replace(' ', ''))}
-                      block
+                      block="true"
                     >
                       {btn}
                     </CButton>
@@ -149,7 +149,7 @@ const SystemMap = ({ homedata }) => {
         </CModalBody>
         {modalContent !== 'usersetting' && (
           <CModalFooter>
-            <CButton color="secondary" onClick={closeModal}>
+            <CButton  block="true" color="secondary" onClick={closeModal}>
               Close
             </CButton>
           </CModalFooter>
