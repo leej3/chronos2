@@ -123,4 +123,6 @@ def test_update_settings(client):
     time.sleep(settings_data["cascade_time"])
     response = client.post("/api/update_settings", json=settings_data)
     assert response.status_code == 200
-    assert response.json() == {"message": f"Temperature setpoint set to {settings_data["setpoint_offset_winter"]}°F"}
+    assert response.json() == {
+        "message": f"Temperature setpoint set to {settings_data['setpoint_offset_winter']}°F"
+    }
