@@ -13,8 +13,8 @@ def client():
 @pytest.fixture
 def refresh_token(client):
     login_data = {
-        "email": "admin@gmail.com",
-        "password": "Aa123456@",
+        "email": "admin@test.com",
+        "password": "123456",
     }
 
     response = client.post("/api/auth/login", json=login_data)
