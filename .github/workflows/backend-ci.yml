@@ -32,9 +32,9 @@ jobs:
 
     env:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: yourpassword
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5400
 
     steps:
     - name: Check out code
@@ -58,7 +58,7 @@ jobs:
       run: |
         wget https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh
         chmod +x wait-for-it.sh
-        ./wait-for-it.sh postgres:5432 --timeout=30 -- echo "PostgreSQL is up"
+        ./wait-for-it.sh localhost:5400 --timeout=30 -- echo "PostgreSQL is up"
 
     - name: Install python package manager
       run: |
