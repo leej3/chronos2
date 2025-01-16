@@ -17,7 +17,7 @@ from fastapi import FastAPI, Query, Request, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
-from chronos.mock_devices.mock_data import mock_devices_data, mock_boiler_stats, mock_operating_status, mock_error_history, mock_model_info, mock_sensors
+from chronos.mock_devices.mock_data import mock_devices_data, mock_boiler_stats, mock_operating_status, mock_error_history, mock_model_info, mock_sensors, mock_error_history_none,history_none,mock_point_update
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
@@ -144,10 +144,15 @@ def get_chronos_status():
 async def get_data():
     """Legacy endpoint for system status."""
     if MOCK_DEVICES:
+        try:
             sensors = mock_sensors()
             devices = {device["id"]: device["state"] for device in mock_devices_data()}
             status = True
             return SystemStatus(sensors=sensors, devices=devices, status=status,mock_devices=MOCK_DEVICES)
+        except Exception as e:
+            logger.error(f"Error reading data: {e}")
+            return SystemStatus(sensors={}, devices={},status=False,mock_devices=True)
+    
     try:
         sensors = {
             "return_temp": safe_read_temperature(cfg.sensors.in_id),
@@ -158,14 +163,14 @@ async def get_data():
         return SystemStatus(sensors=sensors, devices=devices,status=status,mock_devices=False)
     except Exception as e:
         logger.error(f"Error reading data: {e}")
-        return SystemStatus(sensors={}, devices={},mock_devices=False)
+        return SystemStatus(sensors={}, devices={},status=False,mock_devices=False)
 
 @app.get("/device_state", response_model=DeviceModel)
 @with_circuit_breaker
 async def get_device_state(device: int = Query(..., ge=0, lt=5, description="The device ID (0-4)")):
     """Legacy endpoint for device state."""
     if MOCK_DEVICES:
-        return DeviceModel(**mock_devices_data())
+        return DeviceModel(id=device,state=True)
     return DeviceModel(id=device, state=DEVICES[device].state)
 
 @app.post("/device_state")
@@ -185,7 +190,12 @@ async def update_device_state(data: DeviceModel):
 async def get_boiler_stats():
     """Get current boiler statistics."""
     if MOCK_DEVICES:
-        return BoilerStats(**mock_boiler_stats())
+        try:
+            return BoilerStats(**mock_boiler_stats())
+        except ModbusException as e:
+            raise HTTPException(status_code=500, detail=str(e))
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to read boiler data: {str(e)}")
     try:
         with create_modbus_connection() as device:
             stats = device.read_boiler_data()
@@ -219,7 +229,15 @@ async def get_boiler_status():
 async def get_boiler_errors():
     """Get boiler error history."""
     if MOCK_DEVICES:
-        return ErrorHistory(**mock_error_history())
+        try:
+            history = history_none()
+            if history:
+                return ErrorHistory(**mock_error_history_none())
+            return ErrorHistory(**mock_error_history())
+        except ModbusException as e:
+            raise HTTPException(status_code=500, detail=str(e))
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to read error history: {str(e)}")
     try:
         with create_modbus_connection() as device:
             history = device.read_error_history()
@@ -241,7 +259,12 @@ async def get_boiler_errors():
 async def get_boiler_info():
     """Get boiler model information."""
     if MOCK_DEVICES:
-        return ModelInfo(**mock_model_info())
+        try:
+            return ModelInfo(**mock_model_info())
+        except ModbusException as e:
+            raise HTTPException(status_code=500, detail=str(e))
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to read model info: {str(e)}")
     try:
         with create_modbus_connection() as device:
             info = device.read_model_info()
@@ -258,8 +281,13 @@ async def get_boiler_info():
 @with_rate_limit
 async def set_setpoint(data: SetpointUpdate):
     if MOCK_DEVICES:
-        return {"message": f"Temperature setpoint set to {data.temperature}°F"}
-
+        try:
+            mock_point_update()
+            return {"message": f"Temperature setpoint set to {data.temperature}°F"}
+        except ModbusException as e:
+            raise HTTPException(status_code=500, detail=str(e))
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to set temperature: {str(e)}")
     """Update boiler temperature setpoint."""
     try:
         with create_modbus_connection() as device:

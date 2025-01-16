@@ -21,15 +21,15 @@ def mock_devices_data():
 
 def mock_boiler_stats():
     return {
-        "system_supply_temp": random.uniform(180, 220),  
-        "outlet_temp": random.uniform(180, 220),         
-        "inlet_temp": random.uniform(160, 200),          
-        "flue_temp": random.uniform(300, 400),           
-        "cascade_current_power": random.uniform(10, 100),
-        "lead_firing_rate": random.uniform(20, 80),    
-        "water_flow_rate": random.uniform(10, 50),    
-        "pump_status": random.choice([True, False]),     
-        "flame_status": random.choice([True, False]),  
+       "system_supply_temp": 154.4,
+        "outlet_temp": 158.0,
+        "inlet_temp": 149.0,
+        "flue_temp": 176.0,
+        "cascade_current_power": 50.0,
+        "lead_firing_rate": 75.0,
+        "water_flow_rate": 10.0,
+        "pump_status": True,
+        "flame_status": True
     }
 
 def mock_operating_status():
@@ -39,25 +39,37 @@ def mock_operating_status():
         "current_temperature": random.uniform(175, 190),  
         "pressure": random.uniform(1.5, 3.0), 
         "error_code": None if random.choice([True, False]) else random.randint(1000, 9999),  
-        "operating_mode": random.randint(1, 5), 
-        "operating_mode_str": random.choice(["Heating", "Cooling", "Idle", "Maintenance"]), 
-        "cascade_mode": random.randint(1, 3),  
-        "cascade_mode_str": random.choice(["Primary", "Secondary", "Tertiary"]), 
-        "current_setpoint": random.uniform(180, 200), 
+        "operating_mode": 3,
+        "operating_mode_str": "Central Heat",
+        "cascade_mode": 0,
+        "cascade_mode_str": "Single Boiler",
+        "current_setpoint": 158.0
     }
 
 def mock_error_history():
     return {
-        "last_lockout_code": random.randint(100, 999) if random.choice([True, False]) else None, 
-        "last_lockout_str": random.choice(["Flame Failure", "High Pressure", "Low Water Flow", "Electrical Fault"]) if random.choice([True, False]) else None,
-        "last_blockout_code": random.randint(200, 299) if random.choice([True, False]) else None, 
-        "last_blockout_str": random.choice(["Low Water Pressure", "Overheating", "System Error", "Pump Failure"]) if random.choice([True, False]) else None,  
+        "last_lockout_code": 3,
+        "last_lockout_str": "Low Water",
+        "last_blockout_code": 8,
+        "last_blockout_str": "Sensor Failure"
     }
+def mock_error_history_none():
+    return {
+        "last_lockout_code": None,
+        "last_lockout_str": None,
+        "last_blockout_code": None,
+        "last_blockout_str": None
+    }
+def history_none():
+    return True
 
 def mock_model_info():
     return {
-        "model_id": random.randint(1000, 9999),  
-        "model_name": random.choice(["CHRONOS-1000", "CHRONOS-2000", "XPERT-3000"]), 
-        "firmware_version": f"v{random.randint(1, 5)}.{random.randint(0, 9)}.{random.randint(0, 9)}",  
-        "hardware_version": f"HW{random.randint(1, 3)}.{random.randint(0, 9)}", 
+        "model_id": 1,
+        "model_name": "FTXL 85",
+        "firmware_version": "1.2",
+        "hardware_version": "3.4"
     }
+
+def mock_point_update() : 
+   return True
