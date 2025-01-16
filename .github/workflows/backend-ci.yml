@@ -67,7 +67,7 @@ jobs:
       run: cd chronos2/dashboard_frontend && npm install
 
     - name: Run Jest tests
-      run: cd chronos2/dashboard_frontend && npm test
+      run: cd chronos2/dashboard_frontend && npm test -- --coverage
 
     - name: Build React project
       run: cd chronos2/dashboard_frontend && npm run build

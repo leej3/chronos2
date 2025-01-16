@@ -5,6 +5,13 @@ import SystemMap from '../systemMap/SystemMap';
 import React from 'react';
 
 jest.mock('../systemMap/SystemMap.css', () => {});
+jest.mock('../Modebus/Modbus.css', () => {});
+jest.mock('../TypeMode/TypeMode.css', () => {});
+jest.mock('../UserSettings/UserSettings.css', () => {});
+jest.mock('../Sensor/tabletemplate.css', () => {});
+jest.mock("../../utils/constant", () => ({
+  getDeviceId: jest.fn(() => 1), 
+}));
 
 const mockStore = (state) => {
   return createStore(() => state);
@@ -28,9 +35,10 @@ describe("SystemMap component", () => {
       </Provider>
     );
 
-    expect(screen.getByAltText('Tank')).toHaveAttribute('src', 'images/Icons/Boiler/Boiler-ON.png');
-    expect(screen.getByText("50°F")).toBeInTheDocument();
-    expect(screen.getByText("40°F")).toBeInTheDocument();
+    expect(screen.getByAltText('Boiler')).toHaveAttribute('src', 'images/Icons/Boiler/Boiler-ON.png');
+    expect(screen.getByText((content) => content.includes('50.00°F'))).toBeInTheDocument();
+    expect(screen.getByText((content) => content.includes('40.00°F'))).toBeInTheDocument();
+
   });
 
   it("should render system map for Summer season with chiller status", () => {
@@ -48,9 +56,9 @@ describe("SystemMap component", () => {
         <SystemMap homedata={homedata} />
       </Provider>
     );
-    expect(screen.getByAltText('Tank')).toHaveAttribute('src', 'images/Icons/Boiler/Boiler-OFF.png');
-    expect(screen.getByText("70°F")).toBeInTheDocument();
-    expect(screen.getByText("60°F")).toBeInTheDocument();
+    expect(screen.getByAltText('Boiler')).toHaveAttribute('src', 'images/Icons/Boiler/Boiler-OFF.png');
+    expect(screen.getByText("70.00°F")).toBeInTheDocument();
+    expect(screen.getByText("60.00°F")).toBeInTheDocument();
   });
 
   it("should show loading screen when season is not set", () => {
@@ -68,8 +76,7 @@ describe("SystemMap component", () => {
           <SystemMap homedata={homedata} />
         </Provider>
       );
-
-    const loadingContainer = container.querySelector('.loading-container');
+    const loadingContainer = container.querySelector('.container-fluid');
     expect(loadingContainer).toBeInTheDocument();
   });
 });

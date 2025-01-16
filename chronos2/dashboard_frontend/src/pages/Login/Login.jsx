@@ -39,7 +39,7 @@ const Login = () => {
     e.preventDefault();
 
     if (!isEmail || !isPassword) {
-      setError('Vui lòng nhập email và mật khẩu.');
+      setError('Please enter email and password.');
       return;
     }
 
@@ -106,6 +106,7 @@ const Login = () => {
                         onChange={(e) => setPassword(e.target.value)}
                       />
                     </CInputGroup>
+                    {error && <div className="text-danger">{error}</div>}
                     <CRow>
                       <CCol xs={6}>
                         <CButton
@@ -143,7 +144,7 @@ const Login = () => {
       </CContainer>
       {loading && (
         <div className="spinner-overlay">
-          <CSpinner color="primary" size="lg" />
+          <CSpinner color="primary"  />
         </div>
       )}
     </div>

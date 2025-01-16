@@ -14,7 +14,7 @@ function App() {
       <Suspense
         fallback={
           <div className="spinner-overlay">
-            <CSpinner color="primary" size="lg" />
+            <CSpinner color="primary" />
           </div>
         }
       >
