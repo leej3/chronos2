@@ -30,6 +30,12 @@ jobs:
     name: Dashboard backend pytest suite
     runs-on: ubuntu-latest
 
+    env:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: yourpassword
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+
     steps:
     - name: Check out code
       uses: actions/checkout@v3
