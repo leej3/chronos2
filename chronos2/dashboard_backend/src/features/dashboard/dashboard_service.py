@@ -19,8 +19,6 @@ class DashboardService:
         self.setting_repository = SettingRepository()
         self.edge_server = EdgeServer()
 
-    
-
     def get_data(self):
         history = self.history_repository.get_last_history()
         settings = self.setting_repository.get_last_settings()
@@ -28,32 +26,39 @@ class DashboardService:
         edge_server_data = self.edge_server.get_data()
         # edge_server_data["devices"][0]["state"] = True
         results = {
-            "outside_temp": history.outside_temp,
-            "baseline_setpoint": self.chronos.baseline_setpoint,
-            "tha_setpoint": history.tha_setpoint,
-            "effective_setpoint": history.effective_setpoint,
-            "tolerance": settings.tolerance,
-            "setpoint_min": settings.setpoint_min,
-            "setpoint_max": settings.setpoint_max,
-            "mode_change_delta_temp": settings.mode_change_delta_temp,
-            "mode_switch_lockout_time":settings.mode_switch_lockout_time,
-            "mode": settings.mode,
-            "setpoint_offset_summer": settings.setpoint_offset_summer,
-            "setpoint_offset_winter": settings.setpoint_offset_winter,
-            "cascade_time": settings.cascade_time / 60,
-            "wind_chill_avg": history.avg_outside_temp,
+            "outside_temp": getattr(history, "outside_temp", 0),
+            "baseline_setpoint": getattr(self.chronos, "baseline_setpoint", 0),
+            "tha_setpoint": getattr(history, "tha_setpoint", 0),
+            "effective_setpoint": getattr(history, "effective_setpoint", 0),
+            "tolerance": getattr(settings, "tolerance", 0),
+            "setpoint_min": getattr(settings, "setpoint_min", 0),
+            "setpoint_max": getattr(settings, "setpoint_max", 0),
+            "mode_change_delta_temp": getattr(settings, "mode_change_delta_temp", 0),
+            "mode_switch_lockout_time": getattr(
+                settings, "mode_switch_lockout_time", 0
+            ),
+            "mode": getattr(settings, "mode", 0),
+            "setpoint_offset_summer": getattr(settings, "setpoint_offset_summer", 0),
+            "setpoint_offset_winter": getattr(settings, "setpoint_offset_winter", 0),
+            "cascade_time": (
+                getattr(settings, "cascade_time", 0) / 60
+                if getattr(settings, "cascade_time", 0)
+                else 0
+            ),
+            "wind_chill_avg": getattr(history, "avg_outside_temp", 0),
         }
+
         efficiency = self.calculate_efficiency()
         boiler_status = self.edge_server.get_boiler_status()
         boiler_errors = self.edge_server.get_boiler_errors()
         boiler_info = self.edge_server.get_boiler_info()
         boiler_stats = self.edge_server.get_data_boiler_stats()
         boiler = {
-                    "status": boiler_status,
-                    "errors": boiler_errors,
-                    "info": boiler_info,
-                    "stats": boiler_stats
-}
+            "status": boiler_status,
+            "errors": boiler_errors,
+            "info": boiler_info,
+            "stats": boiler_stats,
+        }
         efficiency["cascade_fire_rate_avg"] = round(
             self.chronos.cascade_fire_rate_avg, 1
         )
@@ -62,7 +67,7 @@ class DashboardService:
             **edge_server_data,
             "results": results,
             "efficiency": efficiency,
-            "boiler":boiler,
+            "boiler": boiler,
         }
 
     def get_chart_data(self):
@@ -232,5 +237,3 @@ class DashboardService:
 
     def get_boiler_stats(self):
         return self.edge_server.get_data_boiler_stats()
-
-
