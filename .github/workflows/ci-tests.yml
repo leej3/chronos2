@@ -2,9 +2,9 @@ name: Unit tests
 
 on:
   push:
-    branches: [feature/test_ci]
+    branches: [feature/*]
   pull_request:
-    branches: [feature/test_ci]
+    branches: [main]
 
 jobs:
   edge_server:

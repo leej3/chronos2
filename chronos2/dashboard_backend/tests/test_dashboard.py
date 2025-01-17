@@ -10,7 +10,7 @@ from main import app
 from unittest.mock import MagicMock
 from src.features.dashboard.dashboard_service import DashboardService
 from src.core.services.edge_server import EdgeServer
-from src.core.chronos import Chronos
+from src.core.services.chronos import Chronos
 from src.features.auth.jwt_handler import UserToken
 from src.api.dependencies import get_current_user
 

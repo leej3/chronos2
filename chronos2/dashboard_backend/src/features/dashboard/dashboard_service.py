@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 from sqlalchemy import desc, or_
 from sqlalchemy.sql import func
-from src.core.chronos import Chronos
+from src.core.services.chronos import Chronos
 from src.core.configs.database import session_scope
 from src.core.models import History
 from src.core.repositories.history_repository import HistoryRepository
@@ -52,7 +52,7 @@ class DashboardService:
         boiler_status = self.edge_server.get_boiler_status()
         boiler_errors = self.edge_server.get_boiler_errors()
         boiler_info = self.edge_server.get_boiler_info()
-        boiler_stats = self.edge_server.get_data_boiler_stats()
+        boiler_stats = self.edge_server.get_boiler_stats()
         boiler = {
             "status": boiler_status,
             "errors": boiler_errors,
@@ -234,6 +234,3 @@ class DashboardService:
             old_history.delete()
 
             session.expunge_all()
-
-    def get_boiler_stats(self):
-        return self.edge_server.get_data_boiler_stats()

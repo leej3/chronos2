@@ -7,7 +7,7 @@ from src.api.routers import auth_router, dashboard_router
 from src.core.common.exceptions import GenericError
 from src.features.auth.auth_service import AuthService
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from src.core.chronos import Chronos
+from src.core.services.chronos import Chronos
 
 chronos = Chronos()
 

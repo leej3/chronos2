@@ -1,8 +1,7 @@
-from src.core.chronos.device import Device
 from src.core.utils.config_parser import cfg
 
 
-class Chiller(Device):
+class Chiller:
 
     TYPE = "chiller"
 
