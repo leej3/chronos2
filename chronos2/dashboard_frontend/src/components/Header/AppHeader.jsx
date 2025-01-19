@@ -49,7 +49,7 @@ const AppHeader = () => {
                 href="#"
                 className="d-flex align-items-center text-danger m-1"
               >
-                <CIcon icon={cilFactorySlash} size="lg" className="mr-2" />
+                <CIcon icon={cilFactorySlash} className="mr-2" />
                 <span className="font-weight-bold m-2">Mock Devices Mode</span>
               </CNavLink>
             </CNavItem>

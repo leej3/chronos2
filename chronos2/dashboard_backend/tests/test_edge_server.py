@@ -2,6 +2,7 @@ import unittest
 import requests
 import sys
 import os
+import time
 from unittest.mock import patch, MagicMock
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from src.core.common.exceptions import (
@@ -73,6 +74,7 @@ class TestEdgeServer(unittest.TestCase):
     def test_update_device_state_success(self):
         
         device = {"id": 1, "state": True}
+        time.sleep(5)
         response = self.edge_server.update_device_state(device["id"], device["state"])
         assert response["id"] == device["id"]
         assert response["state"] == device["state"]

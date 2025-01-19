@@ -1,31 +1,27 @@
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
-ENV POETRY_VERSION=1.7.1
+ENV PATH="/app/.venv/bin:$PATH"
 
+RUN mkdir -p /app/src/logs; touch /app/src/logs/chronos.log
 WORKDIR /app
 RUN apt-get update && apt-get install -y \
     curl \
     build-essential \
+    libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Poetry
-RUN curl -sSL https://install.python-poetry.org | python3 - && \
-    ln -s /root/.local/bin/poetry /usr/local/bin/poetry
-
-RUN apt-get update && apt-get install -y \
-    curl \
-    gcc \
-    libpq-dev
-
-COPY pyproject.toml poetry.lock* /app/
-
-RUN poetry config virtualenvs.create false && \
-    poetry install --no-root --no-dev
-RUN mkdir -p /app/src/logs; touch /app/src/logs/chronos.log
-COPY . /app
+COPY --from=ghcr.io/astral-sh/uv:0.5.10 /uv /bin/uv
+# Install requirements first in a separate layer to avoid re-installing them on
+# every code changes
+COPY pyproject.toml .
+# Create the virtual environment
+RUN uv sync --no-dev
+# Copy the application code
+COPY . .
+RUN uv sync
 RUN chmod +x entrypoint.sh
 
 ENTRYPOINT [ "./entrypoint.sh" ]

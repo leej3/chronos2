@@ -51,22 +51,22 @@ const SystemMap = ({ homedata }) => {
               </CRow>
               <CRow className="d-flex justify-content-center mb-4 w-100">
                 <CCol xs="auto" className="px-1">
-                  <CButton color="primary" onClick={() => handleButtonClick('advanced')} block>
+                  <CButton color="primary" onClick={() => handleButtonClick('advanced')} block="true">
                   Advanced
                   </CButton>
                 </CCol>
                 <CCol xs="auto" className="px-1">
-                  <CButton color="primary" onClick={() => handleButtonClick('table')} block>
+                  <CButton color="primary" onClick={() => handleButtonClick('table')} block="true">
                     Sensors
                   </CButton>
                 </CCol>
                 <CCol xs="auto" className="px-1">
-                  <CButton color="primary" onClick={() => handleButtonClick('typemode')} block>
+                  <CButton color="primary" onClick={() => handleButtonClick('typemode')} block="true">
                     Mode
                   </CButton>
                 </CCol>
                 <CCol xs="auto" className="px-1">
-                  <CButton color="primary" onClick={() => handleButtonClick('userSetting')} block>
+                  <CButton color="primary" onClick={() => handleButtonClick('userSetting')} block="true">
                     User Setting
                   </CButton>
                 </CCol>
@@ -109,22 +109,22 @@ const SystemMap = ({ homedata }) => {
               </CRow>
               <CRow className="d-flex justify-content-center mb-4 w-100">
                 <CCol xs="auto" className="px-1">
-                  <CButton color="primary" onClick={() => handleButtonClick('advanced')} block>
+                  <CButton color="primary" onClick={() => handleButtonClick('advanced')} block="true">
                   Advanced
                   </CButton>
                 </CCol>
                 <CCol xs="auto" className="px-1">
-                  <CButton color="primary" onClick={() => handleButtonClick('table')} block>
+                  <CButton color="primary" onClick={() => handleButtonClick('table')} block="true">
                     Sensors
                   </CButton>
                 </CCol>
                 <CCol xs="auto" className="px-1">
-                  <CButton color="primary" onClick={() => handleButtonClick('typemode')} block>
+                  <CButton color="primary" onClick={() => handleButtonClick('typemode')} block="true">
                     Mode
                   </CButton>
                 </CCol>
                 <CCol xs="auto" className="px-1">
-                  <CButton color="primary" onClick={() => handleButtonClick('userSetting')} block>
+                  <CButton color="primary" onClick={() => handleButtonClick('userSetting')} block="true">
                     User Setting
                   </CButton>
                 </CCol>
