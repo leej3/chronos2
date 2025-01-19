@@ -1,4 +1,5 @@
-from sqlalchemy import Column, INTEGER, REAL
+from sqlalchemy import INTEGER, REAL, Column
+
 from .base import Base
 
 

@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 
 class AsyncSQLRepository:
-    def __init__(self, engine : AsyncEngine) -> None:
+    def __init__(self, engine: AsyncEngine) -> None:
         self._engine = engine
         self._sessionmaker = async_sessionmaker(self._engine, expire_on_commit=False)
 

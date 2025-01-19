@@ -1,11 +1,20 @@
 #!/usr/bin/env python
 
-import sys
 import signal
-from chronos2.dashboard_backend.src.core.configs.root_logger import root_logger as logger
-from chronos2.dashboard_backend.src.core.chronos import Chronos
-from chronos2.dashboard_backend.src.core.chronos.constant import WINTER, SUMMER, ON, MANUAL_OFF, TO_SUMMER, TO_WINTER
+import sys
 
+from chronos2.dashboard_backend.src.core.chronos import Chronos
+from chronos2.dashboard_backend.src.core.chronos.constant import (
+    MANUAL_OFF,
+    ON,
+    SUMMER,
+    TO_SUMMER,
+    TO_WINTER,
+    WINTER,
+)
+from chronos2.dashboard_backend.src.core.configs.root_logger import (
+    root_logger as logger,
+)
 
 chronos = Chronos()
 

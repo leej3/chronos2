@@ -1,5 +1,7 @@
 from datetime import datetime
-from sqlalchemy import Column, INTEGER, BOOLEAN, DateTime
+
+from sqlalchemy import BOOLEAN, INTEGER, Column, DateTime
+
 from .base import Base
 
 

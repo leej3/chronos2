@@ -16,13 +16,12 @@ from src.core.configs.root_logger import root_logger as logger
 from src.core.models import *
 from src.core.repositories.history_repository import HistoryRepository
 from src.core.repositories.setting_repository import SettingRepository
+from src.core.services.edge_server import EdgeServer
 from src.core.utils.config_parser import cfg
 from src.core.utils.helpers import c_to_f
-from src.core.services.edge_server import EdgeServer
 
 
 class Chronos(object):
-
     def __init__(self):
         self.boiler = Boiler()
         self.chiller1 = Chiller(1)

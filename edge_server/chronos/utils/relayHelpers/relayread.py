@@ -51,4 +51,3 @@ elif(response.find("off") > 0):
 
 #Close the port
 serPort.close()
-

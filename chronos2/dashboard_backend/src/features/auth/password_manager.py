@@ -2,7 +2,6 @@ import bcrypt
 
 
 class PasswordManager:
-
     def hash_password(self, password: str) -> str:
         password = password.encode()
         return bcrypt.hashpw(password, bcrypt.gensalt()).decode()

@@ -1,18 +1,19 @@
-import pytest
-import sys
 import os
-from fastapi.testclient import TestClient
+import sys
 import time
 
+import pytest
+from fastapi.testclient import TestClient
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from main import app
 from unittest.mock import MagicMock
-from src.features.dashboard.dashboard_service import DashboardService
-from src.core.services.edge_server import EdgeServer
-from src.core.chronos import Chronos
-from src.features.auth.jwt_handler import UserToken
+
+from main import app
 from src.api.dependencies import get_current_user
+from src.core.chronos import Chronos
+from src.core.services.edge_server import EdgeServer
+from src.features.auth.jwt_handler import UserToken
+from src.features.dashboard.dashboard_service import DashboardService
 
 
 @pytest.fixture

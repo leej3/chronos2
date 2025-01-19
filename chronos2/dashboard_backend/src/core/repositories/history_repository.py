@@ -1,8 +1,7 @@
+from sqlalchemy import desc, or_
+from sqlalchemy.sql import func
 from src.core.configs.database import session_scope
 from src.core.models import *
-from sqlalchemy.sql import func
-from sqlalchemy import desc, or_
-
 from src.core.utils.config_parser import cfg
 
 

@@ -10,7 +10,6 @@ from src.core.utils.config_parser import cfg
 
 
 class Device(object):
-
     def _switch_state(self, command, relay_only=False):
         try:
             with serial.Serial(

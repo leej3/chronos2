@@ -128,4 +128,3 @@ transport.tls.enable = false
 # This parameter should be same between client and server.
 # It affects the udp and sudp proxy.
 udpPacketSize = 1500
-

@@ -1,5 +1,5 @@
-from .chronos import Chronos
 from .boiler import Boiler
 from .chiller import Chiller
-from .valve import Valve
+from .chronos import Chronos
 from .device import Device
+from .valve import Valve
