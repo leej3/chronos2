@@ -1,14 +1,13 @@
 repos:
-  # General hooks for shared and backend checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
     hooks:
       - id: check-yaml
-        files: ".*\\.yaml$"  # Check YAML files anywhere
+        files: ".*\\.yaml$"
       - id: end-of-file-fixer
-        exclude: "chronos2/dashboard_backend/examples|chronos2/dashboard_backend/tests/data"  # Exclude specific backend paths
+        exclude: "chronos2/dashboard_backend/examples|chronos2/dashboard_backend/tests/data"
       - id: trailing-whitespace
-        files: "chronos2/dashboard_backend/.*\\.py$"  # Apply to Python files in the backend
+        files: "chronos2/dashboard_backend/.*\\.py$"
         exclude: "chronos2/dashboard_backend/examples|chronos2/dashboard_backend/tests/data"
       - id: check-added-large-files
         files: "chronos2/dashboard_backend/.*"
@@ -20,7 +19,7 @@ repos:
     rev: 22.10.0
     hooks:
       - id: black
-        files: "chronos2/dashboard_backend/.*\\.py$"  # Apply only to Python files in backend
+        files: "chronos2/dashboard_backend/.*\\.py$"
 
   # Import sorting for Python (backend)
   - repo: https://github.com/pycqa/isort
@@ -29,13 +28,4 @@ repos:
       - id: isort
         name: isort
         args: ["--profile", "black"]
-        files: "chronos2/dashboard_backend/.*\\.py$"  # Apply only to Python files in backend
-
-  # Prettier for frontend files
-  - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v3.0.0
-    hooks:
-      - id: prettier
-        args: ["--write"]
-        files: "chronos2/dashboard_frontend/\\.(js|jsx|ts|tsx|json|css|scss|md|html)$"  # Target frontend files
-        exclude: "chronos2/dashboard_frontend/node_modules"  # Exclude `node_modules`
+        files: "chronos2/dashboard_backend/.*\\.py$"
