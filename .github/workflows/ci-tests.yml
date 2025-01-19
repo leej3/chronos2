@@ -2,9 +2,9 @@ name: Unit tests
 
 on:
   push:
-    branches: [feature/test_ci]
+    branches: [feature/*]
   pull_request:
-    branches: [feature/test_ci]
+    branches: [main]
 
 jobs:
   edge_server:
@@ -85,3 +85,20 @@ jobs:
 
       - name: Build React project
         run: cd chronos2/dashboard_frontend && npm run build
+
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install python package manager
+        run: |
+          python -m pip install --upgrade pip
+          pip install uv
+
+      - name: Install pre-commit
+        run: pip install pre-commit
+
+      - name: Run pre-commit
+        run: pre-commit run --all-files
