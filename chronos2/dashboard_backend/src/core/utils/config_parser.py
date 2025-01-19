@@ -2,7 +2,6 @@ import json
 
 
 class Struct(object):
-
     def __init__(self, data):
         # Updated to use items() instead of iteritems()
         for name, value in data.items():

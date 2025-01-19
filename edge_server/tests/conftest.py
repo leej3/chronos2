@@ -218,4 +218,3 @@ def mock_log_file():
         os.unlink(temp_path)
     except OSError:
         pass
-

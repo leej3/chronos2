@@ -8,10 +8,15 @@ Create Date: 2024-12-17 09:47:50.693416
 
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from src.alembic.seeds.boiler_data import BOILER_DATA
-from src.alembic.seeds.chiller_data import CHILLER1_DATA, CHILLER2_DATA, CHILLER3_DATA, CHILLER4_DATA
+from src.alembic.seeds.chiller_data import (
+    CHILLER1_DATA,
+    CHILLER2_DATA,
+    CHILLER3_DATA,
+    CHILLER4_DATA,
+)
 from src.alembic.seeds.setting_data import SETTING_DATA
 from src.alembic.seeds.value_data import SUMMER_DATA, WINTER_DATA
 
@@ -20,7 +25,6 @@ revision: str = "c0b035f570d7"
 down_revision: Union[str, None] = "ffb68c387231"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
 
 
 def upgrade() -> None:

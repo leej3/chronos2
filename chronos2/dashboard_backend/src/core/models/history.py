@@ -1,5 +1,7 @@
 from datetime import datetime
-from sqlalchemy import Column, INTEGER, REAL, DateTime
+
+from sqlalchemy import INTEGER, REAL, Column, DateTime
+
 from .base import Base
 
 

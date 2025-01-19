@@ -214,4 +214,3 @@ out:
 	modbus_free(mb);
 	return err;
 }
-

@@ -1,4 +1,5 @@
-from sqlalchemy import Column, INTEGER, BOOLEAN
+from sqlalchemy import BOOLEAN, INTEGER, Column
+
 from .base import Base
 
 

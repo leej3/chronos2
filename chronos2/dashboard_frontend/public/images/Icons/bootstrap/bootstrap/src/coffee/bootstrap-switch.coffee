@@ -388,4 +388,3 @@ do ($ = window.jQuery, window) ->
     radioAllOff: false
     onInit: ->
     onSwitchChange: ->
-

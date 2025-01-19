@@ -33,12 +33,3 @@ const Ontime = ({ homedata }) => {
 };
 
 export default Ontime;
-
-
-
-
-
-
-
-
-

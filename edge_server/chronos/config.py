@@ -73,4 +73,3 @@ config_dict = {
     "MOCK_DEVICES": os.getenv("MOCK_DEVICES", "false").lower() == "true"
 }
 cfg = Struct(config_dict)
-
