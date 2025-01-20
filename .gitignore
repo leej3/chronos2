@@ -7,3 +7,4 @@
 *egg-info
 __pycache__
 frp_config/frps.toml
+.vscode

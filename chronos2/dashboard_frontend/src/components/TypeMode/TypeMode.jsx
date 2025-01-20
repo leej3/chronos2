@@ -1,7 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
-import { CCardBody, CRow, CCol, CBadge } from "@coreui/react";
-import { FaTemperatureHigh } from "react-icons/fa"; 
+import {
+  CCardBody,
+  CRow,
+  CCol,
+  CBadge,
+  CDropdownItem,
+  CDropdownMenu,
+  CDropdown,
+  CDropdownToggle,
+} from "@coreui/react";
+import { FaThermometerHalf } from "react-icons/fa";
 import "./TypeMode.css";
 
 const TypeMode = ({ homedata }) => {
@@ -15,28 +24,46 @@ const TypeMode = ({ homedata }) => {
   const [isSmallScreen, setIsSmallScreen] = useState(false);
   const [selectedOption, setSelectedOption] = useState("Outdoor Temp");
 
+  const menuItems = [
+    { value: "Outdoor Temp", label: "Outdoor Temp" },
+    { value: "Avg Temp", label: "Avg Temp (96 hrs)" },
+  ];
+
+  // Handle screen resizing
   useEffect(() => {
     const handleResize = () => {
-      setIsSmallScreen(window.innerWidth <= 768); 
+      setIsSmallScreen(window.innerWidth <= 768);
     };
 
-    handleResize(); 
+    handleResize(); // Initial check
     window.addEventListener("resize", handleResize);
 
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const handleDropdownChange = (e) => {
-    setSelectedOption(e.target.value);
-  };
-
-  const getSelectedValue = () => {
+  const getSelectedContent = () => {
     if (selectedOption === "Outdoor Temp") {
-      return outdoorTemp;
+      return (
+        <>
+          <div className="temp-circle">
+            <FaThermometerHalf size={50} color="#FFB600" />
+            <div className="temp-value">{outdoorTemp}°F</div>
+          </div>
+          <div className="temp-label mt-2">Outdoor Temp</div>
+        </>
+      );
     } else if (selectedOption === "Avg Temp") {
-      return avgTemp;
+      return (
+        <>
+          <div className="temp-circle">
+            <FaThermometerHalf size={50} color="#FFB600" />
+            <div className="temp-value">{avgTemp}°F</div>
+          </div>
+          <div className="temp-label mt-2">Avg Temp (96 hrs)</div>
+        </>
+      );
     }
-    return "N/A";
+    return null;
   };
 
   return (
@@ -50,47 +77,47 @@ const TypeMode = ({ homedata }) => {
 
       <CCardBody className="mt-4">
         <CRow className="d-flex justify-content-center">
-          {isSmallScreen && (
+          {/* For small screens, show dropdown */}
+          {isSmallScreen ? (
             <CCol xs={12}>
-              <select 
-                value={selectedOption} 
-                onChange={handleDropdownChange} 
-                className="form-control mb-4"
-              >
-                <option value="Outdoor Temp">Outdoor Temp</option>
-                <option value="Avg Temp">Avg Temp (96 hrs)</option>
-              </select>
-            </CCol>
-          )}
+              <CDropdown className="d-md-none">
+                <CDropdownToggle color="secondary">
+                  Select Metric
+                </CDropdownToggle>
+                <CDropdownMenu>
+                  {menuItems.map((item) => (
+                    <CDropdownItem
+                      key={item.value}
+                      onClick={() => setSelectedOption(item.value)}>
+                      {item.label}
+                    </CDropdownItem>
+                  ))}
+                </CDropdownMenu>
+              </CDropdown>
 
-          <CCol xs={12} md={6} >
-            {!isSmallScreen ? (
-              <>
+              <CCol xs={12} className="mt-2">
+                {getSelectedContent()}
+              </CCol>
+            </CCol>
+          ) : (
+            <>
+              <CCol xs={12} md={6}>
                 <div className="temp-circle">
-                  <FaTemperatureHigh size={50} color="#FFB600" />
+                  <FaThermometerHalf size={50} color="#FFB600" />
                   <div className="temp-value">{outdoorTemp}°F</div>
                 </div>
                 <div className="temp-label mt-2">Outdoor Temp</div>
-              </>
-            ) : (
-              <div className="temp-circle">
-                <FaTemperatureHigh size={50} color="#FFB600" />
-                <div className="temp-value">{getSelectedValue()}°F</div>
-              </div>
-            )}
-          </CCol>
+              </CCol>
 
-          <CCol xs={12} md={6} >
-            {!isSmallScreen ? (
-              <>
+              <CCol xs={12} md={6}>
                 <div className="temp-circle">
-                  <FaTemperatureHigh size={50} color="#FFB600" />
+                  <FaThermometerHalf size={50} color="#FFB600" />
                   <div className="temp-value">{avgTemp}°F</div>
                 </div>
                 <div className="temp-label mt-2">Avg Temp (96 hrs)</div>
-              </>
-            ) : null}
-          </CCol>
+              </CCol>
+            </>
+          )}
         </CRow>
       </CCardBody>
     </div>
