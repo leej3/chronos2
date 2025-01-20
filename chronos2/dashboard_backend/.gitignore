@@ -6,8 +6,5 @@ poetry.lock
 .env
 logs/
 .DS_Store
-<<<<<<< HEAD
 *.lock
-=======
->>>>>>> 862099c (Feat: Update source, add eslint ...)
 uv.lock
