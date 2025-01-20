@@ -5,8 +5,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from src.api.dependencies import exception_handler
 from src.api.routers import auth_router, dashboard_router
-from src.core.chronos import Chronos
 from src.core.common.exceptions import GenericError
+from src.core.services.chronos import Chronos
 from src.features.auth.auth_service import AuthService
 
 chronos = Chronos()

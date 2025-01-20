@@ -4,9 +4,9 @@ from fastapi import APIRouter, Request, Security
 from fastapi.responses import JSONResponse, StreamingResponse
 from src.api.dependencies import get_current_user
 from src.api.dto.dashboard import UpdateDeviceState, UpdateSettings
-from src.core.chronos import Chronos
-from src.core.chronos.constant import TO_SUMMER, TO_WINTER
+from src.core.services.chronos import Chronos
 from src.core.services.edge_server import EdgeServer
+from src.core.utils.constant import TO_SUMMER, TO_WINTER
 from src.features.auth.jwt_handler import UserToken
 from src.features.dashboard.dashboard_service import DashboardService
 
