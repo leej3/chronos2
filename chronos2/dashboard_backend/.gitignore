@@ -6,3 +6,5 @@ poetry.lock
 .env
 logs/
 .DS_Store
+*.lock
+uv.lock
