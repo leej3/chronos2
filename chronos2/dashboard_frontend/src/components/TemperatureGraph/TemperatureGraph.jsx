@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+
 import {
   LineChart,
   Line,
@@ -10,6 +11,7 @@ import {
   ResponsiveContainer,
   Label,
 } from 'recharts';
+
 import './TemperatureGraph.css';
 import { getCharData } from '../../api/getCharData';
 import { formatNumber } from '../../utils/tranform';
@@ -51,15 +53,15 @@ const TemperatureGraph = () => {
     };
 
     fetchData();
-    const intervalId = setInterval(fetchData, 120000);
+    setInterval(fetchData, 120000);
 
     const handleResize = () => {
       if (window.innerWidth < 768) {
         setInterval(8);
-        setChartHeight(400); 
+        setChartHeight(400);
       } else {
         setInterval(4);
-        setChartHeight(600); 
+        setChartHeight(600);
       }
     };
 
@@ -78,21 +80,24 @@ const TemperatureGraph = () => {
           className="custom-tooltip"
           style={{
             backgroundColor: '#333645',
-            padding: '8px 12px', 
+            padding: '8px 12px',
             borderRadius: '5px',
-            fontSize: '12px', 
-            maxWidth: '200px', 
-            color: '#fff', 
+            fontSize: '12px',
+            maxWidth: '200px',
+            color: '#fff',
           }}
         >
           <p style={{ fontSize: '12px', margin: '5px 0' }}>
-            <strong>Time: </strong>{label}
+            <strong>Time: </strong>
+            {label}
           </p>
           <p style={{ fontSize: '12px', margin: '5px 0', color: '#ffca28' }}>
-            <strong>Inlet: </strong>{payload[0].value}°F
+            <strong>Inlet: </strong>
+            {payload[0].value}°F
           </p>
           <p style={{ fontSize: '12px', margin: '5px 0', color: '#ff7043' }}>
-            <strong>Outlet: </strong>{payload[1].value}°F
+            <strong>Outlet: </strong>
+            {payload[1].value}°F
           </p>
         </div>
       );
@@ -101,12 +106,12 @@ const TemperatureGraph = () => {
   };
 
   const downloadCSV = () => {
-    const header = ['Date', 'Inlet Temperature (°F)', 'Outlet Temperature (°F)'];
-    const rows = data.map((entry) => [
-      entry.name,
-      entry.inlet,
-      entry.outlet,
-    ]);
+    const header = [
+      'Date',
+      'Inlet Temperature (°F)',
+      'Outlet Temperature (°F)',
+    ];
+    const rows = data.map((entry) => [entry.name, entry.inlet, entry.outlet]);
 
     let csvContent = 'data:text/csv;charset=utf-8,';
     csvContent += header.join(',') + '\n';
@@ -137,7 +142,7 @@ const TemperatureGraph = () => {
                 if (index === 0) {
                   return '';
                 }
-                const [date, time] = tick.split(', ');
+                const [time] = tick.split(', ');
                 return time;
               }}
               angle={0}
@@ -148,7 +153,7 @@ const TemperatureGraph = () => {
               domain={[30, 90]}
               stroke="#dddddd"
               tick={{ fill: '#dddddd', fontSize: 12, fontWeight: 'bold' }}
-              tickFormatter={(tick) => Math.round(tick)} 
+              tickFormatter={(tick) => Math.round(tick)}
             >
               <Label
                 value="Temperature (°F)"
@@ -168,15 +173,15 @@ const TemperatureGraph = () => {
               type="monotone"
               dataKey="inlet"
               stroke="#ffca28"
-              strokeWidth={2} 
-              dot={{ r: 3 }} 
+              strokeWidth={2}
+              dot={{ r: 3 }}
             />
             <Line
               type="monotone"
               dataKey="outlet"
               stroke="#ff7043"
-              strokeWidth={2} 
-              dot={{ r: 3 }} 
+              strokeWidth={2}
+              dot={{ r: 3 }}
             />
           </LineChart>
         </ResponsiveContainer>

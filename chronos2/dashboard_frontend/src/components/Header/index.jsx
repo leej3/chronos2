@@ -1,5 +1,5 @@
 import AppFooter from './AppFooter';
-import AppHeaderDropdown from './AppHeaderDropdown';
 import AppHeader from './AppHeader';
+import AppHeaderDropdown from './AppHeaderDropdown';
 
 export { AppFooter, AppHeaderDropdown, AppHeader };

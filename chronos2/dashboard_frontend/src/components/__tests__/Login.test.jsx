@@ -1,10 +1,16 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+
 import "@testing-library/jest-dom";
-import Login from "../../pages/Login/Login";
+import MockAdapter from "axios-mock-adapter";
 import { Provider } from "react-redux";
-import { configureStore } from "@reduxjs/toolkit";
+
 import axiosApi from "../../api/axios";
-import MockAdapter from "axios-mock-adapter"; 
+import Login from "../../pages/Login/Login";
+
+import { configureStore } from "@reduxjs/toolkit";
+
+
+ 
 import { BrowserRouter as Router } from "react-router-dom";
 import React from 'react';
 

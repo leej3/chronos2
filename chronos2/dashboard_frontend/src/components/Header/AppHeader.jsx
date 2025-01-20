@@ -1,22 +1,22 @@
 import React, { useEffect, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+
+import { cilFactorySlash } from '@coreui/icons';
+import CIcon from '@coreui/icons-react';
 import {
   CContainer,
   CHeader,
   CHeaderNav,
   CNavLink,
   CNavItem,
-  useColorModes,
 } from '@coreui/react';
-import CIcon from '@coreui/icons-react';
-import { cilFactorySlash } from '@coreui/icons';
+import { useSelector } from 'react-redux';
 
 const AppHeader = () => {
   const headerRef = useRef();
-  const { colorMode, setColorMode } = useColorModes(
-    'coreui-free-react-admin-template-theme'
-  );
+  // const { colorMode, setColorMode } = useColorModes(
+  //   'coreui-free-react-admin-template-theme'
+  // );
 
   // Get mockDevices state from Redux store
   const mockDevices = useSelector((state) => state.season.mockDevices);
@@ -27,7 +27,7 @@ const AppHeader = () => {
       headerRef.current &&
         headerRef.current.classList.toggle(
           'shadow-sm',
-          document.documentElement.scrollTop > 0
+          document.documentElement.scrollTop > 0,
         );
     });
   }, []);

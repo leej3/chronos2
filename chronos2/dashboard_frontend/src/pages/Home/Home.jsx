@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import UserSettings from '../../components/UserSettings/UserSettings';
-import SystemMap from '../../components/systemMap/SystemMap';
-import ManualOverride from '../../components/ManualOverride/ManualOverride';
-import TemperatureGraph from '../../components/TemperatureGraph/TemperatureGraph';
-import { useDispatch, useSelector } from 'react-redux';
-import { fetchSummerData } from '../../features/summer/summerSlice';
-import { setSeason, setMockDevices } from '../../features/state/seasonSlice';
+
 import { CContainer, CRow, CCol, CCard, CCardBody } from '@coreui/react';
-import "./Home.css"
+import { useDispatch, useSelector } from 'react-redux';
+
+import ManualOverride from '../../components/ManualOverride/ManualOverride';
+import SystemMap from '../../components/systemMap/SystemMap';
+import TemperatureGraph from '../../components/TemperatureGraph/TemperatureGraph';
+import { setSeason, setMockDevices } from '../../features/state/seasonSlice';
+import { fetchSummerData } from '../../features/summer/summerSlice';
+
+import './Home.css';
 const Home = () => {
   const [homedata, setHomeData] = useState();
   const dispatch = useDispatch();
@@ -44,8 +46,6 @@ const Home = () => {
     }
   };
 
-  
-
   useEffect(() => {
     fetchData();
     const intervalId = setInterval(fetchData, 5000);
@@ -57,21 +57,21 @@ const Home = () => {
       <CRow>
         <CCol lg={12}>
           <CCard className="item mt-4">
-            <CCardBody className='p-0'>
+            <CCardBody className="p-0">
               <SystemMap homedata={homedata} />
             </CCardBody>
           </CCard>
 
           <CCard className="item ">
-            <CCardBody className='p-0'>
+            <CCardBody className="p-0">
               <ManualOverride data={homedata} season={season} />
             </CCardBody>
           </CCard>
           <CCard className="item mt-4">
-            <CCardBody className='p-0'>
+            <CCardBody className="p-0">
               <TemperatureGraph />
             </CCardBody>
-          </CCard> 
+          </CCard>
         </CCol>
       </CRow>
     </CContainer>

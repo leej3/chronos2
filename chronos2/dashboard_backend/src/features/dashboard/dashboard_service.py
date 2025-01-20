@@ -3,11 +3,11 @@ from datetime import datetime, timedelta
 
 from sqlalchemy import desc, or_
 from sqlalchemy.sql import func
-from src.core.chronos import Chronos
 from src.core.configs.database import session_scope
 from src.core.models import History
 from src.core.repositories.history_repository import HistoryRepository
 from src.core.repositories.setting_repository import SettingRepository
+from src.core.services.chronos import Chronos
 from src.core.services.edge_server import EdgeServer
 from src.core.utils.config_parser import cfg
 

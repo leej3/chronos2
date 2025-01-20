@@ -1,9 +1,12 @@
 import React from 'react';
+
 import { render,act } from '@testing-library/react';
+
 import '@testing-library/jest-dom';
-import TemperatureGraph from '../TemperatureGraph/TemperatureGraph';
-import { getCharData } from '../../api/getCharData';
 import ResizeObserver from 'resize-observer-polyfill';
+
+import { getCharData } from '../../api/getCharData';
+import TemperatureGraph from '../TemperatureGraph/TemperatureGraph';
 
 global.ResizeObserver = ResizeObserver;
 
