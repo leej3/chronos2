@@ -1,9 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { CForm, CFormInput, CButton, CRow, CCol, CCardBody } from '@coreui/react';
-import { updateSettings } from '../../api/updateSetting';
-import { toast } from 'react-toastify';
-import { useSelector } from 'react-redux';
-import "./UserSettings.css"
+import React, { useState, useEffect } from "react";
+import {
+  CForm,
+  CFormInput,
+  CButton,
+  CRow,
+  CCol,
+  CCardBody,
+} from "@coreui/react";
+import { updateSettings } from "../../api/updateSetting";
+import { toast } from "react-toastify";
+import { useSelector } from "react-redux";
+import "./UserSettings.css";
+
 const UserSettings = ({ data }) => {
   const initialFormData = {
     tolerance: null,
@@ -17,6 +25,7 @@ const UserSettings = ({ data }) => {
   };
 
   const [formData, setFormData] = useState(initialFormData);
+  const [showForm, setShowForm] = useState(false); // State để hiển thị form nhập liệu
   const season = useSelector((state) => state.season.season); // Lấy giá trị mùa từ Redux
 
   useEffect(() => {
@@ -62,72 +71,111 @@ const UserSettings = ({ data }) => {
   };
 
   return (
-    <div className='text-start'>
-
+    <div className="text-start">
       <CCardBody>
         <CForm onSubmit={handleSubmit}>
           <CRow>
-          <CRow className='position-relative mb-2'>
-  {[
-    { label: 'Baseline Setpoint', key: 'baseline_setpoint' },
-    { label: 'THA Setpoint', key: 'tha_setpoint' },
-    { label: 'Effective Setpoint', key: 'effective_setpoint' },
-  ].map(({ label, key }) => (
-    <CCol xs="12" key={key} className="mt-2">
-      <label className="font-weight-bold" htmlFor={key} style={{ fontSize: '18px', fontWeight: 'bold' }}>
-        {label}:
-      </label> 
-      <span className="font-italic" style={{ fontSize: '16px', marginLeft: '10px' }}>
-        {data.results[key] ?? '0.0'} <span>°F</span>
-      </span>
-    </CCol>
-  ))}
-  
-  <div className='icon_mode'>
-    {season === 'Summer' ? (
-      <span style={{ color: 'orange', fontSize: '24px' }}>☀️ Summer</span>
-    ) : season === 'Winter' ? (
-      <span style={{ color: 'lightblue', fontSize: '24px' }}>❄️ Winter</span>
-    ) : null}
-  </div>
-</CRow>
+            <CRow className="position-relative mb-2">
+              {[
+                { label: "Baseline Setpoint", key: "baseline_setpoint" },
+                { label: "THA Setpoint", key: "tha_setpoint" },
+                { label: "Effective Setpoint", key: "effective_setpoint" },
+              ].map(({ label, key }) => (
+                <CCol xs="12" key={key} className="mt-2">
+                  <label
+                    className="font-weight-bold"
+                    htmlFor={key}
+                    style={{ fontSize: "18px", fontWeight: "bold" }}>
+                    {label}:
+                  </label>
+                  <span
+                    className="font-italic"
+                    style={{ fontSize: "16px", marginLeft: "10px" }}>
+                    {data.results[key] ?? "0.0"} <span>°F</span>
+                  </span>
+                </CCol>
+              ))}
 
-{[
-  { label: 'Tolerance', key: 'tolerance' },
-  { label: 'Min. Setpoint', key: 'setpoint_min' },
-  { label: 'Max. Setpoint', key: 'setpoint_max' },
-  season === 'Summer' && { label: 'Setpoint Offset (Summer)', key: 'setpoint_offset_summer' },
-  season === 'Winter' && { label: 'Setpoint Offset (Winter)', key: 'setpoint_offset_winter' },
-  { label: 'Mode Change Delta Temp', key: 'mode_change_delta_temp' },
-  { label: 'Mode Switch Lockout Time', key: 'mode_switch_lockout_time', unit: 'min.' },
-  { label: 'Cascade Time', key: 'cascade_time', unit: 'min.' },
-]
-  .filter(Boolean) 
-  .map(({ label, key, unit = '' }) => (
-    <CCol xs="12" key={key} >
-      <div style={{ marginBottom: '10px' }}>
-        <label htmlFor={key} style={{ fontWeight: 'bold', display: 'block', marginBottom: '5px' }}>
-          {label}:
-        </label>
-        <CFormInput
-          type="number"
-          name={key}
-          id={key}
-          value={formData[key] ?? ''}
-          onChange={handleInputChange}
-          placeholder={`${data.results[key] ?? '0.0'} ${unit}`}
-        />
-      </div>
-    </CCol>
-  ))}
+              <div className="icon_mode">
+                {season === "Summer" ? (
+                  <span style={{ color: "orange", fontSize: "24px" }}>
+                    ☀️ Summer
+                  </span>
+                ) : season === "Winter" ? (
+                  <span style={{ color: "lightblue", fontSize: "24px" }}>
+                    ❄️ Winter
+                  </span>
+                ) : null}
+              </div>
+            </CRow>
 
-           
-
-            <CCol xs="12" className='text-end'>
-              <CButton type="submit" color="primary" className="update-btn">
-                Update
+            {/* Nút Show Settings chỉ hiển thị trên màn hình nhỏ */}
+            <CCol xs="12" className="text-center">
+              <CButton
+                color="primary"
+                onClick={() => setShowForm(!showForm)}
+                className="show-settings-btn">
+                {showForm ? "Hide Settings" : "Show Settings"}
               </CButton>
             </CCol>
+
+            {/* Form nhập liệu chỉ hiển thị khi bấm nút Show Settings */}
+            <div className={`show-settings-form ${showForm ? "show" : ""}`}>
+              <CRow>
+                {[
+                  { label: "Tolerance", key: "tolerance" },
+                  { label: "Min. Setpoint", key: "setpoint_min" },
+                  { label: "Max. Setpoint", key: "setpoint_max" },
+                  season === "Summer" && {
+                    label: "Setpoint Offset (Summer)",
+                    key: "setpoint_offset_summer",
+                  },
+                  season === "Winter" && {
+                    label: "Setpoint Offset (Winter)",
+                    key: "setpoint_offset_winter",
+                  },
+                  {
+                    label: "Mode Change Delta Temp",
+                    key: "mode_change_delta_temp",
+                  },
+                  {
+                    label: "Mode Switch Lockout Time",
+                    key: "mode_switch_lockout_time",
+                    unit: "min.",
+                  },
+                  { label: "Cascade Time", key: "cascade_time", unit: "min." },
+                ]
+                  .filter(Boolean)
+                  .map(({ label, key, unit = "" }) => (
+                    <CCol xs="12" key={key}>
+                      <div style={{ marginBottom: "10px" }}>
+                        <label
+                          htmlFor={key}
+                          style={{
+                            fontWeight: "bold",
+                            display: "block",
+                            marginBottom: "5px",
+                          }}>
+                          {label}:
+                        </label>
+                        <CFormInput
+                          type="number"
+                          name={key}
+                          id={key}
+                          value={formData[key] ?? ""}
+                          onChange={handleInputChange}
+                          placeholder={`${data.results[key] ?? "0.0"} ${unit}`}
+                        />
+                      </div>
+                    </CCol>
+                  ))}
+                <CCol xs="12" className="text-end">
+                  <CButton type="submit" color="primary" className="update-btn">
+                    Update
+                  </CButton>
+                </CCol>
+              </CRow>
+            </div>
           </CRow>
         </CForm>
       </CCardBody>
