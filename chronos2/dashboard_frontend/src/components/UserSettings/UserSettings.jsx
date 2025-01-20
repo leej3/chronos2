@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   CForm,
   CFormInput,
@@ -6,11 +6,11 @@ import {
   CRow,
   CCol,
   CCardBody,
-} from "@coreui/react";
-import { updateSettings } from "../../api/updateSetting";
-import { toast } from "react-toastify";
-import { useSelector } from "react-redux";
-import "./UserSettings.css";
+} from '@coreui/react';
+import { updateSettings } from '../../api/updateSetting';
+import { toast } from 'react-toastify';
+import { useSelector } from 'react-redux';
+import './UserSettings.css';
 
 const UserSettings = ({ data }) => {
   const initialFormData = {
@@ -66,7 +66,7 @@ const UserSettings = ({ data }) => {
       const response = await updateSettings(JSON.stringify(formData));
       toast.success(response?.data?.message);
     } catch (error) {
-      toast.error(response?.data?.message);
+      toast.error(error?.response?.data?.message || 'Đã có lỗi xảy ra');
     }
   };
 
@@ -77,32 +77,34 @@ const UserSettings = ({ data }) => {
           <CRow>
             <CRow className="position-relative mb-2">
               {[
-                { label: "Baseline Setpoint", key: "baseline_setpoint" },
-                { label: "THA Setpoint", key: "tha_setpoint" },
-                { label: "Effective Setpoint", key: "effective_setpoint" },
+                { label: 'Baseline Setpoint', key: 'baseline_setpoint' },
+                { label: 'THA Setpoint', key: 'tha_setpoint' },
+                { label: 'Effective Setpoint', key: 'effective_setpoint' },
               ].map(({ label, key }) => (
                 <CCol xs="12" key={key} className="mt-2">
                   <label
                     className="font-weight-bold"
                     htmlFor={key}
-                    style={{ fontSize: "18px", fontWeight: "bold" }}>
+                    style={{ fontSize: '18px', fontWeight: 'bold' }}
+                  >
                     {label}:
                   </label>
                   <span
                     className="font-italic"
-                    style={{ fontSize: "16px", marginLeft: "10px" }}>
-                    {data.results[key] ?? "0.0"} <span>°F</span>
+                    style={{ fontSize: '16px', marginLeft: '10px' }}
+                  >
+                    {data.results[key] ?? '0.0'} <span>°F</span>
                   </span>
                 </CCol>
               ))}
 
               <div className="icon_mode">
-                {season === "Summer" ? (
-                  <span style={{ color: "orange", fontSize: "24px" }}>
+                {season === 'Summer' ? (
+                  <span style={{ color: 'orange', fontSize: '24px' }}>
                     ☀️ Summer
                   </span>
-                ) : season === "Winter" ? (
-                  <span style={{ color: "lightblue", fontSize: "24px" }}>
+                ) : season === 'Winter' ? (
+                  <span style={{ color: 'lightblue', fontSize: '24px' }}>
                     ❄️ Winter
                   </span>
                 ) : null}
@@ -114,57 +116,59 @@ const UserSettings = ({ data }) => {
               <CButton
                 color="primary"
                 onClick={() => setShowForm(!showForm)}
-                className="show-settings-btn">
-                {showForm ? "Hide Settings" : "Show Settings"}
+                className="show-settings-btn"
+              >
+                {showForm ? 'Hide Settings' : 'Show Settings'}
               </CButton>
             </CCol>
 
             {/* Form nhập liệu chỉ hiển thị khi bấm nút Show Settings */}
-            <div className={`show-settings-form ${showForm ? "show" : ""}`}>
+            <div className={`show-settings-form ${showForm ? 'show' : ''}`}>
               <CRow>
                 {[
-                  { label: "Tolerance", key: "tolerance" },
-                  { label: "Min. Setpoint", key: "setpoint_min" },
-                  { label: "Max. Setpoint", key: "setpoint_max" },
-                  season === "Summer" && {
-                    label: "Setpoint Offset (Summer)",
-                    key: "setpoint_offset_summer",
+                  { label: 'Tolerance', key: 'tolerance' },
+                  { label: 'Min. Setpoint', key: 'setpoint_min' },
+                  { label: 'Max. Setpoint', key: 'setpoint_max' },
+                  season === 'Summer' && {
+                    label: 'Setpoint Offset (Summer)',
+                    key: 'setpoint_offset_summer',
                   },
-                  season === "Winter" && {
-                    label: "Setpoint Offset (Winter)",
-                    key: "setpoint_offset_winter",
-                  },
-                  {
-                    label: "Mode Change Delta Temp",
-                    key: "mode_change_delta_temp",
+                  season === 'Winter' && {
+                    label: 'Setpoint Offset (Winter)',
+                    key: 'setpoint_offset_winter',
                   },
                   {
-                    label: "Mode Switch Lockout Time",
-                    key: "mode_switch_lockout_time",
-                    unit: "min.",
+                    label: 'Mode Change Delta Temp',
+                    key: 'mode_change_delta_temp',
                   },
-                  { label: "Cascade Time", key: "cascade_time", unit: "min." },
+                  {
+                    label: 'Mode Switch Lockout Time',
+                    key: 'mode_switch_lockout_time',
+                    unit: 'min.',
+                  },
+                  { label: 'Cascade Time', key: 'cascade_time', unit: 'min.' },
                 ]
                   .filter(Boolean)
-                  .map(({ label, key, unit = "" }) => (
+                  .map(({ label, key, unit = '' }) => (
                     <CCol xs="12" key={key}>
-                      <div style={{ marginBottom: "10px" }}>
+                      <div style={{ marginBottom: '10px' }}>
                         <label
                           htmlFor={key}
                           style={{
-                            fontWeight: "bold",
-                            display: "block",
-                            marginBottom: "5px",
-                          }}>
+                            fontWeight: 'bold',
+                            display: 'block',
+                            marginBottom: '5px',
+                          }}
+                        >
                           {label}:
                         </label>
                         <CFormInput
                           type="number"
                           name={key}
                           id={key}
-                          value={formData[key] ?? ""}
+                          value={formData[key] ?? ''}
                           onChange={handleInputChange}
-                          placeholder={`${data.results[key] ?? "0.0"} ${unit}`}
+                          placeholder={`${data.results[key] ?? '0.0'} ${unit}`}
                         />
                       </div>
                     </CCol>

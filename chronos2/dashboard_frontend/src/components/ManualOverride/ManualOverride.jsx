@@ -1,7 +1,6 @@
-/* eslint-disable react/prop-types */
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import io from 'socket.io-client';
+// import io from 'socket.io-client';
 import {
   setOverride,
   setInitialState,
@@ -21,7 +20,7 @@ const ManualOverride = ({ data, season }) => {
   const dispatch = useDispatch();
   const state = useSelector((state) => state.manualOverride);
   const [alertMessage, setAlertMessage] = useState('');
-  const [socket, setSocket] = useState(null);
+  // const [socket, setSocket] = useState(null);
   useEffect(() => {
     if (data?.devices) {
       const devices = data.devices;
@@ -63,7 +62,11 @@ const ManualOverride = ({ data, season }) => {
       <h2 className="section-title">Manual Override</h2>
       <CCardBody className="p-0">
         {alertMessage && (
-          <CAlert color="danger" dismissible onClose={() => setAlertMessage('')}>
+          <CAlert
+            color="danger"
+            dismissible
+            onClose={() => setAlertMessage('')}
+          >
             <strong>Error!</strong> {alertMessage}
           </CAlert>
         )}
@@ -72,11 +75,14 @@ const ManualOverride = ({ data, season }) => {
             .filter(
               (device, index) =>
                 index <= 4 &&
-                (device === 'boiler' || device.startsWith('chiller'))
+                (device === 'boiler' || device.startsWith('chiller')),
             )
             .map((device) => (
               <CCol
-                xs={12} sm={6} md={4} lg={2.4}  
+                xs={12}
+                sm={6}
+                md={4}
+                lg={2.4}
                 key={device}
                 className="d-flex flex-column align-items-center"
               >
@@ -86,9 +92,11 @@ const ManualOverride = ({ data, season }) => {
                 <div className="d-flex gap-2 align-items-center">
                   <label>OFF</label>
                   <CFormSwitch
-                    checked={state[device] === true} 
+                    checked={state[device] === true}
                     className="cursor-pointer"
-                    onChange={(e) => handleRadioChange(device, e.target.checked)}
+                    onChange={(e) =>
+                      handleRadioChange(device, e.target.checked)
+                    }
                     size="xl"
                     disabled={
                       (season === 'Winter' && device.startsWith('chiller')) ||

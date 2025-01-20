@@ -13,7 +13,7 @@ const manualOverrideSlice = createSlice({
   reducers: {
     setOverride: (state, action) => {
       const { name, value } = action.payload;
-      if (state.hasOwnProperty(name)) {
+      if (Object.prototype.hasOwnProperty.call(state, name)) {
         state[name] = value;
       }
     },
