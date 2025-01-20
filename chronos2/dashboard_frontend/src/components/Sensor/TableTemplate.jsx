@@ -1,5 +1,6 @@
 import { CCardBody, CRow, CCol, CWidgetStatsD } from "@coreui/react";
 import PropTypes from 'prop-types';
+
 import "./tabletemplate.css";
 import {formatNumber} from "../../utils/tranform"
 

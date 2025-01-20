@@ -1,10 +1,4 @@
 import React, { useState } from "react";
-import { useSelector } from "react-redux";
-import Modbus from "../Modebus/Modbus";
-import TableTemplate from "../Sensor/TableTemplate";
-import TypeMode from "../TypeMode/TypeMode";
-import UserSetting from "../UserSettings/UserSettings";
-import { formatNumber } from "../../utils/tranform";
 
 import {
   CButton,
@@ -19,6 +13,14 @@ import {
   CModalHeader,
   CModalTitle,
 } from "@coreui/react";
+import { useSelector } from "react-redux";
+
+import { formatNumber } from "../../utils/tranform";
+import Modbus from "../Modebus/Modbus";
+import TableTemplate from "../Sensor/TableTemplate";
+import TypeMode from "../TypeMode/TypeMode";
+import UserSetting from "../UserSettings/UserSettings";
+
 import "./SystemMap.css";
 
 const SystemMap = ({ homedata }) => {

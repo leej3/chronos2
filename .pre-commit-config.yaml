@@ -31,9 +31,8 @@ repos:
         files: "chronos2/dashboard_backend/.*\\.py$"
 
   - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v8.0.1
+    rev: v8.38.0
     hooks:
       - id: eslint
         name: eslint
-        files: "chronos2/dashboard_frontend/.*\\.(js|jsx|ts|tsx)$"
-        exclude: "chronos2/dashboard_frontend/node_modules"
+        files: "chronos2/dashboard_frontend/src.*\\.(js|jsx|ts|tsx)$"

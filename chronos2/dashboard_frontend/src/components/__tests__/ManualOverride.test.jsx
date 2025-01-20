@@ -1,9 +1,11 @@
 import React from "react";
+
 import { render, screen, fireEvent,act } from "@testing-library/react";
-import configureStore from "redux-mock-store"; 
 import { Provider } from "react-redux"; 
-import ManualOverride from "../ManualOverride/ManualOverride"; 
+import configureStore from "redux-mock-store";
+ 
 import { updateDeviceState } from "../../api/updateState";
+import ManualOverride from "../ManualOverride/ManualOverride"; 
 
 jest.mock('../ManualOverride/ManualOverride.css', () => {});
 jest.mock("../../api/updateState"); 

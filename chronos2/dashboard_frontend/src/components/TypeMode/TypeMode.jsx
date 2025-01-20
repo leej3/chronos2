@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
+
 import {
   CCardBody,
   CRow,
@@ -11,6 +11,7 @@ import {
   CDropdownToggle,
 } from "@coreui/react";
 import { FaThermometerHalf } from "react-icons/fa";
+import { useSelector } from "react-redux";
 import "./TypeMode.css";
 
 const TypeMode = ({ homedata }) => {

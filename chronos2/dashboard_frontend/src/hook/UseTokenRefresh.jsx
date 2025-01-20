@@ -1,7 +1,9 @@
-import { useDispatch } from 'react-redux';
-import { setAccessToken } from '../redux/AuthSlice';
 import { useState } from 'react';
+
+import { useDispatch } from 'react-redux';
+
 import axiosApi from '../api/axios';
+import { setAccessToken } from '../redux/AuthSlice';
 
 const UseTokenRefresh = () => {
   const dispatch = useDispatch();

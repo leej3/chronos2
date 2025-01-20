@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+
+import { cilFactorySlash } from '@coreui/icons';
+import CIcon from '@coreui/icons-react';
 import {
   CContainer,
   CHeader,
@@ -8,8 +10,7 @@ import {
   CNavLink,
   CNavItem,
 } from '@coreui/react';
-import CIcon from '@coreui/icons-react';
-import { cilFactorySlash } from '@coreui/icons';
+import { useSelector } from 'react-redux';
 
 const AppHeader = () => {
   const headerRef = useRef();

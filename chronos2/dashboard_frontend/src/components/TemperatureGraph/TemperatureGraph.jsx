@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+
 import {
   LineChart,
   Line,
@@ -10,6 +11,7 @@ import {
   ResponsiveContainer,
   Label,
 } from 'recharts';
+
 import './TemperatureGraph.css';
 import { getCharData } from '../../api/getCharData';
 import { formatNumber } from '../../utils/tranform';

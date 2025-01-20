@@ -1,11 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-// import io from 'socket.io-client';
-import {
-  setOverride,
-  setInitialState,
-} from '../../features/state/ManualOverrideSlice';
-import { updateDeviceState } from '../../api/updateState';
+
 import {
   CCard,
   CCardBody,
@@ -14,6 +8,14 @@ import {
   CRow,
   CCol,
 } from '@coreui/react';
+import { useDispatch, useSelector } from 'react-redux';
+
+// import io from 'socket.io-client';
+import { updateDeviceState } from '../../api/updateState';
+import {
+  setOverride,
+  setInitialState,
+} from '../../features/state/ManualOverrideSlice';
 import { getDeviceId } from '../../utils/constant';
 
 const ManualOverride = ({ data, season }) => {

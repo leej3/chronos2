@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+
 import {
   CForm,
   CFormInput,
@@ -7,9 +8,11 @@ import {
   CCol,
   CCardBody,
 } from '@coreui/react';
-import { updateSettings } from '../../api/updateSetting';
-import { toast } from 'react-toastify';
 import { useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
+
+import { updateSettings } from '../../api/updateSetting';
+
 import './UserSettings.css';
 
 const UserSettings = ({ data }) => {

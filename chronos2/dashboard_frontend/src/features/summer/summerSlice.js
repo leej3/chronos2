@@ -1,5 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { createAsyncThunk } from '@reduxjs/toolkit';
+
 import { getDashboardData } from '../../api/getDashboardData';
 
 const initialState = {

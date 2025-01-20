@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+
 import {
   CFormLabel,
   CCol,
@@ -13,6 +14,7 @@ import {
   CDropdownMenu,
   CDropdownItem
 } from "@coreui/react";
+
 import "./Modbus.css";
 import { formatNumber } from "../../utils/tranform";
 

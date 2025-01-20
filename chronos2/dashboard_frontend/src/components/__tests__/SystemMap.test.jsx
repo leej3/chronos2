@@ -1,8 +1,10 @@
+import React from 'react';
+
 import { render, screen } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { createStore } from 'redux';
+
 import SystemMap from '../systemMap/SystemMap';
-import React from 'react';
 
 jest.mock('../systemMap/SystemMap.css', () => {});
 jest.mock('../Modebus/Modbus.css', () => {});

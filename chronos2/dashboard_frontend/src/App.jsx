@@ -1,6 +1,7 @@
 import React, { Suspense } from 'react';
 import './App.css';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+
 import { CSpinner } from '@coreui/react';
 // Containers
 const Layout = React.lazy(() => import('./pages/Layout/LayoutDasdboard'));

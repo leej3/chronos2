@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from 'react';
+
 import './Login.css';
+import { useNavigate } from 'react-router-dom';
+
+import { cilLockLocked, cilUser } from '@coreui/icons';
+import CIcon from '@coreui/icons-react';
 import {
   CButton,
   CCard,
@@ -14,13 +19,12 @@ import {
   CRow,
   CSpinner,
 } from '@coreui/react';
-import CIcon from '@coreui/icons-react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
 
-import { cilLockLocked, cilUser } from '@coreui/icons';
-import { login } from '../../redux/AuthSlice';
+
+
 import axiosApi from '../../api/axios';
+import { login } from '../../redux/AuthSlice';
 const Login = () => {
   const dispatch = useDispatch();
   const { isLoggedIn } = useSelector((state) => state.auth);
