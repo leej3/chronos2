@@ -29,3 +29,9 @@ class HistoryRepository:
             (avg_result,) = session.query(func.avg(result.c.delta)).first()
             session.expunge_all()
         return avg_result
+
+    def _get_property_from_db(self, param):
+        param = getattr(Settings, param)
+        with session_scope() as session:
+            (value,) = session.query(param).first()
+        return value

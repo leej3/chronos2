@@ -7,7 +7,7 @@ from uuid import UUID
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer, SecurityScopes
 from jose import jwt
-from jose.exceptions import ExpiredSignatureError
+from jose.exceptions import ExpiredSignatureError, JWTError
 from pydantic import BaseModel
 from src.core.common.exceptions import JWTInvalid
 from src.core.configs.config import settings
@@ -56,13 +56,17 @@ def decode_jwt_token(token: str) -> Payload:
         return payload
     except ExpiredSignatureError:
         raise JWTInvalid(message="This token is expired")
+    except JWTError:
+        raise JWTInvalid(message="This token is expired")
+    except Exception as e:
+        raise JWTInvalid(message="This token is expired")
 
 
 def create_refresh_token(user_token: UserToken) -> str:
     payload: AccessPayload = {
         "sub": user_token.user_id,
         "exp": datetime.now(timezone.utc)
-        + timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES),
+        + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
         "token_type": TokenType.REFRESH,
     }
     return encode_jwt_token(payload)
@@ -72,7 +76,7 @@ def create_access_token(user_token: UserToken) -> str:
     payload: AccessPayload = {
         "sub": user_token.user_id,
         "exp": datetime.now(timezone.utc)
-        + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
+        + timedelta(days=settings.ACCESS_TOKEN_EXPIRE_DAYS),
         "token_type": TokenType.ACCESS,
     }
     return encode_jwt_token(payload)
