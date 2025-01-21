@@ -6,6 +6,12 @@ from src.core.utils.config_parser import cfg
 
 
 class HistoryRepository:
+    def _get_property_from_db(self, param):
+        param = getattr(History, param)
+        with session_scope() as session:
+            (value,) = session.query(param).first()
+        return value
+
     def get_last_history(self):
         with session_scope() as session:
             history = session.query(History).order_by(desc(History.id)).first()
