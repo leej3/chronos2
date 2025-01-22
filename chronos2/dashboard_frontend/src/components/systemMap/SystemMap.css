@@ -5,10 +5,11 @@
   max-width: 100%;
   height: auto;
 }
-h2 ,button{
-  margin-bottom: 25px; 
-  font-size: 1.8rem; 
-  color: #ffffff; 
+h2,
+button {
+  margin-bottom: 25px;
+  font-size: 1.8rem;
+  color: #ffffff;
   font-weight: bold;
 }
 .responsive-arrow {
@@ -18,32 +19,34 @@ h2 ,button{
 }
 
 @media (max-width: 768px) {
-  h2 ,button {
-    font-size: 1.2rem 
+  h2,
+  button {
+    font-size: 1.2rem;
   }
   .h4 {
-    font-size: 1.2rem; 
+    font-size: 1.2rem;
   }
 
   .h5 {
-    font-size: 1rem; 
+    font-size: 1rem;
   }
 
   .responsive-arrow {
-    max-width: 100%; 
+    max-width: 100%;
   }
 }
 
 @media (max-width: 576px) {
-  h2 ,button{
-    font-size: 1rem
+  h2,
+  button {
+    font-size: 1rem;
   }
   .h4 {
-    font-size: 1rem; 
+    font-size: 1rem;
   }
-  
+
   .responsive-arrow {
-    max-width: 100%; 
+    max-width: 100%;
   }
 }
 

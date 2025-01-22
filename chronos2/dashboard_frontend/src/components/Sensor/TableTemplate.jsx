@@ -1,12 +1,15 @@
-import { CCardBody, CRow, CCol, CWidgetStatsD } from "@coreui/react";
+import { CCardBody, CRow, CCol, CWidgetStatsD } from '@coreui/react';
 import PropTypes from 'prop-types';
 
-import "./tabletemplate.css";
-import {formatNumber} from "../../utils/tranform"
+import './tabletemplate.css';
+import { formatNumber } from '../../utils/tranform';
 
 const HVACIcon = (props) => {
   return (
-    <div className="hvac-icon" style={{ width: '130px', height: '119px', marginBottom: '20px' }}>
+    <div
+      className="hvac-icon"
+      style={{ width: '130px', height: '119px', marginBottom: '20px' }}
+    >
       <svg
         id="Layer_1"
         data-name="Layer 1"
@@ -28,8 +31,8 @@ const HVACIcon = (props) => {
 };
 
 const TableTemplate = ({ homedata }) => {
-  const intelTemp = formatNumber(homedata?.sensors?.return_temp) || "N/A";
-  const outletTemp = formatNumber(homedata?.sensors?.water_out_temp) || "N/A";
+  const intelTemp = formatNumber(homedata?.sensors?.return_temp) || 'N/A';
+  const outletTemp = formatNumber(homedata?.sensors?.water_out_temp) || 'N/A';
 
   return (
     <CRow className="sensor-table">
@@ -57,9 +60,9 @@ TableTemplate.propTypes = {
   homedata: PropTypes.shape({
     sensors: PropTypes.shape({
       return_temp: PropTypes.number,
-      water_out_temp: PropTypes.number
-    })
-  })
+      water_out_temp: PropTypes.number,
+    }),
+  }),
 };
 
 export default TableTemplate;

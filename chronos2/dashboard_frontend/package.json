@@ -6,10 +6,11 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
-    "lint": "eslint src/**/*.{js,jsx}",
+    "eslint": "eslint . --fix",
     "start": "vite preview --host 0.0.0.0",
     "test": "jest",
-    "lint:fix": "eslint src/**/*.{js,jsx} --fix"
+    "prettier": "prettier . --write",
+    "lint": "npm run prettier && npm run eslint"
   },
   "dependencies": {
     "@coreui/icons": "^3.0.1",
@@ -35,16 +36,22 @@
     "@babel/eslint-parser": "^7.26.5",
     "@babel/plugin-syntax-import-meta": "^7.10.4",
     "@babel/plugin-syntax-jsx": "^7.25.9",
+    "@babel/plugin-transform-modules-commonjs": "^7.26.3",
     "@babel/preset-env": "^7.26.0",
     "@babel/preset-react": "^7.26.3",
     "@eslint/js": "^8.38.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
     "axios-mock-adapter": "^2.1.0",
+    "babel-eslint": "^10.1.0",
     "babel-jest": "^29.7.0",
-    "eslint": "^8.38.0",
+    "babel-plugin-module-resolver": "^5.0.2",
+    "eslint": "^8.57.1",
     "eslint-config-prettier": "^10.0.1",
+    "eslint-import-resolver-babel-module": "^5.3.2",
     "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-jest": "^28.11.0",
+    "eslint-plugin-module-resolver": "^1.5.0",
     "eslint-plugin-prettier": "^5.2.3",
     "eslint-plugin-react": "^7.37.4",
     "eslint-plugin-react-hooks": "^5.1.0",
@@ -73,15 +80,6 @@
     },
     "setupFilesAfterEnv": [
       "@testing-library/jest-dom"
-    ]
-  },
-  "babel": {
-    "presets": [
-      "@babel/preset-env",
-      "@babel/preset-react"
-    ],
-    "plugins": [
-      "@babel/plugin-syntax-import-meta"
     ]
   }
 }

@@ -1,8 +1,8 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
-  season: 'default', 
-  timer: false
+  season: 'default',
+  timer: false,
 };
 
 // Create the slice
