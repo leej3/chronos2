@@ -6,8 +6,8 @@ class GenericError(Exception):
 
 
 class JWTInvalid(GenericError):
-    def __init__(self, message: str = "JWT token is invalid") -> None:
-        super().__init__(error_code=3, message=message)
+    def __init__(self, code: int = 1, message: str = "JWT token is invalid") -> None:
+        super().__init__(error_code=code, message=message)
 
 
 class ServiceUnavailable(GenericError):
