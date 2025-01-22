@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-
-import './Login.css';
 import { useNavigate } from 'react-router-dom';
 
 import { cilLockLocked, cilUser } from '@coreui/icons';
@@ -21,10 +19,10 @@ import {
 } from '@coreui/react';
 import { useDispatch, useSelector } from 'react-redux';
 
-
-
 import axiosApi from '../../api/axios';
 import { login } from '../../redux/AuthSlice';
+import './Login.css';
+
 const Login = () => {
   const dispatch = useDispatch();
   const { isLoggedIn } = useSelector((state) => state.auth);
@@ -60,7 +58,7 @@ const Login = () => {
         localStorage.setItem('access_token', tokens.access);
         localStorage.setItem('refresh_token', tokens.refresh);
         dispatch(
-          login({ accessToken: tokens.access, refreshToken: tokens.refresh })
+          login({ accessToken: tokens.access, refreshToken: tokens.refresh }),
         );
         navigate('/');
       } else {
@@ -148,7 +146,7 @@ const Login = () => {
       </CContainer>
       {loading && (
         <div className="spinner-overlay">
-          <CSpinner color="primary"  />
+          <CSpinner color="primary" />
         </div>
       )}
     </div>

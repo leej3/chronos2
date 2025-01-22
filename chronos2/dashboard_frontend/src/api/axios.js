@@ -18,7 +18,7 @@ axiosApi.interceptors.request.use(
   },
   function (error) {
     return Promise.reject(error);
-  }
+  },
 );
 
 axiosApi.interceptors.response.use(
@@ -49,7 +49,7 @@ axiosApi.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export default axiosApi;

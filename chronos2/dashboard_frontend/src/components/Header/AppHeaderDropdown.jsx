@@ -1,7 +1,7 @@
-import React from "react";
+import React from 'react';
 
-import { cilUser } from "@coreui/icons";
-import CIcon from "@coreui/icons-react";
+import { cilUser } from '@coreui/icons';
+import CIcon from '@coreui/icons-react';
 import {
   CAvatar,
   CDropdown,
@@ -9,14 +9,14 @@ import {
   CDropdownItem,
   CDropdownMenu,
   CDropdownToggle,
-} from "@coreui/react";
+} from '@coreui/react';
 
-import avatar8 from "./../../assets/images/avatars/9.jpg";
+import avatar8 from './../../assets/images/avatars/9.jpg';
 
 const AppHeaderDropdown = () => {
   const logoutHandle = () => {
-    localStorage.removeItem("token");
-    window.location.href = "/login";
+    localStorage.removeItem('token');
+    window.location.href = '/login';
   };
   return (
     <CDropdown variant="nav-item">

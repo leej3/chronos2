@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
 import {
   CButton,
@@ -12,16 +12,16 @@ import {
   CContainer,
   CModalHeader,
   CModalTitle,
-} from "@coreui/react";
-import { useSelector } from "react-redux";
+} from '@coreui/react';
+import { useSelector } from 'react-redux';
 
-import { formatNumber } from "../../utils/tranform";
-import Modbus from "../Modebus/Modbus";
-import TableTemplate from "../Sensor/TableTemplate";
-import TypeMode from "../TypeMode/TypeMode";
-import UserSetting from "../UserSettings/UserSettings";
+import { formatNumber } from '../../utils/tranform';
+import Modbus from '../Modebus/Modbus';
+import TableTemplate from '../Sensor/TableTemplate';
+import TypeMode from '../TypeMode/TypeMode';
+import UserSetting from '../UserSettings/UserSettings';
 
-import "./SystemMap.css";
+import './SystemMap.css';
 
 const SystemMap = ({ homedata }) => {
   const { results, sensors, boiler } = homedata || {};
@@ -56,20 +56,21 @@ const SystemMap = ({ homedata }) => {
           <CCard className="mb-4 bgr p-0">
             <CCardBody>
               <h2 className="text-center mb-4">
-                {season === "Winter"
-                  ? "System Map - Winter"
-                  : "System Map - Summer"}
+                {season === 'Winter'
+                  ? 'System Map - Winter'
+                  : 'System Map - Summer'}
               </h2>
               <CRow className="mb-4">
                 <CCol
                   xs={12}
                   md={6}
-                  className="d-flex justify-content-center align-items-center mb-4">
+                  className="d-flex justify-content-center align-items-center mb-4"
+                >
                   <img
                     src={
                       manualOverride.boiler
-                        ? "images/Icons/Boiler/Boiler-ON.png"
-                        : "images/Icons/Boiler/Boiler-OFF.png"
+                        ? 'images/Icons/Boiler/Boiler-ON.png'
+                        : 'images/Icons/Boiler/Boiler-OFF.png'
                     }
                     alt="Boiler"
                     className="responsive-image"
@@ -78,7 +79,8 @@ const SystemMap = ({ homedata }) => {
                 <CCol
                   xs={12}
                   md={6}
-                  className="d-flex flex-column justify-content-center align-items-center">
+                  className="d-flex flex-column justify-content-center align-items-center"
+                >
                   <img
                     src="/images/Icons/Boiler/arrow4.png"
                     alt="Arrow"
@@ -98,19 +100,20 @@ const SystemMap = ({ homedata }) => {
                 </CCol>
               </CRow>
               <CRow className="d-flex justify-content-center mb-4 w-100">
-                {["Advanced", "Sensors", "Mode", "User Setting"].map(
+                {['Advanced', 'Sensors', 'Mode', 'User Setting'].map(
                   (btn, idx) => (
                     <CCol xs="auto" key={idx} className="px-1">
                       <CButton
                         color="primary"
                         onClick={() =>
-                          handleButtonClick(btn.toLowerCase().replace(" ", ""))
+                          handleButtonClick(btn.toLowerCase().replace(' ', ''))
                         }
-                        block>
+                        block="true"
+                      >
                         {btn}
                       </CButton>
                     </CCol>
-                  )
+                  ),
                 )}
               </CRow>
             </CCardBody>
@@ -133,12 +136,13 @@ const SystemMap = ({ homedata }) => {
                     key={index}
                     xs={6}
                     md={3}
-                    className="d-flex justify-content-center align-items-center">
+                    className="d-flex justify-content-center align-items-center"
+                  >
                     <img
                       src={
                         manualOverride[`chiller${index + 1}`]
-                          ? "images/Icons/Boiler/Chiller-ON.png"
-                          : "images/Icons/Boiler/Chiller-OFF.png"
+                          ? 'images/Icons/Boiler/Chiller-ON.png'
+                          : 'images/Icons/Boiler/Chiller-OFF.png'
                       }
                       alt={`Chiller ${index + 1}`}
                       className="responsive-image"
@@ -153,28 +157,30 @@ const SystemMap = ({ homedata }) => {
                 <CCol className="mx-2">
                   <div
                     className="border-bottom"
-                    style={{ height: "2px", backgroundColor: "#000" }}></div>
+                    style={{ height: '2px', backgroundColor: '#000' }}
+                  ></div>
                 </CCol>
                 <CCol xs="auto">
                   <span className="h4">
-                    {results?.water_out_temp || "N/A"}°F
+                    {results?.water_out_temp || 'N/A'}°F
                   </span>
                 </CCol>
               </CRow>
               <CRow className="d-flex justify-content-center mb-4 w-100">
-                {["Advanced", "Sensors", "Mode", "User Setting"].map(
+                {['Advanced', 'Sensors', 'Mode', 'User Setting'].map(
                   (btn, idx) => (
                     <CCol xs="auto" key={idx} className="px-1">
                       <CButton
                         color="primary"
                         onClick={() =>
-                          handleButtonClick(btn.toLowerCase().replace(" ", ""))
+                          handleButtonClick(btn.toLowerCase().replace(' ', ''))
                         }
-                        block>
+                        block="true"
+                      >
                         {btn}
                       </CButton>
                     </CCol>
-                  )
+                  ),
                 )}
               </CRow>
             </CCardBody>
@@ -186,9 +192,9 @@ const SystemMap = ({ homedata }) => {
 
   return (
     <>
-      {season === "Winter"
+      {season === 'Winter'
         ? renderWinterView()
-        : season === "Summer"
+        : season === 'Summer'
         ? renderSummerView()
         : renderLoadingView()}
 
@@ -197,22 +203,23 @@ const SystemMap = ({ homedata }) => {
         visible={isModalOpen}
         onClose={closeModal}
         aria-labelledby="ModbusModal"
-        className="modal-lg">
+        className="modal-lg"
+      >
         <CModalHeader>
           <CModalTitle>
-            {modalContent === "advanced" && "Advanced Boiler"}
-            {modalContent === "sensors" && "Sensors"}
-            {modalContent === "mode" && "Type Mode Settings"}
-            {modalContent === "usersetting" && "User Settings"}
+            {modalContent === 'advanced' && 'Advanced Boiler'}
+            {modalContent === 'sensors' && 'Sensors'}
+            {modalContent === 'mode' && 'Type Mode Settings'}
+            {modalContent === 'usersetting' && 'User Settings'}
           </CModalTitle>
         </CModalHeader>
         <CModalBody>
-          {modalContent === "advanced" && <Modbus boiler={boiler} />}
-          {modalContent === "sensors" && <TableTemplate homedata={homedata} />}
-          {modalContent === "mode" && <TypeMode homedata={homedata} />}
-          {modalContent === "usersetting" && <UserSetting data={homedata} />}
+          {modalContent === 'advanced' && <Modbus boiler={boiler} />}
+          {modalContent === 'sensors' && <TableTemplate homedata={homedata} />}
+          {modalContent === 'mode' && <TypeMode homedata={homedata} />}
+          {modalContent === 'usersetting' && <UserSetting data={homedata} />}
         </CModalBody>
-        {modalContent !== "usersetting" && (
+        {modalContent !== 'usersetting' && (
           <CModalFooter>
             <CButton color="secondary" onClick={closeModal}>
               Close
