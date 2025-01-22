@@ -1,4 +1,4 @@
-from src.core.utils.config_parser import cfg
+from src.core.utils.constant import Relay
 
 
 class Valve:
@@ -6,7 +6,7 @@ class Valve:
         if season not in ("winter", "summer"):
             raise ValueError("Valve must be winter or summer")
         else:
-            self.relay_number = getattr(cfg.relay, "{}_valve".format(season))
+            self.relay_number = Relay["{}_VALVE".format(season.upper())]
             self.table_class_name = "{}Valve".format(season.capitalize())
 
     def __getattr__(self, name):

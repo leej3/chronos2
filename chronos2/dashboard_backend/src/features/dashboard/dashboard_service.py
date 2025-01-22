@@ -9,7 +9,7 @@ from src.core.repositories.history_repository import HistoryRepository
 from src.core.repositories.setting_repository import SettingRepository
 from src.core.services.chronos import Chronos
 from src.core.services.edge_server import EdgeServer
-from src.core.utils.config_parser import cfg
+from src.core.utils.constant import *
 
 
 class DashboardService:
@@ -62,7 +62,7 @@ class DashboardService:
         efficiency["cascade_fire_rate_avg"] = round(
             self.chronos.cascade_fire_rate_avg, 1
         )
-        efficiency["hours"] = cfg.efficiency.hours
+        efficiency["hours"] = EFFICIENCY_HOUR
         return {
             **edge_server_data,
             "results": results,
@@ -180,7 +180,7 @@ class DashboardService:
                 stop = True
 
     def calculate_efficiency(self):
-        hours = cfg.efficiency.hours
+        hours = EFFICIENCY_HOUR
         timespan = datetime.now() - timedelta(hours=hours)
         with session_scope() as session:
             amount_minutes = (

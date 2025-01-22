@@ -16,7 +16,6 @@ from src.core.services.boiler import Boiler
 from src.core.services.chiller import Chiller
 from src.core.services.edge_server import EdgeServer
 from src.core.services.valve import Valve
-from src.core.utils.config_parser import cfg
 from src.core.utils.constant import *
 from src.core.utils.helpers import c_to_f
 
@@ -77,10 +76,6 @@ class Chronos(object):
                 )
 
         if outside_temp != self._outside_temp:
-            # socketio_client.send({
-            #     "event": "misc",
-            #     "message": {"outside_temp": outside_temp}
-            # })
             self._outside_temp = outside_temp
             self._wind_speed = wind_speed
         return {"outside_temp": outside_temp, "wind_speed": wind_speed}
@@ -99,7 +94,7 @@ class Chronos(object):
 
     @property
     def cascade_fire_rate_avg(self):
-        timespan = datetime.now() - timedelta(hours=cfg.efficiency.hours)
+        timespan = datetime.now() - timedelta(hours=EFFICIENCY_HOUR)
         with session_scope() as session:
             result = (
                 session.query(History.cascade_fire_rate)

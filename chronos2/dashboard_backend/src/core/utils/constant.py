@@ -12,6 +12,8 @@ OFF, ON = 0, 1
 MANUAL_OFF, MANUAL_ON, MANUAL_AUTO = 2, 1, 0
 VALVES_SWITCH_TIME = 2
 
+EFFICIENCY_HOUR = 12
+
 
 # TODO: Replace these constants with Enum
 class State(Enum):
@@ -36,3 +38,17 @@ class Season(Enum):
 
 class ValveSwitchTime(Enum):
     VALVES_SWITCH_TIME = 2
+
+
+class Relay(Enum):
+    BOILER = 0
+    CHILLER1 = 2
+    CHILLER2 = 1
+    CHILLER3 = 4
+    CHILLER4 = 3
+    WINTER_VALVE = 5
+    SUMMER_VALVE = 6
+    LED_BREATHER = 7
+    LED_RED = 8
+    LED_GREEN = 9
+    LED_BLUE = 10

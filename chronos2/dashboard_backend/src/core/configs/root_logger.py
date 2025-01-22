@@ -3,9 +3,7 @@ import os
 import sys
 from logging.handlers import TimedRotatingFileHandler
 
-from src.core.utils.config_parser import cfg
-
-log_file_path = cfg.files.log_path
+log_file_path = "./src/logs/chronos.log"
 log_dir = os.path.dirname(log_file_path)
 os.makedirs(log_dir, exist_ok=True)
 

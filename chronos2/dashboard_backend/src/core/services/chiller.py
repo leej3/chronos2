@@ -1,4 +1,4 @@
-from src.core.utils.config_parser import cfg
+from src.core.utils.constant import Relay
 
 
 class Chiller:
@@ -10,5 +10,5 @@ class Chiller:
             raise ValueError("Chiller number must be in range from 1 to 4")
         else:
             self.number = number
-            self.relay_number = getattr(cfg.relay, "chiller{}".format(number))
+            self.relay_number = Relay["CHILLER{}".format(number)]
             self.table_class_name = "Chiller{}".format(number)
