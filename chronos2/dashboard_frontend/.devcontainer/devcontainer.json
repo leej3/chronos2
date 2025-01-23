@@ -3,15 +3,6 @@
     "context": "..",
     "dockerFile": "Dockerfile",
 
-    
-    // "dockerComposeFile": [
-    //     "../../docker-compose.yml",
-    //     "../../docker-compose.dev.yml"
-    // ],
-    // "service": "frontend",
-    // "shutdownAction": "none",
-    // "workspaceFolder": "/workspace/frontend",
-
 
     "appPort": [5173],
     "postCreateCommand": "bash .devcontainer/scripts/post-create-commands.sh",
