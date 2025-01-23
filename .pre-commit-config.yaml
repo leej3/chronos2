@@ -14,14 +14,15 @@ repos:
       - id: check-toml
         files: "chronos2/dashboard_backend/.*\\.toml$"
 
-  # Code formatting for Python (backend)
-  - repo: https://github.com/psf/black
-    rev: 22.10.0
-    hooks:
-      - id: black
-        files: "chronos2/dashboard_backend/.*\\.py$"
 
-  # Import sorting for Python (backend)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.2
+    hooks:
+      - id: ruff
+        args: ["--fix"]
+      - id: ruff-format
+
+
   - repo: https://github.com/pycqa/isort
     rev: 5.13.2
     hooks:
@@ -44,3 +45,16 @@ repos:
         name: eslint
         files: "chronos2/dashboard_frontend/src.*\\.(js|jsx|ts|tsx)$"
         args: ["--fix", "--no-ignore"]
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+        files: ".*\\.py"
+        exclude: "examples|docs/examples|tests/data"
+      - id: check-added-large-files
+      - id: check-toml
+      - id: check-yaml
+      - id: check-json
+      - id: end-of-file-fixer
+        exclude: "examples|docs/examples|tests/data"
