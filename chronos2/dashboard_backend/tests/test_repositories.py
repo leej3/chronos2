@@ -3,7 +3,6 @@ import sys
 from unittest.mock import MagicMock, patch
 
 import pytest
-from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -76,9 +75,7 @@ def test_three_minute_avg_delta(mock_session):
     mock_subquery = MagicMock()
     mock_subquery.c.delta = MagicMock()
 
-    mock_session.return_value.__enter__.return_value.query.return_value.order_by.return_value.limit.return_value.subquery.return_value = (
-        mock_subquery
-    )
+    mock_session.return_value.__enter__.return_value.query.return_value.order_by.return_value.limit.return_value.subquery.return_value = mock_subquery
 
     mock_session.return_value.__enter__.return_value.query.return_value.first.return_value = (
         5.0,

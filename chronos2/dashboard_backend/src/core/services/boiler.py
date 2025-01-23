@@ -4,7 +4,6 @@ from src.core.utils.constant import Relay
 
 
 class Boiler:
-
     TYPE = "boiler"
 
     def __init__(self):

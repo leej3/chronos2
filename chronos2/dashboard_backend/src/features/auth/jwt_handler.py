@@ -1,11 +1,10 @@
-import time
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import Annotated, TypedDict
 from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer, SecurityScopes
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import jwt
 from jose.exceptions import ExpiredSignatureError, JWTError
 from pydantic import BaseModel
@@ -58,7 +57,7 @@ def decode_jwt_token(token: str) -> Payload:
         raise JWTInvalid(message="This token is expired")
     except JWTError:
         raise JWTInvalid(message="This token is expired")
-    except Exception as e:
+    except Exception:
         raise JWTInvalid(message="This token is expired")
 
 
@@ -103,14 +102,14 @@ async def revoke_user_tokens(user_id: UUID) -> None:
 
 
 async def get_current_user_from_jwt_token(
-    token: Annotated[HTTPAuthorizationCredentials, Depends(scheme)]
+    token: Annotated[HTTPAuthorizationCredentials, Depends(scheme)],
 ) -> UserToken:
     try:
         payload = verify_access_token(token.credentials)
         return UserToken(
             user_id=payload["sub"],
         )
-    except JWTInvalid as e:
+    except JWTInvalid:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",

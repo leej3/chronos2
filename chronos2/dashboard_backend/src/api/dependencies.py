@@ -25,6 +25,6 @@ async def exception_handler(_: Request, exc: ex.GenericError) -> JSONResponse:
 
 
 async def get_current_user(
-    current_user: Annotated[UserToken, Security(get_current_user_from_jwt_token)]
+    current_user: Annotated[UserToken, Security(get_current_user_from_jwt_token)],
 ) -> UserToken:
     return current_user

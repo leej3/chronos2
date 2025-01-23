@@ -6,7 +6,6 @@ from .base import Base
 
 
 class Boiler(Base):
-
     __tablename__ = "boiler"
 
     id = Column(INTEGER, primary_key=True)

@@ -1,8 +1,8 @@
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 
-from fastapi import Depends, FastAPI, HTTPException, status
-from jose import JWTError, jwt
+from fastapi import HTTPException, status
+from jose import JWTError
 from pydantic import BaseModel
 from src.core.configs.config import settings
 from src.core.configs.database import session_scope

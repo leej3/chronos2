@@ -13,7 +13,7 @@ def catch_connection_error(func):
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except requests.exceptions.ConnectionError as e:
+        except requests.exceptions.ConnectionError:
             raise ConnectToEdgeServerError()
 
     return wrapper
@@ -32,7 +32,7 @@ class EdgeServer:
         except requests.exceptions.HTTPError as e:
             msg = f"Failure when get data in Edge server. Detail error: {e}"
             raise EdgeServerError(message=msg)
-        except Exception as e:
+        except Exception:
             raise ErrorReadDataEdgeServer()
 
     @catch_connection_error

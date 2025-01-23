@@ -1,4 +1,4 @@
-from sqlalchemy import desc, or_
+from sqlalchemy import desc
 from sqlalchemy.sql import func
 from src.core.configs.database import session_scope
 from src.core.models import *

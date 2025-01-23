@@ -4,7 +4,6 @@ from .base import Base
 
 
 class SummerValve(Base):
-
     __tablename__ = "summer_valve"
 
     id = Column(INTEGER, primary_key=True)
@@ -13,7 +12,6 @@ class SummerValve(Base):
 
 
 class WinterValve(Base):
-
     __tablename__ = "winter_valve"
 
     id = Column(INTEGER, primary_key=True)

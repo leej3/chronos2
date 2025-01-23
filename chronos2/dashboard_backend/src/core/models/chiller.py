@@ -6,7 +6,6 @@ from .base import Base
 
 
 class Chiller1(Base):
-
     __tablename__ = "chiller1"
 
     id = Column(INTEGER, primary_key=True)
@@ -18,7 +17,6 @@ class Chiller1(Base):
 
 
 class Chiller2(Base):
-
     __tablename__ = "chiller2"
 
     id = Column(INTEGER, primary_key=True)
@@ -30,7 +28,6 @@ class Chiller2(Base):
 
 
 class Chiller3(Base):
-
     __tablename__ = "chiller3"
 
     id = Column(INTEGER, primary_key=True)
@@ -42,7 +39,6 @@ class Chiller3(Base):
 
 
 class Chiller4(Base):
-
     __tablename__ = "chiller4"
 
     id = Column(INTEGER, primary_key=True)

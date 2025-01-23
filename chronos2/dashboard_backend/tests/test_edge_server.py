@@ -7,7 +7,6 @@ from unittest.mock import MagicMock, patch
 import requests
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from unittest.mock import patch
 
 from src.core.common.exceptions import (
     ConnectToEdgeServerError,
@@ -77,7 +76,6 @@ class TestEdgeServer(unittest.TestCase):
 
     # @patch("src.core.services.edge_server.requests.post")
     def test_update_device_state_success(self):
-
         device = {"id": 1, "state": True}
         time.sleep(5)
         response = self.edge_server.update_device_state(device["id"], device["state"])

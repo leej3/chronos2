@@ -1,6 +1,3 @@
-import sys
-import threading
-import time
 from datetime import datetime, timedelta
 
 import requests
@@ -17,7 +14,6 @@ from src.core.services.chiller import Chiller
 from src.core.services.edge_server import EdgeServer
 from src.core.services.valve import Valve
 from src.core.utils.constant import *
-from src.core.utils.helpers import c_to_f
 
 
 class Chronos(object):

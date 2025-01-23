@@ -4,7 +4,6 @@ from .base import Base
 
 
 class SetpointLookup(Base):
-
     __tablename__ = "setpoint_lookup"
 
     id = Column(INTEGER, primary_key=True)

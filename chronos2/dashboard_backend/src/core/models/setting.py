@@ -6,7 +6,6 @@ from .base import Base
 
 
 class Settings(Base):
-
     __tablename__ = "settings"
 
     id = Column(INTEGER, primary_key=True)

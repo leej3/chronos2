@@ -6,7 +6,6 @@ from .base import Base
 
 
 class User(Base):
-
     __tablename__ = "user"
 
     id = Column(INTEGER, primary_key=True)

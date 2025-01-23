@@ -2,7 +2,6 @@ from src.core.utils.constant import Relay
 
 
 class Chiller:
-
     TYPE = "chiller"
 
     def __init__(self, number):

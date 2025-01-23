@@ -6,7 +6,6 @@ from .base import Base
 
 
 class History(Base):
-
     __tablename__ = "history"
 
     id = Column(INTEGER, primary_key=True)

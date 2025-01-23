@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Body
-from fastapi.responses import JSONResponse
 from src.api.dto.auth import LoginForm, UserLoginResponse
-from src.features.auth.auth_service import AuthService, Tokens
+from src.features.auth.auth_service import AuthService
 
 router = APIRouter(tags=["Auth"], prefix="/auth")
 auth_service = AuthService()
