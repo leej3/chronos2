@@ -1,6 +1,6 @@
 from src.core.repositories.history_repository import HistoryRepository
 from src.core.repositories.setting_repository import SettingRepository
-from src.core.utils.config_parser import cfg
+from src.core.utils.constant import Relay
 
 
 class Boiler:
@@ -9,7 +9,7 @@ class Boiler:
 
     def __init__(self):
         self.number = 0
-        self.relay_number = cfg.relay.boiler
+        self.relay_number = Relay.BOILER
         self.table_class_name = "Boiler"
         self.history_repository = HistoryRepository()
         self.setting_repository = SettingRepository()
