@@ -1,6 +1,6 @@
 from sqlalchemy import desc
 from src.core.configs.database import session_scope
-from src.core.models import *
+from src.core.models import Settings
 
 
 class SettingRepository:

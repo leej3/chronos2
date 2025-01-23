@@ -6,14 +6,20 @@ from sqlalchemy import desc
 from sqlalchemy.sql import func
 from src.core.configs.database import session_scope
 from src.core.configs.root_logger import root_logger as logger
-from src.core.models import *
+from src.core.models import History
 from src.core.repositories.history_repository import HistoryRepository
 from src.core.repositories.setting_repository import SettingRepository
 from src.core.services.boiler import Boiler
 from src.core.services.chiller import Chiller
 from src.core.services.edge_server import EdgeServer
 from src.core.services.valve import Valve
-from src.core.utils.constant import *
+from src.core.utils.constant import (
+    EFFICIENCY_HOUR,
+    SUMMER,
+    WEATHER_HEADERS,
+    WEATHER_URL,
+    WINTER,
+)
 
 
 class Chronos(object):
@@ -54,7 +60,7 @@ class Chronos(object):
             for zone in data["zones"]:
                 for param in zone["parameters"]:
                     if param["name"] == "RAIN":
-                        rain_value = param["value"]
+                        _ = param["value"]  # Collect but currently unused
                     elif param["name"] == "WIND":
                         wind_speed = float(param["value"])
                     elif param["name"] == "EXT1":

@@ -1,9 +1,12 @@
+import logging
 import os
-import pytest
-from chronos.devices import ModbusException
-from chronos.devices import ModbusDevice
-from chronos.config import cfg
 from unittest.mock import patch
+
+import pytest
+from chronos.config import cfg
+from chronos.devices import ModbusDevice, ModbusException
+
+logger = logging.getLogger(__name__)
 
 
 # Test data for parametrized tests
@@ -28,12 +31,12 @@ ERROR_SCENARIOS = [
 ]
 
 
-def has_modbus_connection():
-    """Check if we can connect to the real modbus device."""
+def is_modbus_connected():
     try:
         with ModbusDevice(port=cfg.modbus.portname) as device:
             return device.is_connected()
-    except:
+    except Exception as e:
+        logger.error(f"Error connecting to modbus device: {e}")
         return False
 
 
@@ -315,9 +318,7 @@ def test_download_log_file_not_found(client, mock_log_file):
 
 
 # Hardware tests (skipped by default)
-@pytest.mark.skipif(
-    not has_modbus_connection(), reason="No modbus connection available"
-)
+@pytest.mark.skipif(not is_modbus_connected(), reason="No modbus connection available")
 def test_get_boiler_stats_hardware(client):
     """Test getting boiler stats with real hardware."""
     response = client.get("/boiler_stats")
@@ -331,9 +332,7 @@ def test_get_boiler_stats_hardware(client):
     assert isinstance(data["flame_status"], bool)
 
 
-@pytest.mark.skipif(
-    not has_modbus_connection(), reason="No modbus connection available"
-)
+@pytest.mark.skipif(not is_modbus_connected(), reason="No modbus connection available")
 def test_set_boiler_setpoint_hardware(client):
     """Test setting boiler setpoint with real hardware."""
     # Get original setpoint
@@ -366,9 +365,7 @@ def test_set_boiler_setpoint_hardware(client):
         assert abs(final_status.json()["current_setpoint"] - original_setpoint) < 2.0
 
 
-@pytest.mark.skipif(
-    not has_modbus_connection(), reason="No modbus connection available"
-)
+@pytest.mark.skipif(not is_modbus_connected(), reason="No modbus connection available")
 def test_get_boiler_error_history_hardware(client):
     """Test getting error history with real hardware."""
     response = client.get("/boiler_errors")
@@ -381,9 +378,7 @@ def test_get_boiler_error_history_hardware(client):
         assert "last_blockout_str" in data
 
 
-@pytest.mark.skipif(
-    not has_modbus_connection(), reason="No modbus connection available"
-)
+@pytest.mark.skipif(not is_modbus_connected(), reason="No modbus connection available")
 def test_get_boiler_model_info_hardware(client):
     """Test getting model info with real hardware."""
     response = client.get("/boiler_info")
@@ -405,9 +400,7 @@ def test_get_boiler_model_info_hardware(client):
 
 
 # Test error cases with real hardware (if available)
-@pytest.mark.skipif(
-    not has_modbus_connection(), reason="No modbus connection available"
-)
+@pytest.mark.skipif(not is_modbus_connected(), reason="No modbus connection available")
 def test_invalid_setpoint_range_hardware(client):
     """Test setting invalid setpoint ranges with real hardware."""
     # Test minimum boundary
@@ -478,7 +471,7 @@ def test_complete_boiler_flow(client, mock_modbus_device):
     # 1. Get initial stats
     response = client.get("/boiler_stats")
     assert response.status_code == 200
-    initial_stats = response.json()
+    assert response.json()  # Verify we get valid JSON response
 
     # 2. Get current operating status
     response = client.get("/boiler_status")

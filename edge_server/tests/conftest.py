@@ -1,12 +1,13 @@
-import os
-import pytest
-import tempfile
 import logging
-from unittest.mock import patch, MagicMock
-from fastapi.testclient import TestClient
-from chronos.devices import ModbusDevice, SerialDevice
-from chronos.app import app, rate_limiter, circuit_breaker
+import os
+import tempfile
+from unittest.mock import MagicMock, patch
+
+import pytest
+from chronos.app import app, circuit_breaker, rate_limiter
 from chronos.config import cfg
+from chronos.devices import ModbusDevice, SerialDevice
+from fastapi.testclient import TestClient
 
 # Set up basic logging
 logging.basicConfig(level=logging.DEBUG)
@@ -99,7 +100,8 @@ def has_modbus_connection():
     try:
         with ModbusDevice(port=cfg.modbus.portname) as device:
             return device.is_connected()
-    except:
+    except Exception as e:
+        logger.error(f"Error connecting to modbus device: {e}")
         return False
 
 

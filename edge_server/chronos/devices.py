@@ -1,13 +1,14 @@
-from serial import Serial
+import asyncio
+import time
+from contextlib import contextmanager
+from pathlib import Path
+from typing import Optional
+
 from chronos.config import cfg
 from chronos.logging import root_logger as logger
-from pathlib import Path
-import time
-import asyncio
-from contextlib import contextmanager
 from pymodbus.client import ModbusSerialClient
 from pymodbus.exceptions import ModbusException
-from typing import Optional
+from serial import Serial
 
 
 def c_to_f(celsius):
@@ -396,7 +397,7 @@ class SerialDevice:
         """Set the device state by sending the appropriate command, then store it."""
         command_str = "on" if desired_state else "off"
         command = f"relay {command_str} {self.id}\n\r"
-        response = self._send_command(command)
+        self._send_command(command)
         self._state = desired_state
 
     def read_state_from_device(self) -> bool:

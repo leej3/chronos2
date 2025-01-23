@@ -8,7 +8,7 @@ from src.core.repositories.history_repository import HistoryRepository
 from src.core.repositories.setting_repository import SettingRepository
 from src.core.services.chronos import Chronos
 from src.core.services.edge_server import EdgeServer
-from src.core.utils.constant import *
+from src.core.utils.constant import EFFICIENCY_HOUR
 
 
 class DashboardService:
