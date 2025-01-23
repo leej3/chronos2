@@ -47,11 +47,6 @@ jobs:
           pip install uv
           pip install alembic psycopg2 uvicorn python-dotenv
 
-      - name: Run Alembic migrations
-        run: |
-          cd chronos2/dashboard_backend
-          alembic upgrade head
-
       - name: Run dashboard-backend test suite
         run: |
           cd chronos2/dashboard_backend
