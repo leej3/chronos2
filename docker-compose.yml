@@ -5,7 +5,7 @@ services:
       context: ./chronos2/dashboard_backend
     container_name: dashboard_backend
     env_file:
-      - ./chronos2/dashboard_backend/.env
+      - ./chronos2/dashboard_backend/.env.docker
     restart: always
     depends_on:
       - postgres
@@ -14,7 +14,7 @@ services:
 
   dashboard_frontend:
     env_file:
-      - ./chronos2/dashboard_frontend/.env
+      - ./chronos2/dashboard_frontend/.env.docker
     build:
       context: ./chronos2/dashboard_frontend
     container_name: dashboard_frontend
@@ -27,11 +27,11 @@ services:
     image: postgres:15
     container_name: postgres
     env_file:
-      - ./chronos2/dashboard_backend/.env
+      - ./chronos2/dashboard_backend/.env.docker
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
-      timeout: 5s  # Added missing timeout value
+      timeout: 5s # Added missing timeout value
       retries: 5
     volumes:
       - postgres_data:/var/lib/postgresql/data
