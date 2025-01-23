@@ -14,10 +14,11 @@ Follow the steps below to build and start the Chronos project using Docker Compo
 
 ### Build and Start Services
 
-Run the following command to build and start all services in detached mode:
+Run the following commands to build and start all services in detached mode:
 
 ```bash
-sudo docker-compose up -d
+bash setup-env.sh
+docker-compose up -d
 ```
 
 ### Stop and Remove Services
@@ -25,12 +26,12 @@ sudo docker-compose up -d
 To stop and remove all running containers, use:
 
 ```bash
-sudo docker-compose down
+docker-compose down
 ```
 
 ## Docker Services
 
-The Chronos project consists of the following services managed by Docker Compose:
+The Chronos project consists of the following services managed by Docker Compose. During development the docker-compose.override.yml file is used automatically and the services are exposed on the local host machine for debugging purposes. The services themselves in the containers are configured to look for each other via the docker network. During deployment the edge server is run on the edge host and connects to the stack using a fast reverse proxy.
 
 ### Frontend
 
@@ -49,6 +50,7 @@ The Chronos project consists of the following services managed by Docker Compose
 
 - **Service Name:** `edge_server`
 - **Port:** `5171`
+- **API Documentation:** [http://localhost:5171/docs](http://localhost:5171/docs)
 - **Access URL:** Configured via `.env` files in the backend and frontend components.
 
-For further details, please refer to the respective README files linked above.
+For further details, please refer to the respective README files linked above and the docker compose files in this directory.
