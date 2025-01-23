@@ -64,7 +64,7 @@ const SystemMap = ({ homedata }) => {
                 <CCol
                   xs={12}
                   md={6}
-                  className="d-flex justify-content-center align-items-center mb-4"
+                  className="d-flex justify-content-md-end align-items-center mb-4 justify-content-center "
                 >
                   <img
                     src={
@@ -79,24 +79,26 @@ const SystemMap = ({ homedata }) => {
                 <CCol
                   xs={12}
                   md={6}
-                  className="d-flex flex-column justify-content-center align-items-center"
+                  className="d-flex flex-column justify-content-md-center justify-content-center align-items-center align-items-md-start"
                 >
-                  <img
-                    src="/images/Icons/Boiler/arrow4.png"
-                    alt="Arrow"
-                    className="mb-2 responsive-arrow"
-                  />
-                  <span className="h4 text-center">
-                    {formatNumber(sensors?.water_out_temp)}°F
-                  </span>
-                  <img
-                    src="/images/Icons/Boiler/arrow3.png"
-                    alt="Arrow"
-                    className="mb-2 responsive-arrow"
-                  />
-                  <span className="h4 text-center">
-                    {formatNumber(sensors?.return_temp)}°F
-                  </span>
+                  <div className="d-flex flex-column">
+                    <img
+                      src="/images/Icons/Boiler/arrow4.png"
+                      alt="Arrow"
+                      className="mb-2 responsive-arrow"
+                    />
+                    <span className="h4 text-center">
+                      {formatNumber(sensors?.water_out_temp)}°F
+                    </span>
+                    <img
+                      src="/images/Icons/Boiler/arrow3.png"
+                      alt="Arrow"
+                      className="mb-2 responsive-arrow"
+                    />
+                    <span className="h4 text-center">
+                      {formatNumber(sensors?.return_temp)}°F
+                    </span>
+                  </div>
                 </CCol>
               </CRow>
               <CRow className="d-flex justify-content-center mb-4 w-100">
