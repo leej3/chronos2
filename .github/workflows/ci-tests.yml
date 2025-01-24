@@ -2,7 +2,7 @@ name: Unit tests
 
 on:
   push:
-    branches: [feature/*]
+    branches: ["**"]
   pull_request:
     branches: [main]
 
@@ -49,7 +49,7 @@ jobs:
 
       - name: Run dashboard-backend test suite
         run: |
-          cd chronos2/dashboard_backend
+          cd dashboard_backend
           uv sync --all-extras
           uv run pytest
 
@@ -67,13 +67,13 @@ jobs:
           node-version: "16"
 
       - name: Install React dependencies
-        run: cd chronos2/dashboard_frontend && npm install
+        run: cd dashboard_frontend && npm install
 
       - name: Run Jest tests
-        run: cd chronos2/dashboard_frontend && npm test -- --coverage
+        run: cd dashboard_frontend && npm test -- --coverage
 
       - name: Build React project
-        run: cd chronos2/dashboard_frontend && npm run build
+        run: cd dashboard_frontend && npm run build
 
   pre-commit:
     runs-on: ubuntu-latest
@@ -87,7 +87,7 @@ jobs:
           pip install uv
 
       - name: Install React dependencies
-        run: cd chronos2/dashboard_frontend && npm install
+        run: cd dashboard_frontend && npm install
 
       - name: Install pre-commit
         run: pip install pre-commit

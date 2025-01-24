@@ -2,10 +2,10 @@ name: chronos
 services:
   dashboard_backend:
     build:
-      context: ./chronos2/dashboard_backend
+      context: ./dashboard_backend
     container_name: dashboard_backend
     env_file:
-      - ./chronos2/dashboard_backend/.env.docker
+      - ./dashboard_backend/.env.docker
     restart: always
     depends_on:
       - postgres
@@ -14,9 +14,9 @@ services:
 
   dashboard_frontend:
     env_file:
-      - ./chronos2/dashboard_frontend/.env.docker
+      - ./dashboard_frontend/.env.docker
     build:
-      context: ./chronos2/dashboard_frontend
+      context: ./dashboard_frontend
     container_name: dashboard_frontend
     depends_on:
       - dashboard_backend
@@ -27,7 +27,7 @@ services:
     image: postgres:15
     container_name: postgres
     env_file:
-      - ./chronos2/dashboard_backend/.env.docker
+      - ./dashboard_backend/.env.docker
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
