@@ -21,11 +21,11 @@
 		"ms-azuretools.vscode-docker",
 		"hermitter.oh-lucy-vscode",
 		"pkief.material-icon-theme",
-		"ms-python.python",          
-		"ms-toolsai.jupyter",        
-		"magicstack.magicpython",     
-		"ms-ossdata.vscode-sqlite",   
-		"mikehillyer.sql-formatter"   
+		"ms-python.python",
+		"ms-toolsai.jupyter",
+		"magicstack.magicpython",
+		"ms-ossdata.vscode-sqlite",
+		"mikehillyer.sql-formatter"
 	]
-	
+
 }

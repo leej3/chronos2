@@ -1,7 +1,8 @@
-import pytest
-from unittest.mock import patch, MagicMock
-from chronos.devices import ModbusDevice, ModbusException, create_modbus_connection
 import logging
+from unittest.mock import MagicMock, patch
+
+import pytest
+from chronos.devices import ModbusDevice, ModbusException, create_modbus_connection
 
 # Set up basic logging
 logging.basicConfig(level=logging.DEBUG)

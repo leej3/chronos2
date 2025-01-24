@@ -6,35 +6,35 @@ from functools import wraps
 from typing import Callable
 
 from chronos.config import cfg
-from chronos.devices import (
-    SerialDevice,
-    safe_read_temperature,
-    create_modbus_connection,
-    ModbusException,
-)
 from chronos.data_models import (
-    SystemStatus,
-    DeviceModel,
     BoilerStats,
-    OperatingStatus,
+    DeviceModel,
     ErrorHistory,
-    SetpointUpdate,
     ModelInfo,
+    OperatingStatus,
+    SetpointUpdate,
+    SystemStatus,
 )
-from fastapi import FastAPI, Query, HTTPException
+from chronos.devices import (
+    ModbusException,
+    SerialDevice,
+    create_modbus_connection,
+    safe_read_temperature,
+)
+from chronos.mock_devices.mock_data import (
+    history_none,
+    mock_boiler_stats,
+    mock_devices_data,
+    mock_error_history,
+    mock_error_history_none,
+    mock_model_info,
+    mock_operating_status,
+    mock_point_update,
+    mock_sensors,
+)
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
-from chronos.mock_devices.mock_data import (
-    mock_devices_data,
-    mock_boiler_stats,
-    mock_operating_status,
-    mock_error_history,
-    mock_model_info,
-    mock_sensors,
-    mock_error_history_none,
-    history_none,
-    mock_point_update,
-)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()

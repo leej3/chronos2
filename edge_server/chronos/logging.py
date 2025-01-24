@@ -1,7 +1,8 @@
-import sys
 import logging
-from chronos.config import cfg
+import sys
 from logging.handlers import TimedRotatingFileHandler
+
+from chronos.config import cfg
 
 logging.getLogger("socketIO-client").setLevel(logging.ERROR)
 logging.getLogger("requests").setLevel(logging.ERROR)

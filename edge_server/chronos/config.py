@@ -1,8 +1,10 @@
 import os
 import sys
 from pathlib import Path
-from .boiler_modbus import MODBUS
+
 from dotenv import load_dotenv
+
+from .boiler_modbus import MODBUS
 
 load_dotenv()
 
