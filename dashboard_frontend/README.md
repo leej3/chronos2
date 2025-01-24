@@ -11,7 +11,7 @@ Follow these steps to get the project up and running on your local machine.
 1. Copy the example environment file:
 
    ```bash
-   cp chronos2/dashboard_frontend/.env.sample chronos2/dashboard_frontend/.env
+   cp dashboard_frontend/.env.sample dashboard_frontend/.env
    ```
 
 2. Open the .env file and modify the values based on your local

@@ -13,7 +13,7 @@ The project relies on environment variables for configuration. To ensure all com
 1. **Copy the example environment file**:
 
    ```bash
-   cp chronos2/dashboard_backend/.env.sample chronos2/dashboard_backend/.env
+   cp dashboard_backend/.env.sample dashboard_backend/.env
    ```
 
 2. **Modify the `.env` file**: Open the `.env` file and adjust the values based on your local or production setup. The most important variables to configure are listed below.
@@ -24,7 +24,7 @@ The project relies on environment variables for configuration. To ensure all com
 
   - `POSTGRES_USER`: PostgreSQL username (e.g., `postgres`)
   - `POSTGRES_PASSWORD`: PostgreSQL password (e.g., `yourpassword`)
-  - `POSTGRES_DB`: Name of the database (e.g., `dev_chronos2`)
+  - `POSTGRES_DB`: Name of the database (e.g., `dev_chronos`)
   - `DB_HOST`: Hostname for PostgreSQL (e.g., `postgres`)
   - `DB_PORT`: Port for PostgreSQL (default: `5432`)
 
