@@ -21,7 +21,7 @@ COPY pyproject.toml .
 RUN uv sync --no-dev
 # Copy the application code
 COPY . .
-RUN uv sync
+RUN uv sync --no-dev
 RUN chmod +x entrypoint.sh
 
 ENTRYPOINT [ "./entrypoint.sh" ]

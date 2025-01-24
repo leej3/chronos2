@@ -10,16 +10,14 @@ dependencies = [
     "pymodbus",
     "python-dotenv",
     "pydantic",
-    "pydantic-settings",
     "requests>=2.32.3",
     "uvicorn>=0.34.0",
-    "pip>=24.3.1",
-    "nest-asyncio>=1.6.0",
-    "ipython>=8.31.0",
 ]
 
 [project.optional-dependencies]
 dev = [
+    "pip>=24.3.1",
+    "ipython>=8.31.0",
     "pytest>=8.3.4",
     "ipython>=8.31.0",
     "nest-asyncio>=1.6.0",
