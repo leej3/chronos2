@@ -8,8 +8,8 @@ services:
       - traefik-public
     ports:
       - "5171:5171"
-    environment:
-      - MOCK_DEVICES=true
+    env_file:
+      - ./edge_server/.env.docker
   dashboard_frontend:
     ports:
       - "5173:5173"
