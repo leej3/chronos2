@@ -28,4 +28,3 @@ Configuration is typically done in the .env.docker file (see .env.sample).
 
   - `USER_1_EMAIL`: Email for the first admin user
   - `USER_1_PASSWORD`: Password for the first admin user
-
