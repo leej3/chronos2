@@ -53,4 +53,4 @@ The Chronos project consists of the following services managed by Docker Compose
 - **API Documentation:** [http://localhost:5171/docs](http://localhost:5171/docs)
 - **Access URL:** Configured via `.env` files in the backend and frontend components.
 
-For further details, please refer to the respective README files linked above and the docker compose files in this directory.
+For further details, please refer to the respective README files linked above and the docker compose files in this directory. Note, other services are run depending on the deployment configuration.

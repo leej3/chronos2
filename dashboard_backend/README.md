@@ -1,32 +1,18 @@
-# Backend README - Chronos Project
+# Dashboard Backend README - Chronos Project
 
 ## Overview
 
-The backend of the **Chronos** project provides the core API and server-side functionalities. It is a standalone service that can be run independently or as part of the full Chronos project setup.
+This backend provides the API.
 
-## Environment Variables
+### Environment Variables/Configuration
 
-The project relies on environment variables for configuration. To ensure all components run smoothly, follow these steps:
-
-### Setting Up the Environment Variables
-
-1. **Copy the example environment file**:
-
-   ```bash
-   cp dashboard_backend/.env.sample dashboard_backend/.env
-   ```
-
-2. **Modify the `.env` file**: Open the `.env` file and adjust the values based on your local or production setup. The most important variables to configure are listed below.
-
-### Required Environment Variables
+Configuration is typically done in the .env.docker file (see .env.sample).
 
 - **Database Configuration**:
 
-  - `POSTGRES_USER`: PostgreSQL username (e.g., `postgres`)
   - `POSTGRES_PASSWORD`: PostgreSQL password (e.g., `yourpassword`)
-  - `POSTGRES_DB`: Name of the database (e.g., `dev_chronos`)
-  - `DB_HOST`: Hostname for PostgreSQL (e.g., `postgres`)
-  - `DB_PORT`: Port for PostgreSQL (default: `5432`)
+  - `POSTGRES_HOST`: Hostname for PostgreSQL
+  - `POSTGRES_PORT`: Port for PostgreSQL
 
 - **Authentication**:
 
@@ -35,12 +21,11 @@ The project relies on environment variables for configuration. To ensure all com
 
 - **Edge Server Configuration**:
 
-  - `EDGE_SERVER_IP`: IP address or hostname of the Edge Server (e.g., `http://edge_server` or `http://localhost`)
+  - `EDGE_SERVER_IP`: IP address or hostname of the Edge Server (e.g., `http://edge_server` when developing with docker and `http://localhost` if accessing a port forwarded from another host)
   - `EDGE_SERVER_PORT`: Port for the Edge Server (e.g., `5171`)
 
 - **Admin User Credentials**:
 
-  - `USER_1_EMAIL`: Email for the first admin user (e.g., `admin@gmail.com`)
-  - `USER_1_PASSWORD`: Password for the first admin user (e.g., `Aa123456@`)
+  - `USER_1_EMAIL`: Email for the first admin user
+  - `USER_1_PASSWORD`: Password for the first admin user
 
-For more detailed instructions or troubleshooting, refer to the project’s [main README](../../README.md).
