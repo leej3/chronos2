@@ -1,19 +1,20 @@
-from serial import Serial
-import sys
-from datetime import datetime
+import asyncio
+import time
+from contextlib import contextmanager
+from pathlib import Path
+from typing import Optional
+
 from chronos.config import cfg
 from chronos.logging import root_logger as logger
-from pathlib import Path
-import time
-import asyncio
-from contextlib import contextmanager
 from pymodbus.client import ModbusSerialClient
 from pymodbus.exceptions import ModbusException
-from typing import Optional
+from serial import Serial
+
 
 def c_to_f(celsius):
     """Convert Celsius to Fahrenheit."""
     return round(((9.0 / 5.0) * celsius + 32.0), 1)
+
 
 def _ensure_event_loop():
     """Ensure there is an event loop available."""
@@ -24,8 +25,9 @@ def _ensure_event_loop():
         asyncio.set_event_loop(loop)
     return loop
 
+
 @contextmanager
-def create_modbus_connection(port="/dev/ttyUSB0", baudrate=9600, parity='E', timeout=1):
+def create_modbus_connection(port="/dev/ttyUSB0", baudrate=9600, parity="E", timeout=1):
     """
     Create a ModbusDevice connection using a context manager.
 
@@ -47,13 +49,16 @@ def create_modbus_connection(port="/dev/ttyUSB0", baudrate=9600, parity='E', tim
     """
     device = None
     try:
-        device = ModbusDevice(port=port, baudrate=baudrate, parity=parity, timeout=timeout)
+        device = ModbusDevice(
+            port=port, baudrate=baudrate, parity=parity, timeout=timeout
+        )
         if not device.is_connected():
             raise ModbusException(f"Failed to connect to Modbus device on {port}")
         yield device
     finally:
         if device:
             device.close()
+
 
 class ModbusDevice:
     """
@@ -72,13 +77,10 @@ class ModbusDevice:
         device.close()
     """
 
-    def __init__(self, port="/dev/ttyUSB0", baudrate=9600, parity='E', timeout=1):
+    def __init__(self, port="/dev/ttyUSB0", baudrate=9600, parity="E", timeout=1):
         _ensure_event_loop()
         self.client = ModbusSerialClient(
-            port=port,
-            baudrate=baudrate,
-            parity=parity,
-            timeout=timeout
+            port=port, baudrate=baudrate, parity=parity, timeout=timeout
         )
         # Load register maps and mappings from config
         self.registers = cfg.modbus.registers
@@ -90,7 +92,7 @@ class ModbusDevice:
 
     def _connect(self):
         if not self.client.connect():
-            logger.warning(f"Unable to connect to Modbus device")
+            logger.warning("Unable to connect to Modbus device")
 
     def is_connected(self):
         return self.client.is_socket_open()
@@ -142,12 +144,18 @@ class ModbusDevice:
             try:
                 # Read input registers for status and performance (in chunks)
                 # Note: Input registers are 30001-based, so we add 1 to the config values
-                i_result1 = self._read_input_register(self.registers.input.alarm + 1, count=6)  # First chunk: alarm through water_flow
-                i_result2 = self._read_input_register(self.registers.input.outlet_temp + 1, count=4)  # Second chunk: temps and firing rate
+                i_result1 = self._read_input_register(
+                    self.registers.input.alarm + 1, count=6
+                )  # First chunk: alarm through water_flow
+                i_result2 = self._read_input_register(
+                    self.registers.input.outlet_temp + 1, count=4
+                )  # Second chunk: temps and firing rate
 
                 # Try reading supply temp holding register (known to work)
                 try:
-                    h_result1 = self._read_holding_register(self.registers.holding.supply_temp, count=1)
+                    h_result1 = self._read_holding_register(
+                        self.registers.holding.supply_temp, count=1
+                    )
                     system_supply_temp = c_to_f(h_result1[0] / 10.0)
                 except Exception as e:
                     logger.warning(f"Failed to read supply temp: {e}")
@@ -169,19 +177,32 @@ class ModbusDevice:
                 boiler_stats = {
                     # Temperatures
                     "system_supply_temp": system_supply_temp,  # From holding register (available)
-                    "outlet_temp": c_to_f(i_result2[0] / 10.0),  # From input register (available)
-                    "inlet_temp": c_to_f(i_result2[1] / 10.0),  # From input register (available)
-                    "flue_temp": c_to_f(i_result2[2] / 10.0),  # From input register (available)
-                    
+                    "outlet_temp": c_to_f(
+                        i_result2[0] / 10.0
+                    ),  # From input register (available)
+                    "inlet_temp": c_to_f(
+                        i_result2[1] / 10.0
+                    ),  # From input register (available)
+                    "flue_temp": c_to_f(
+                        i_result2[2] / 10.0
+                    ),  # From input register (available)
                     # Performance
-                    "cascade_current_power": float(i_result1[3]),  # From input register (available)
-                    "lead_firing_rate": float(i_result2[3]),  # From input register (available)
-                    "water_flow_rate": float(i_result1[4] / 10.0),  # From input register (available)
-                    
+                    "cascade_current_power": float(
+                        i_result1[3]
+                    ),  # From input register (available)
+                    "lead_firing_rate": float(
+                        i_result2[3]
+                    ),  # From input register (available)
+                    "water_flow_rate": float(
+                        i_result1[4] / 10.0
+                    ),  # From input register (available)
                     # Status
-                    "pump_status": bool(i_result1[1]),  # From input register (available)
-                    "flame_status": bool(i_result1[2])  # From input register (available)
-                    
+                    "pump_status": bool(
+                        i_result1[1]
+                    ),  # From input register (available)
+                    "flame_status": bool(
+                        i_result1[2]
+                    ),  # From input register (available)
                     # The following values were attempted but are not available:
                     # "dhw_temp": None,  # From holding register (not available)
                     # "min_modulation_rate": None,  # From holding register (not available)
@@ -193,7 +214,9 @@ class ModbusDevice:
                 return boiler_stats
 
             except (ModbusException, OSError, AttributeError, IndexError) as e:
-                logger.error(f"Failed to read boiler data (attempt {attempt + 1}): {str(e)}")
+                logger.error(
+                    f"Failed to read boiler data (attempt {attempt + 1}): {str(e)}"
+                )
                 if attempt < max_retries - 1:
                     time.sleep(1)
 
@@ -209,29 +232,41 @@ class ModbusDevice:
         # Typical range: 120-180°F maps to 0-100%
         min_temp = 120.0
         max_temp = 180.0
-        setpoint = int(((float(effective_setpoint) - min_temp) / (max_temp - min_temp)) * 100)
+        setpoint = int(
+            ((float(effective_setpoint) - min_temp) / (max_temp - min_temp)) * 100
+        )
 
         if not (0 <= setpoint <= 100):
-            logger.error(f"Calculated setpoint {setpoint}% is out of valid range (0-100)")
+            logger.error(
+                f"Calculated setpoint {setpoint}% is out of valid range (0-100)"
+            )
             return False
 
         for attempt in range(max_retries):
             try:
                 # Write mode (4) to operating mode register
-                result1 = self.client.write_register(self.registers.holding.operating_mode, 4)
+                result1 = self.client.write_register(
+                    self.registers.holding.operating_mode, 4
+                )
                 if result1.isError():
                     raise ModbusException("Failed to write mode")
 
                 # Write setpoint to setpoint register
-                result2 = self.client.write_register(self.registers.holding.setpoint, setpoint)
+                result2 = self.client.write_register(
+                    self.registers.holding.setpoint, setpoint
+                )
                 if result2.isError():
                     raise ModbusException("Failed to write setpoint")
 
-                logger.info(f"Successfully set boiler setpoint to {effective_setpoint}°F ({setpoint}%) (attempt {attempt + 1})")
+                logger.info(
+                    f"Successfully set boiler setpoint to {effective_setpoint}°F ({setpoint}%) (attempt {attempt + 1})"
+                )
                 return True
 
             except (ModbusException, OSError) as e:
-                logger.error(f"Failed to set boiler setpoint (attempt {attempt + 1}): {str(e)}")
+                logger.error(
+                    f"Failed to set boiler setpoint (attempt {attempt + 1}): {str(e)}"
+                )
                 if attempt < max_retries - 1:
                     time.sleep(0.5)
 
@@ -247,15 +282,21 @@ class ModbusDevice:
         """Read operating mode, cascade mode, and current setpoint."""
         try:
             mode = self._read_holding_register(self.registers.holding.operating_mode)[0]
-            cascade = self._read_holding_register(self.registers.holding.cascade_mode)[0]
+            cascade = self._read_holding_register(self.registers.holding.cascade_mode)[
+                0
+            ]
             setpoint = self._read_holding_register(self.registers.holding.setpoint)[0]
 
             return {
                 "operating_mode": mode,
-                "operating_mode_str": self.operating_modes.get(str(mode), f"Unknown ({mode})"),
+                "operating_mode_str": self.operating_modes.get(
+                    str(mode), f"Unknown ({mode})"
+                ),
                 "cascade_mode": cascade,
-                "cascade_mode_str": self.cascade_modes.get(str(cascade), f"Unknown ({cascade})"),
-                "current_setpoint": c_to_f(setpoint / 10.0)
+                "cascade_mode_str": self.cascade_modes.get(
+                    str(cascade), f"Unknown ({cascade})"
+                ),
+                "current_setpoint": c_to_f(setpoint / 10.0),
             }
         except ModbusException as e:
             logger.error(f"Failed to read operating status: {e}")
@@ -265,30 +306,40 @@ class ModbusDevice:
         """Read error history including last lockout and blockout codes."""
         try:
             # Read last lockout and blockout codes
-            error_regs = self._read_holding_register(self.registers.holding.last_lockout, count=2)
-            
+            error_regs = self._read_holding_register(
+                self.registers.holding.last_lockout, count=2
+            )
+
             error_history = {}
-            
+
             # Process lockout code
             lockout_code = error_regs[0]
             if 0 <= lockout_code < len(self.error_codes):
-                error_history.update({
-                    "last_lockout_code": lockout_code,
-                    "last_lockout_str": self.error_codes.get(str(lockout_code), f"Unknown ({lockout_code})")
-                })
+                error_history.update(
+                    {
+                        "last_lockout_code": lockout_code,
+                        "last_lockout_str": self.error_codes.get(
+                            str(lockout_code), f"Unknown ({lockout_code})"
+                        ),
+                    }
+                )
             else:
                 logger.warning(f"Invalid lockout code: {lockout_code}")
-            
+
             # Process blockout code
             blockout_code = error_regs[1]
             if 0 <= blockout_code < len(self.error_codes):
-                error_history.update({
-                    "last_blockout_code": blockout_code,
-                    "last_blockout_str": self.error_codes.get(str(blockout_code), f"Unknown ({blockout_code})")
-                })
+                error_history.update(
+                    {
+                        "last_blockout_code": blockout_code,
+                        "last_blockout_str": self.error_codes.get(
+                            str(blockout_code), f"Unknown ({blockout_code})"
+                        ),
+                    }
+                )
             else:
                 logger.warning(f"Invalid blockout code: {blockout_code}")
-            
+
             return error_history
         except ModbusException as e:
             logger.debug(f"Error history not available: {e}")
@@ -298,31 +349,36 @@ class ModbusDevice:
         """Read boiler model information and firmware versions."""
         try:
             # Read model ID and version information
-            info_regs = self._read_holding_register(self.registers.holding.model_id, count=3)
-            
+            info_regs = self._read_holding_register(
+                self.registers.holding.model_id, count=3
+            )
+
             model_info = {}
-            
+
             # Process model ID
             model_id = info_regs[0]
             model_info["model_id"] = model_id
-            model_info["model_name"] = self.model_ids.get(str(model_id), f"Unknown Model ({model_id})")
-            
+            model_info["model_name"] = self.model_ids.get(
+                str(model_id), f"Unknown Model ({model_id})"
+            )
+
             # Process firmware version
             fw_ver = info_regs[1]
             major = (fw_ver >> 8) & 0xFF
             minor = fw_ver & 0xFF
             model_info["firmware_version"] = f"{major}.{minor}"
-            
+
             # Process hardware version
             hw_ver = info_regs[2]
             major = (hw_ver >> 8) & 0xFF
             minor = hw_ver & 0xFF
             model_info["hardware_version"] = f"{major}.{minor}"
-            
+
             return model_info
         except ModbusException as e:
             logger.debug(f"Model information not available: {e}")
             return {}
+
 
 class SerialDevice:
     def __init__(self, id: int, portname: str = "", baudrate: int = 19200):
@@ -341,7 +397,7 @@ class SerialDevice:
         """Set the device state by sending the appropriate command, then store it."""
         command_str = "on" if desired_state else "off"
         command = f"relay {command_str} {self.id}\n\r"
-        response = self._send_command(command)
+        self._send_command(command)
         self._state = desired_state
 
     def read_state_from_device(self) -> bool:
@@ -367,14 +423,17 @@ class SerialDevice:
         """Send a command to the device and return the raw response."""
         try:
             with Serial(self.portname, self.baudrate, timeout=1) as ser_port:
-                ser_port.write(command.encode('utf-8'))
-                response = ser_port.readall().decode('utf-8', errors='replace')
+                ser_port.write(command.encode("utf-8"))
+                response = ser_port.readall().decode("utf-8", errors="replace")
             return response
         except Exception as e:
-            logger.warning(f"Serial port not accessible ([{e}]). Returning mock response for debugging.")
+            logger.warning(
+                f"Serial port not accessible ([{e}]). Returning mock response for debugging."
+            )
             parts = command.strip().split()
             device_id = parts[2] if len(parts) >= 3 else "0"
             return f"relay read {device_id} \n\n\roff\n\r>"
+
 
 def read_temperature_sensor(sensor_id):
     device_file = Path(cfg.sensors.mount_point, sensor_id, "w1_slave")
@@ -392,7 +451,7 @@ def read_temperature_sensor(sensor_id):
                 time.sleep(0.2)
     equals_pos = lines[1].find("t=")
     if equals_pos != -1:
-        temp_string = lines[1][equals_pos + 2:]
+        temp_string = lines[1][equals_pos + 2 :]
         temp = float(temp_string) / 1000.0
         return c_to_f(temp)
 

@@ -4,8 +4,8 @@
 
 The Chronos project has been structured into three distinct components: frontend, backend, and edge server. These components operate independently, enabling better scalability and maintainability. Docker Compose is used to integrate and manage these services for seamless deployment. Detailed information about each component is available in their respective README files:
 
-- [Frontend README](./chronos2/dashboard_frontend/README.md)
-- [Backend README](./chronos2/dashboard_backend/README.md)
+- [Frontend README](./dashboard_frontend/README.md)
+- [Backend README](./dashboard_backend/README.md)
 - [Edge Server README](./edge_server/README.md)
 
 ## Installation with Docker
@@ -53,4 +53,4 @@ The Chronos project consists of the following services managed by Docker Compose
 - **API Documentation:** [http://localhost:5171/docs](http://localhost:5171/docs)
 - **Access URL:** Configured via `.env` files in the backend and frontend components.
 
-For further details, please refer to the respective README files linked above and the docker compose files in this directory.
+For further details, please refer to the respective README files linked above and the docker compose files in this directory. Note, other services are run depending on the deployment configuration.

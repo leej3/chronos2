@@ -12,7 +12,7 @@ Chronos talks to the following components on the RPI. These devices are specifie
 
 ### API Endpoints
 
-Once deployed, api endpoint documentation can be accessed at http://5173/api/docs
+Once deployed, api endpoint documentation can be accessed at http://5171/api/docs
 
 
 ### Hardware dependencies
@@ -27,5 +27,5 @@ Once deployed, api endpoint documentation can be accessed at http://5173/api/doc
 ```
 curl -LsSf https://astral.sh/uv/install.sh | sh
 uv sync
-uvicorn chronos.app:app --host 0.0.0.0 --port 5171
+uv run uvicorn chronos.app:app --host 0.0.0.0 --port 5171
 ```

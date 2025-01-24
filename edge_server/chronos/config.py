@@ -1,27 +1,26 @@
-import json
 import os
 import sys
 from pathlib import Path
-from .boiler_modbus import MODBUS
+
 from dotenv import load_dotenv
+
+from .boiler_modbus import MODBUS
 
 load_dotenv()
 
+
 def ensure_log_path(path: Path):
-    candidates = [
-        path,
-        Path.cwd() / path.name,
-        Path("/tmp") / path.name
-    ]
+    candidates = [path, Path.cwd() / path.name, Path("/tmp") / path.name]
     for p in candidates:
         try:
             p.parent.mkdir(parents=True, exist_ok=True)
             # Test writing the file to ensure we have permission
-            with p.open('a'):
+            with p.open("a"):
                 pass
+            print(f"Using log file at {p}")
             return p
         except Exception as e:
-            print(f"Warning:log file won't work at {p}: {e}")
+            print(f"Log file won't work at {p}: {e}")
 
     # If all fail, exit or raise an exception
     print("Could not create a suitable log file path.")
@@ -42,18 +41,13 @@ class Struct:
 
 config_dict = {
     **MODBUS,
-    "serial": {
-        "baudr": 19200,
-        "portname": "/dev/ttyACM0"
-    },
+    "serial": {"baudr": 19200, "portname": "/dev/ttyACM0"},
     "sensors": {
-        "mount_point": os.getenv("W1_MOUNT_POINT", "/sys/bus/w1/devices"),
+        "mount_point": "/sys/bus/w1/devices",
         "in_id": "28-00000677d509",
         "out_id": "28-011927cd8e7d",
     },
-    "files": {
-        "log_path": str(ensure_log_path(Path("/var/log/chronos/chronos.log")))
-    },
+    "files": {"log_path": str(ensure_log_path(Path("/var/log/chronos/chronos.log")))},
     "relay": {
         "boiler": 0,
         "chiller1": 2,
@@ -65,11 +59,9 @@ config_dict = {
         "led_breather": 7,
         "led_red": 8,
         "led_green": 9,
-        "led_blue": 10
+        "led_blue": 10,
     },
-    "efficiency": {
-        "hours": 12
-    },
-    "MOCK_DEVICES": os.getenv("MOCK_DEVICES", "false").lower() == "true"
+    "efficiency": {"hours": 12},
+    "MOCK_DEVICES": os.getenv("MOCK_DEVICES", "false").lower() == "true",
 }
 cfg = Struct(config_dict)

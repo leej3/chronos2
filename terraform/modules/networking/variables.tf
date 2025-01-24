@@ -24,7 +24,7 @@ variable "environment" {
 
 variable "vpc_name" {
   description = "The name used to tag the VPC."
-  default     = "chronos2-vpc"
+  default     = "chronos-vpc"
   type        = string
 }
 
@@ -36,13 +36,13 @@ variable "vpc_ipv4_cidr_block" {
 
 variable "internet_gateway_name" {
   description = "The name of the internet gateway"
-  default     = "chronos2-internet-gateway"
+  default     = "chronos-internet-gateway"
   type        = string
 }
 
 variable "route_table_name" {
   description = "The name used to tag the route table."
-  default     = "chronos2-route-table"
+  default     = "chronos-route-table"
   type        = string
 }
 
@@ -72,7 +72,7 @@ variable "vpc_domain_name_servers" {
 
 variable "vpc_dhcp_options_name" {
   description = "The name used to tag the VPC DHCP options"
-  default     = "chronos2-dhcp-options"
+  default     = "chronos-dhcp-options"
   type        = string
 }
 

@@ -11,13 +11,13 @@ variable "region" {
 
 variable "instance_profile_name" {
   description = "The name of the instance profile"
-  default     = "chronos2-instance-profile"
+  default     = "chronos-instance-profile"
   type        = string
 }
 
 variable "instance_profile_role_name" {
   description = "The name of the instance profile"
-  default     = "chronos2-instance-profile-role"
+  default     = "chronos-instance-profile-role"
   type        = string
 }
 
