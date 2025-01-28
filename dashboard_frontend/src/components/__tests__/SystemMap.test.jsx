@@ -47,10 +47,10 @@ describe('SystemMap component', () => {
       'images/Icons/Boiler/Boiler-ON.png',
     );
     expect(
-      screen.getByText((content) => content.includes('50.00°F')),
+      screen.getByText((content) => content.includes('50°F')),
     ).toBeInTheDocument();
     expect(
-      screen.getByText((content) => content.includes('40.00°F')),
+      screen.getByText((content) => content.includes('40°F')),
     ).toBeInTheDocument();
   });
 
@@ -79,8 +79,8 @@ describe('SystemMap component', () => {
       'src',
       'images/Icons/Boiler/Boiler-OFF.png',
     );
-    expect(screen.getByText('70.00°F')).toBeInTheDocument();
-    expect(screen.getByText('60.00°F')).toBeInTheDocument();
+    expect(screen.getByText('70°F')).toBeInTheDocument();
+    expect(screen.getByText('60°F')).toBeInTheDocument();
   });
 
   it('should show loading screen when season is not set', () => {

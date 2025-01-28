@@ -88,7 +88,7 @@ const SystemMap = ({ homedata }) => {
                       className="mb-2 responsive-arrow"
                     />
                     <span className="h4 text-center">
-                      {formatNumber(sensors?.water_out_temp)}°F
+                      {`${Math.round(sensors?.water_out_temp)}°F`}
                     </span>
                     <img
                       src="/images/Icons/Boiler/arrow3.png"
@@ -96,7 +96,7 @@ const SystemMap = ({ homedata }) => {
                       className="mb-2 responsive-arrow"
                     />
                     <span className="h4 text-center">
-                      {formatNumber(sensors?.return_temp)}°F
+                      {`${Math.round(sensors?.return_temp)}°F`}
                     </span>
                   </div>
                 </CCol>
