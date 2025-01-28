@@ -18,7 +18,7 @@ Run the following commands to build and start all services in detached mode:
 
 ```bash
 bash setup-env.sh
-docker-compose up -d
+docker compose up --build
 ```
 
 ### Stop and Remove Services
@@ -26,7 +26,13 @@ docker-compose up -d
 To stop and remove all running containers, use:
 
 ```bash
-docker-compose down
+docker compose down
+```
+
+Sometimes the postgres container has been initialized with a different user than the one specified in the .env.docker file. To fix this, remove the postgres volume run the following command:
+
+```bash
+docker compose down -v
 ```
 
 ## Docker Services

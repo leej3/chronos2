@@ -9,10 +9,10 @@ terraform {
   }
 
   backend "s3" {
-    bucket         = "${var.state_bucket_name}-${var.environment}"
-    key            = var.state_backend_key
-    region         = var.state_storage_region
-    dynamodb_table = "${var.state_table_name}-${var.environment}"
+    bucket         = "chronos2-terraform-state-storage-stage"
+    key            = "terraform.tfstate"
+    region         = "us-east-1"
+    dynamodb_table = "terraform-state-locks-stage"
     encrypt        = true
   }
 }
