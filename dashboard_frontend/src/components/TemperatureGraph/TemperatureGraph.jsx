@@ -130,7 +130,12 @@ const TemperatureGraph = () => {
   return (
     <div className="graph-container">
       <div className="graphbody">
-        <h3>Inlet/Outlet Temperature History</h3>
+        <div className="graph-header">
+          <h3>Inlet/Outlet Temperature History</h3>
+          <button className="download-button" onClick={downloadCSV}>
+            Download logs csv
+          </button>
+        </div>
         <ResponsiveContainer width="100%" height={chartHeight}>
           <LineChart data={data}>
             <CartesianGrid stroke="#4c5c77" strokeDasharray="3 3" />
@@ -138,15 +143,13 @@ const TemperatureGraph = () => {
               dataKey="name"
               stroke="#dddddd"
               tick={{ fill: '#dddddd', fontSize: 12, fontWeight: 'bold' }}
-              tickFormatter={(tick, index) => {
-                if (index === 0) {
-                  return '';
-                }
-                const [time] = tick.split(', ');
+              tickFormatter={(tick) => {
+                const [date, time] = tick.split(', ');
                 return time;
               }}
-              angle={0}
-              textAnchor="middle"
+              angle={-45}
+              textAnchor="end"
+              height={60}
               interval={interval}
             />
             <YAxis
@@ -185,9 +188,6 @@ const TemperatureGraph = () => {
             />
           </LineChart>
         </ResponsiveContainer>
-        <button className="download-button" onClick={downloadCSV}>
-          Download logs csv
-        </button>
       </div>
     </div>
   );

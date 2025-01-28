@@ -43,6 +43,17 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
+.graph-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.graph-header h3 {
+  margin: 0;
+}
+
 @media (max-width: 768px) {
   .graphbody {
     padding: 20px;
