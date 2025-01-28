@@ -1,7 +1,7 @@
 variable "state_bucket_name" {
   description = "The name of the S3 bucket to store Terraform state. Must be globally unique."
   type        = string
-  default     = "chronos-terraform-state-storage"
+  default     = "chronos2-terraform-state-storage"
 }
 
 variable "state_table_name" {
