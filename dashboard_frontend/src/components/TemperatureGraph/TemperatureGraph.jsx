@@ -18,7 +18,7 @@ import { formatNumber } from '../../utils/tranform';
 
 const TemperatureGraph = () => {
   const [data, setData] = useState([]);
-  const [interval, setInterval] = useState(4);
+  const [interval, setInterval] = useState(8);
   const [chartHeight, setChartHeight] = useState(600);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -83,10 +83,10 @@ const TemperatureGraph = () => {
 
     const handleResize = () => {
       if (window.innerWidth < 768) {
-        setInterval(8);
+        setInterval(16);
         setChartHeight(400);
       } else {
-        setInterval(4);
+        setInterval(8);
         setChartHeight(600);
       }
     };
@@ -158,16 +158,7 @@ const TemperatureGraph = () => {
   return (
     <div className="graph-container">
       <div className="graphbody">
-        <div className="graph-header">
-          <h3>Inlet/Outlet Temperature History</h3>
-          <button
-            className="download-button"
-            onClick={downloadCSV}
-            disabled={isLoading || data.length === 0}
-          >
-            Download logs csv
-          </button>
-        </div>
+        <h3>Inlet/Outlet Temperature History</h3>
         {isLoading && (
           <div className="loading-state">
             <div className="spinner"></div>
@@ -180,58 +171,67 @@ const TemperatureGraph = () => {
           </div>
         )}
         {!isLoading && !error && data.length > 0 && (
-          <ResponsiveContainer width="100%" height={chartHeight}>
-            <LineChart data={data}>
-              <CartesianGrid stroke="#4c5c77" strokeDasharray="3 3" />
-              <XAxis
-                dataKey="name"
-                stroke="#dddddd"
-                tick={{ fill: '#dddddd', fontSize: 12, fontWeight: 'bold' }}
-                tickFormatter={(tick) => {
-                  const [, time] = tick.split(', ');
-                  return time;
-                }}
-                angle={-45}
-                textAnchor="end"
-                height={60}
-                interval={interval}
-              />
-              <YAxis
-                domain={[30, 90]}
-                stroke="#dddddd"
-                tick={{ fill: '#dddddd', fontSize: 12, fontWeight: 'bold' }}
-                tickFormatter={(tick) => Math.round(tick)}
-              >
-                <Label
-                  value="Temperature (°F)"
-                  angle={-90}
-                  position="insideLeft"
-                  fill="#dddddd"
-                  style={{ textAnchor: 'middle', fontSize: 18 }}
+          <>
+            <ResponsiveContainer width="100%" height={chartHeight}>
+              <LineChart data={data}>
+                <CartesianGrid stroke="#4c5c77" strokeDasharray="3 3" />
+                <XAxis
+                  dataKey="name"
+                  stroke="#dddddd"
+                  tick={{ fill: '#dddddd', fontSize: 12, fontWeight: 'bold' }}
+                  tickFormatter={(tick) => {
+                    const [, time] = tick.split(', ');
+                    return time;
+                  }}
+                  angle={-45}
+                  textAnchor="end"
+                  height={60}
+                  interval={interval}
                 />
-              </YAxis>
-              <Tooltip content={<CustomTooltip />} />
-              <Legend
-                verticalAlign="top"
-                align="right"
-                wrapperStyle={{ fill: '#dddddd' }}
-              />
-              <Line
-                type="monotone"
-                dataKey="inlet"
-                stroke="#ffca28"
-                strokeWidth={2}
-                dot={{ r: 3 }}
-              />
-              <Line
-                type="monotone"
-                dataKey="outlet"
-                stroke="#ff7043"
-                strokeWidth={2}
-                dot={{ r: 3 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+                <YAxis
+                  domain={[30, 90]}
+                  stroke="#dddddd"
+                  tick={{ fill: '#dddddd', fontSize: 12, fontWeight: 'bold' }}
+                  tickFormatter={(tick) => Math.round(tick)}
+                >
+                  <Label
+                    value="Temperature (°F)"
+                    angle={-90}
+                    position="insideLeft"
+                    fill="#dddddd"
+                    style={{ textAnchor: 'middle', fontSize: 18 }}
+                  />
+                </YAxis>
+                <Tooltip content={<CustomTooltip />} />
+                <Legend
+                  verticalAlign="top"
+                  align="right"
+                  wrapperStyle={{ fill: '#dddddd' }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="inlet"
+                  stroke="#ffca28"
+                  strokeWidth={2}
+                  dot={false}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="outlet"
+                  stroke="#ff7043"
+                  strokeWidth={2}
+                  dot={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+            <button
+              className="download-button"
+              onClick={downloadCSV}
+              disabled={isLoading || data.length === 0}
+            >
+              Download logs csv
+            </button>
+          </>
         )}
       </div>
     </div>

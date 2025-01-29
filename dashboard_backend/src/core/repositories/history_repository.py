@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from sqlalchemy import desc
 from sqlalchemy.sql import func
 from src.core.configs.database import session_scope
@@ -17,9 +19,15 @@ class HistoryRepository:
             session.expunge_all()
         return history
 
-    def get_last_histories(self, limit=40):
+    def get_last_histories(self, hours=12):
         with session_scope() as session:
-            rows = session.query(History).order_by(desc(History.id)).limit(limit).all()
+            timespan = datetime.now() - timedelta(hours=hours)
+            rows = (
+                session.query(History)
+                .filter(History.timestamp > timespan)
+                .order_by(desc(History.id))
+                .all()
+            )
             session.expunge_all()
         return rows
 
