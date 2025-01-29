@@ -1,3 +1,4 @@
+/* eslint-env jest */
 import React from 'react';
 
 import { render, screen } from '@testing-library/react';
@@ -32,8 +33,8 @@ describe('SystemMap component', () => {
       },
     };
     const homedata = {
-      results: { water_out_temp: '50', return_temp: '40' },
-      sensors: { water_out_temp: '50', return_temp: '40' },
+      results: { water_out_temp: 50, return_temp: 40 },
+      sensors: { water_out_temp: 50, return_temp: 40 },
     };
 
     render(
@@ -46,17 +47,17 @@ describe('SystemMap component', () => {
       'src',
       'images/Icons/Boiler/Boiler-ON.png',
     );
-    expect(
-      screen.getByText((content) => content.includes('50°F')),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText((content) => content.includes('40°F')),
-    ).toBeInTheDocument();
+
+    // Check for exact temperature strings
+    const temperatures = screen.getAllByText('50.0°F');
+    expect(temperatures).toHaveLength(1);
+    const returnTemps = screen.getAllByText('40.0°F');
+    expect(returnTemps).toHaveLength(1);
   });
 
   it('should render system map for Summer season with chiller status', () => {
     const state = {
-      season: { season: 'Winter' },
+      season: { season: 'Summer' },
       manualOverride: {
         boiler: false,
         chiller1: false,
@@ -66,8 +67,8 @@ describe('SystemMap component', () => {
       },
     };
     const homedata = {
-      results: { water_out_temp: '70', return_temp: '60' },
-      sensors: { water_out_temp: '70', return_temp: '60' },
+      results: { water_out_temp: 70, return_temp: 60 },
+      sensors: { water_out_temp: 70, return_temp: 60 },
     };
 
     render(
@@ -75,12 +76,16 @@ describe('SystemMap component', () => {
         <SystemMap homedata={homedata} />
       </Provider>,
     );
-    expect(screen.getByAltText('Boiler')).toHaveAttribute(
+    expect(screen.getByAltText('Chiller 1')).toHaveAttribute(
       'src',
-      'images/Icons/Boiler/Boiler-OFF.png',
+      'images/Icons/Boiler/Chiller-OFF.png',
     );
-    expect(screen.getByText('70°F')).toBeInTheDocument();
-    expect(screen.getByText('60°F')).toBeInTheDocument();
+
+    // Check for exact temperature strings
+    const outTemps = screen.getAllByText('70.0°F');
+    expect(outTemps).toHaveLength(1);
+    const returnTemps = screen.getAllByText('60.0°F');
+    expect(returnTemps).toHaveLength(1);
   });
 
   it('should show loading screen when season is not set', () => {
@@ -106,5 +111,25 @@ describe('SystemMap component', () => {
     );
     const loadingContainer = container.querySelector('.container-fluid');
     expect(loadingContainer).toBeInTheDocument();
+  });
+
+  it('should handle N/A temperatures correctly', () => {
+    const state = {
+      season: { season: 'Winter' },
+      manualOverride: { boiler: false },
+    };
+    const homedata = {
+      results: { water_out_temp: 'N/A', return_temp: 'N/A' },
+      sensors: { water_out_temp: 'N/A', return_temp: 'N/A' },
+    };
+
+    render(
+      <Provider store={mockStore(state)}>
+        <SystemMap homedata={homedata} />
+      </Provider>,
+    );
+
+    const naTemps = screen.getAllByText('N/A');
+    expect(naTemps).toHaveLength(2);
   });
 });

@@ -15,7 +15,7 @@ import {
 } from '@coreui/react';
 import { useSelector } from 'react-redux';
 
-import { formatNumber } from '../../utils/tranform';
+import { formatTemperature } from '../../utils/tranform';
 import Modbus from '../Modebus/Modbus';
 import TableTemplate from '../Sensor/TableTemplate';
 import TypeMode from '../TypeMode/TypeMode';
@@ -88,7 +88,7 @@ const SystemMap = ({ homedata }) => {
                       className="mb-2 responsive-arrow"
                     />
                     <span className="h4 text-center">
-                      {`${Math.round(sensors?.water_out_temp)}°F`}
+                      {formatTemperature(sensors?.water_out_temp)}
                     </span>
                     <img
                       src="/images/Icons/Boiler/arrow3.png"
@@ -96,7 +96,7 @@ const SystemMap = ({ homedata }) => {
                       className="mb-2 responsive-arrow"
                     />
                     <span className="h4 text-center">
-                      {`${Math.round(sensors?.return_temp)}°F`}
+                      {formatTemperature(sensors?.return_temp)}
                     </span>
                   </div>
                 </CCol>
@@ -154,7 +154,9 @@ const SystemMap = ({ homedata }) => {
               </CRow>
               <CRow className="d-flex align-items-center mb-3">
                 <CCol xs="auto">
-                  <span className="h5">{results?.return_temp}°F</span>
+                  <span className="h5">
+                    {formatTemperature(results?.return_temp)}
+                  </span>
                 </CCol>
                 <CCol className="mx-2">
                   <div
@@ -164,7 +166,7 @@ const SystemMap = ({ homedata }) => {
                 </CCol>
                 <CCol xs="auto">
                   <span className="h4">
-                    {results?.water_out_temp || 'N/A'}°F
+                    {formatTemperature(results?.water_out_temp)}
                   </span>
                 </CCol>
               </CRow>
