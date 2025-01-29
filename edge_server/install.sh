@@ -17,10 +17,24 @@ echo "Setting up installation directory..."
 mkdir -p "$INSTALL_DIR"
 cp -r . "$INSTALL_DIR/"
 
-# Install uv if not already installed
+# Install uv if not already installed and set up PATH
 if ! command -v uv &> /dev/null; then
     echo "Installing uv package manager..."
     curl -LsSf https://astral.sh/uv/install.sh | sh
+
+    # Source the environment file to get uv in PATH
+    if [ -f "/root/.local/bin/env" ]; then
+        source "/root/.local/bin/env"
+    else
+        export PATH="/root/.local/bin:$PATH"
+    fi
+fi
+
+# Verify uv is now available
+if ! command -v uv &> /dev/null; then
+    echo "Error: uv installation failed or not in PATH"
+    echo "Please ensure /root/.local/bin is in your PATH"
+    exit 1
 fi
 
 # Install dependencies
