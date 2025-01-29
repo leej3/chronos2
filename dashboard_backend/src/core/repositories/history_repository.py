@@ -19,7 +19,7 @@ class HistoryRepository:
             session.expunge_all()
         return history
 
-    def get_last_histories(self, hours=12):
+    def get_last_histories(self, hours=1):
         with session_scope() as session:
             timespan = datetime.now() - timedelta(hours=hours)
             rows = (

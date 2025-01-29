@@ -213,14 +213,14 @@ const TemperatureGraph = () => {
                   dataKey="inlet"
                   stroke="#ffca28"
                   strokeWidth={2}
-                  dot={false}
+                  dot={{ r: 3 }}
                 />
                 <Line
                   type="monotone"
                   dataKey="outlet"
                   stroke="#ff7043"
                   strokeWidth={2}
-                  dot={false}
+                  dot={{ r: 3 }}
                 />
               </LineChart>
             </ResponsiveContainer>
