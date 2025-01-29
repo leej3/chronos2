@@ -23,6 +23,7 @@ def mock_session():
 
         session_mock.query.return_value = query_mock
         query_mock.filter_by.return_value = query_mock
+        query_mock.filter.return_value = query_mock
         query_mock.order_by.return_value = query_mock
         query_mock.limit.return_value = query_mock
         query_mock.all.return_value = [
@@ -64,7 +65,17 @@ def test_get_last_history(mock_session):
 
 def test_get_last_histories(mock_session):
     repo = HistoryRepository()
+    mock_query = mock_session.return_value.__enter__.return_value.query
+    mock_query.return_value.filter.return_value.order_by.return_value.all.return_value = [
+        History(id=1),
+        History(id=2),
+    ]
+
     histories = repo.get_last_histories()
+
+    # Verify that filter was called (timestamp filtering)
+    mock_query.return_value.filter.assert_called_once()
+    # Verify that we got the expected results
     assert len(histories) == 2
     assert histories[0].id == 1
     assert histories[1].id == 2
