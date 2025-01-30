@@ -33,7 +33,7 @@ uv run uvicorn chronos.app:app --host 0.0.0.0 --port 5171
 
 Or install it as a systemd service (recommended for production):
 ```bash
-sudo ./install.sh
+sudo bash install.sh
 ```
 
 The installation script will:
@@ -41,21 +41,3 @@ The installation script will:
 - Install the uv package manager if not present
 - Install all dependencies
 - Configure and start the systemd service
-
-You can manage the service using standard systemd commands:
-```bash
-# View service status
-sudo systemctl status chronos
-
-# View logs
-sudo journalctl -u chronos -f
-
-# Stop the service
-sudo systemctl stop chronos
-
-# Start the service
-sudo systemctl start chronos
-
-# Restart the service
-sudo systemctl restart chronos
-```

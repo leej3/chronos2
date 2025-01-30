@@ -10,3 +10,4 @@ frp_config/frps.toml
 .vscode
 uv.lock
 .env.docker
+deployment.log
