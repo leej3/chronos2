@@ -34,7 +34,7 @@ jobs:
 
       - name: Copy template .env files
         run: |
-          bash setup-env.sh
+          bash setup-dotenv.sh
       - name: Run docker-compose to start services
         run: |
           docker compose up -d dashboard_backend edge_server
