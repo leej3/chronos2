@@ -15,6 +15,7 @@ import {
 import './TemperatureGraph.css';
 import { getCharData } from '../../api/getCharData';
 import { formatNumber } from '../../utils/tranform';
+import { getFormattedTime } from '../../utils/timezone';
 
 const TemperatureGraph = () => {
   const [data, setData] = useState([]);
@@ -35,11 +36,11 @@ const TemperatureGraph = () => {
           setError('No data available');
           return;
         }
-
+        const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
         const mappedData = result.map((entry) => {
-          const date = new Date(entry.date);
+          const date = new Date(entry.date + 'Z');
           const formattedDate = date.toLocaleString('en-US', {
-            timeZone: 'America/Chicago',
+            timeZone: userTimeZone,
             year: 'numeric',
             month: 'numeric',
             day: 'numeric',
