@@ -1,7 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
-
-import { cilFactorySlash } from '@coreui/icons';
+import { cilFactorySlash, cilClock } from '@coreui/icons';
 import CIcon from '@coreui/icons-react';
 import {
   CContainer,
@@ -11,17 +10,24 @@ import {
   CNavItem,
 } from '@coreui/react';
 import { useSelector } from 'react-redux';
+import { getFormattedTime } from '../../utils/timezone';
 
 const AppHeader = () => {
+  const [currentTime, setCurrentTime] = useState('');
   const headerRef = useRef();
-  // const { colorMode, setColorMode } = useColorModes(
-  //   'coreui-free-react-admin-template-theme'
-  // );
-
-  // Get mockDevices state from Redux store
   const mockDevices = useSelector((state) => state.season.mockDevices);
 
-  // Add shadow effect on scroll
+  useEffect(() => {
+    const updateTime = () => {
+      setCurrentTime(getFormattedTime());
+    };
+
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   useEffect(() => {
     document.addEventListener('scroll', () => {
       headerRef.current &&
@@ -37,12 +43,25 @@ const AppHeader = () => {
       <CContainer fluid>
         <CHeaderNav className="d-none d-md-flex">
           <CNavItem>
-            <CNavLink to="/" as={NavLink}>
+            <CNavLink
+              to="/"
+              as={NavLink}
+              className="text-primary font-weight-bold"
+            >
               Chronus Dashboard
             </CNavLink>
           </CNavItem>
         </CHeaderNav>
         <CHeaderNav className="ms-auto">
+          <CNavItem>
+            <CNavLink
+              href="#"
+              className="d-flex align-items-center font-weight-bold m-1"
+            >
+              <CIcon icon={cilClock} className="mr-2" />
+              <span className="font-weight-bold m-2">{currentTime}</span>
+            </CNavLink>
+          </CNavItem>
           {mockDevices && (
             <CNavItem>
               <CNavLink

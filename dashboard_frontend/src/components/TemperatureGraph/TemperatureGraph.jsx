@@ -15,6 +15,7 @@ import {
 import './TemperatureGraph.css';
 import { getCharData } from '../../api/getCharData';
 import { formatNumber } from '../../utils/tranform';
+import { getFormattedTime } from '../../utils/timezone';
 
 const TemperatureGraph = () => {
   const [data, setData] = useState([]);
@@ -37,23 +38,15 @@ const TemperatureGraph = () => {
         }
 
         const mappedData = result.map((entry) => {
-          const date = new Date(entry.date);
-          const formattedDate = date.toLocaleString('en-US', {
-            timeZone: 'America/Chicago',
-            year: 'numeric',
-            month: 'numeric',
-            day: 'numeric',
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true,
-          });
-
           return {
-            name: formattedDate,
+            name: getFormattedTime('DD/MM/YYYY, h:mm A', entry.date),
             inlet: formatNumber(entry['column-2'], 0),
             outlet: formatNumber(entry['column-1'], 0),
           };
         });
+        const timeStamps = result.map((entry) =>
+          new Date(entry.date).getTime(),
+        );
 
         setData(mappedData);
       } catch (error) {
@@ -64,17 +57,14 @@ const TemperatureGraph = () => {
       }
     };
 
-    // Initial fetch
     fetchData();
 
-    // Retry every 10 seconds if no data or error
     const intervalId = setInterval(() => {
       if (data.length === 0 || error) {
         fetchData();
       }
     }, 10000);
 
-    // Regular updates every 2 minutes once we have data
     const updateIntervalId = setInterval(() => {
       if (data.length > 0) {
         fetchData();
@@ -183,16 +173,51 @@ const TemperatureGraph = () => {
                     const [, time] = tick.split(', ');
                     return time;
                   }}
-                  angle={-45}
-                  textAnchor="end"
+                  angle={0}
+                  textAnchor="left"
                   height={60}
-                  interval={interval}
+                  interval="preserveStartEnd"
+                  minTickGap={5}
                 />
                 <YAxis
-                  domain={[30, 90]}
+                  domain={[
+                    (dataMin) => {
+                      const minValue = Math.min(
+                        ...data.map((d) => Math.min(d.inlet, d.outlet)),
+                      );
+                      return minValue - 0.5;
+                    },
+                    (dataMax) => {
+                      const maxValue = Math.max(
+                        ...data.map((d) => Math.max(d.inlet, d.outlet)),
+                      );
+                      return maxValue + 0.5;
+                    },
+                  ]}
+                  ticks={(function () {
+                    const minValue =
+                      Math.min(
+                        ...data.map((d) => Math.min(d.inlet, d.outlet)),
+                      ) - 0.5;
+                    const maxValue =
+                      Math.max(
+                        ...data.map((d) => Math.max(d.inlet, d.outlet)),
+                      ) + 0.5;
+                    const step = 0.5;
+                    const ticks = [];
+                    for (
+                      let i = Math.floor(minValue / step) * step;
+                      i <= Math.ceil(maxValue / step) * step;
+                      i += step
+                    ) {
+                      ticks.push(i);
+                    }
+                    return ticks;
+                  })()}
                   stroke="#dddddd"
                   tick={{ fill: '#dddddd', fontSize: 12, fontWeight: 'bold' }}
-                  tickFormatter={(tick) => Math.round(tick)}
+                  tickFormatter={(tick) => tick.toFixed(1)}
+                  minTickGap={10}
                 >
                   <Label
                     value="Temperature (°F)"
@@ -204,21 +229,27 @@ const TemperatureGraph = () => {
                 </YAxis>
                 <Tooltip content={<CustomTooltip />} />
                 <Legend
-                  verticalAlign="top"
-                  align="right"
-                  wrapperStyle={{ fill: '#dddddd' }}
+                  verticalAlign="bottom"
+                  align="left"
+                  iconType="line"
+                  iconSize={25}
+                  wrapperStyle={{
+                    paddingLeft: '24px',
+                  }}
                 />
                 <Line
+                  name="Water Outlet"
                   type="monotone"
-                  dataKey="inlet"
-                  stroke="#ffca28"
+                  dataKey="outlet"
+                  stroke="#ff7043"
                   strokeWidth={2}
                   dot={{ r: 3 }}
                 />
                 <Line
+                  name="Water Inlet"
                   type="monotone"
-                  dataKey="outlet"
-                  stroke="#ff7043"
+                  dataKey="inlet"
+                  stroke="#ffca28"
                   strokeWidth={2}
                   dot={{ r: 3 }}
                 />
