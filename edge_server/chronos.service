@@ -3,10 +3,12 @@ Description=Chronos Edge Server
 After=network.target
 
 [Service]
+User=pi
+Group=dialout
 Type=simple
-WorkingDirectory=/opt/chronos
-Environment=PATH=/opt/chronos/.venv/bin:$PATH
-ExecStart=/opt/chronos/.venv/bin/uvicorn chronos.app:app --host 0.0.0.0 --port 5171
+WorkingDirectory=/opt/chronos/edge_server
+Environment=PATH=/opt/chronos/edge_server/.venv/bin:$PATH
+ExecStart=/opt/chronos/edge_server/.venv/bin/uvicorn chronos.app:app --host 0.0.0.0 --port 5171
 Restart=always
 RestartSec=1
 

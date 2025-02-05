@@ -9,38 +9,37 @@ fi
 
 INSTALL_DIR="/opt/chronos"
 SERVICE_NAME="chronos"
+SERVICE_USER="pi"
+SERVICE_GROUP="dialout"
 
 echo "Installing Chronos edge server..."
 
 # Create or update installation directory
 echo "Setting up installation directory..."
 mkdir -p "$INSTALL_DIR"
-cp -r . "$INSTALL_DIR/"
+rsync -av --delete --exclude='.venv' . "$INSTALL_DIR/"
 
-# Install uv if not already installed and set up PATH
-if ! command -v uv &> /dev/null; then
-    echo "Installing uv package manager..."
-    curl -LsSf https://astral.sh/uv/install.sh | sh
+# Set correct ownership
+echo "Setting correct ownership..."
+chown -R $SERVICE_USER:$SERVICE_USER "$INSTALL_DIR"
 
-    # Source the environment file to get uv in PATH
-    if [ -f "/root/.local/bin/env" ]; then
-        source "/root/.local/bin/env"
-    else
-        export PATH="/root/.local/bin:$PATH"
-    fi
-fi
+# Ensure service user is in dialout group
+echo "Ensuring $SERVICE_USER has access to serial ports..."
+usermod -a -G dialout $SERVICE_USER
 
-# Verify uv is now available
-if ! command -v uv &> /dev/null; then
-    echo "Error: uv installation failed or not in PATH"
-    echo "Please ensure /root/.local/bin is in your PATH"
-    exit 1
-fi
+# Install uv for the service user if not already installed
+echo "Installing uv package manager..."
+sudo -u $SERVICE_USER mkdir -p /home/$SERVICE_USER/.local/bin
+sudo -u $SERVICE_USER bash -c 'curl -LsSf https://astral.sh/uv/install.sh | sh'
 
-# Install dependencies
+# Install dependencies as the service user
 echo "Installing dependencies..."
-cd "$INSTALL_DIR"
-uv sync
+cd "$INSTALL_DIR/edge_server"
+sudo -u $SERVICE_USER bash -c "
+    export PATH=/home/$SERVICE_USER/.local/bin:\$PATH
+    export LC_ALL=C.UTF-8
+    export LANG=C.UTF-8
+    uv sync"
 
 # Install and configure systemd service
 echo "Configuring systemd service..."
@@ -56,3 +55,5 @@ echo "Installation complete! Service status:"
 systemctl status "$SERVICE_NAME"
 echo
 echo "To view logs, run: journalctl -u $SERVICE_NAME -f"
+echo
+echo "NOTE: You may need to log out and back in for the dialout group changes to take effect."

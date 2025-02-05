@@ -231,6 +231,7 @@ def test_get_boiler_model_info_error(client, mock_modbus_device):
         assert "Failed to read model info" in response.json()["detail"]
 
 
+@pytest.mark.skip(reason="Error history registers (40010) not supported on this model")
 def test_get_boiler_error_history_mock(client, mock_modbus_device):
     """Test getting boiler error history with mocked device."""
     mock_modbus_device.read_error_history.return_value = {
@@ -526,3 +527,104 @@ def test_complete_boiler_flow(client, mock_modbus_device):
         }
         # Restore original setpoint
         client.post("/boiler_set_setpoint", json={"temperature": original_setpoint})
+
+
+def test_get_boiler_error_history_unsupported(client, mock_modbus_device):
+    """Test getting boiler error history returns appropriate default values since registers are not supported."""
+    response = client.get("/boiler_errors")
+    assert response.status_code == 200
+    data = response.json()
+    assert data == {
+        "last_lockout_code": None,
+        "last_lockout_str": "Not Available",
+        "last_blockout_code": None,
+        "last_blockout_str": "Not Available",
+    }
+
+
+def test_get_boiler_model_info_unsupported(client, mock_modbus_device):
+    """Test getting boiler model info returns appropriate default values since registers are not supported."""
+    response = client.get("/boiler_info")
+    assert response.status_code == 200
+    data = response.json()
+    assert data == {
+        "model_id": 0,
+        "model_name": "Unknown Model",
+        "firmware_version": "N/A",
+        "hardware_version": "N/A",
+    }
+
+
+def test_boiler_data_supported_registers(client, mock_modbus_device):
+    """Test that supported registers are read correctly."""
+    mock_data = {
+        "system_supply_temp": 154.4,
+        "outlet_temp": 158.0,
+        "inlet_temp": 149.0,
+        "flue_temp": 176.0,
+        "cascade_current_power": 50.0,
+        "lead_firing_rate": 75.0,
+        "water_flow_rate": 10.0,
+        "pump_status": True,
+        "flame_status": True,
+    }
+    mock_modbus_device.read_boiler_data.return_value = mock_data
+
+    response = client.get("/boiler_stats")
+    assert response.status_code == 200
+    data = response.json()
+
+    # Verify all supported registers are present and have correct values
+    for key, value in mock_data.items():
+        assert key in data
+        assert data[key] == value
+
+    # Verify unsupported registers are not present
+    assert "dhw_temp" not in data
+    assert "min_modulation_rate" not in data
+    assert "max_modulation_rate" not in data
+
+
+def test_boiler_operating_status_supported_registers(client, mock_modbus_device):
+    """Test that operating status reads supported registers correctly."""
+    mock_status = {
+        "operating_mode": 3,
+        "operating_mode_str": "DHW Demand",
+        "cascade_mode": 0,
+        "cascade_mode_str": "Single Boiler",
+        "current_setpoint": 158.0,
+    }
+    mock_modbus_device.read_operating_status.return_value = mock_status
+
+    response = client.get("/boiler_status")
+    assert response.status_code == 200
+    data = response.json()
+
+    # Verify all operating status fields are present and correct
+    for key, value in mock_status.items():
+        assert key in data
+        assert data[key] == value
+
+
+@pytest.mark.skipif(not is_modbus_connected(), reason="No modbus connection available")
+def test_hardware_supported_registers(client):
+    """Test reading supported registers with real hardware."""
+    response = client.get("/boiler_stats")
+    assert response.status_code == 200
+    data = response.json()
+
+    # Verify all supported registers return valid values
+    assert isinstance(data["system_supply_temp"], (int, float))
+    assert isinstance(data["outlet_temp"], (int, float))
+    assert isinstance(data["inlet_temp"], (int, float))
+    assert isinstance(data["flue_temp"], (int, float))
+    assert isinstance(data["cascade_current_power"], (int, float))
+    assert isinstance(data["lead_firing_rate"], (int, float))
+    assert isinstance(data["water_flow_rate"], (int, float))
+    assert isinstance(data["pump_status"], bool)
+    assert isinstance(data["flame_status"], bool)
+
+    # Verify unsupported registers are not present
+    assert "dhw_temp" not in data
+    assert "min_modulation_rate" not in data
+    assert "max_modulation_rate" not in data
