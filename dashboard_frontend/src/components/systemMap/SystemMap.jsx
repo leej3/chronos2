@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 
 import {
   CButton,
@@ -23,12 +23,32 @@ import UserSetting from '../UserSettings/UserSettings';
 
 import './SystemMap.css';
 
-const SystemMap = ({ homedata }) => {
+const MODAL_CONTENTS = {
+  advanced: {
+    title: 'Advanced Boiler',
+    component: ({ boiler }) => <Modbus boiler={boiler} />,
+  },
+  sensors: {
+    title: 'Sensors',
+    component: ({ homedata }) => <TableTemplate homedata={homedata} />,
+  },
+  mode: {
+    title: 'Type Mode Settings',
+    component: ({ homedata }) => <TypeMode homedata={homedata} />,
+  },
+  usersetting: {
+    title: 'User Settings',
+    component: ({ data }) => <UserSetting data={data} />,
+  },
+};
+
+const BUTTONS = ['Advanced', 'Sensors', 'Mode', 'User Setting'];
+
+const SystemMap = memo(({ homedata, season }) => {
   const { results, sensors, boiler } = homedata || {};
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalContent, setModalContent] = useState(null);
 
-  const season = useSelector((state) => state.season.season);
   const manualOverride = useSelector((state) => state.manualOverride);
 
   const handleButtonClick = (contentType) => {
@@ -38,17 +58,24 @@ const SystemMap = ({ homedata }) => {
 
   const closeModal = () => setIsModalOpen(false);
 
-  const renderLoadingView = () => (
-    <CContainer fluid>
-      <CRow>
-        <CCol xs={12} className="d-flex justify-content-center">
-          <div className="spinner-border text-primary" role="status">
-            <span className="sr-only"></span>
-          </div>
+  const renderButtons = () => (
+    <CRow className="d-flex justify-content-center mb-4 w-100">
+      {BUTTONS.map((btn, idx) => (
+        <CCol xs="auto" key={idx} className="px-1">
+          <CButton
+            color="primary"
+            onClick={() =>
+              handleButtonClick(btn.toLowerCase().replace(' ', ''))
+            }
+            block="true"
+          >
+            {btn}
+          </CButton>
         </CCol>
-      </CRow>
-    </CContainer>
+      ))}
+    </CRow>
   );
+
   const renderWinterView = () => (
     <CContainer fluid className="p-0">
       <CRow>
@@ -56,9 +83,7 @@ const SystemMap = ({ homedata }) => {
           <CCard className="mb-4 bgr p-0">
             <CCardBody>
               <h2 className="text-center mb-4">
-                {season === 'Winter'
-                  ? 'System Map - Winter'
-                  : 'System Map - Summer'}
+                System Map - {season === 0 ? 'Winter' : 'Summer'}
               </h2>
               <CRow className="mb-4">
                 <CCol
@@ -67,11 +92,9 @@ const SystemMap = ({ homedata }) => {
                   className="d-flex justify-content-md-end align-items-center mb-4 justify-content-center "
                 >
                   <img
-                    src={
-                      manualOverride.boiler
-                        ? 'images/Icons/Boiler/Boiler-ON.png'
-                        : 'images/Icons/Boiler/Boiler-OFF.png'
-                    }
+                    src={`images/Icons/Boiler/Boiler-${
+                      manualOverride.boiler ? 'ON' : 'OFF'
+                    }.png`}
                     alt="Boiler"
                     className="responsive-image"
                   />
@@ -101,23 +124,7 @@ const SystemMap = ({ homedata }) => {
                   </div>
                 </CCol>
               </CRow>
-              <CRow className="d-flex justify-content-center mb-4 w-100">
-                {['Advanced', 'Sensors', 'Mode', 'User Setting'].map(
-                  (btn, idx) => (
-                    <CCol xs="auto" key={idx} className="px-1">
-                      <CButton
-                        color="primary"
-                        onClick={() =>
-                          handleButtonClick(btn.toLowerCase().replace(' ', ''))
-                        }
-                        block="true"
-                      >
-                        {btn}
-                      </CButton>
-                    </CCol>
-                  ),
-                )}
-              </CRow>
+              {renderButtons()}
             </CCardBody>
           </CCard>
         </CCol>
@@ -141,11 +148,9 @@ const SystemMap = ({ homedata }) => {
                     className="d-flex justify-content-center align-items-center"
                   >
                     <img
-                      src={
-                        manualOverride[`chiller${index + 1}`]
-                          ? 'images/Icons/Boiler/Chiller-ON.png'
-                          : 'images/Icons/Boiler/Chiller-OFF.png'
-                      }
+                      src={`images/Icons/Boiler/Chiller-${
+                        manualOverride[`chiller${index + 1}`] ? 'ON' : 'OFF'
+                      }.png`}
                       alt={`Chiller ${index + 1}`}
                       className="responsive-image"
                     />
@@ -170,23 +175,7 @@ const SystemMap = ({ homedata }) => {
                   </span>
                 </CCol>
               </CRow>
-              <CRow className="d-flex justify-content-center mb-4 w-100">
-                {['Advanced', 'Sensors', 'Mode', 'User Setting'].map(
-                  (btn, idx) => (
-                    <CCol xs="auto" key={idx} className="px-1">
-                      <CButton
-                        color="primary"
-                        onClick={() =>
-                          handleButtonClick(btn.toLowerCase().replace(' ', ''))
-                        }
-                        block="true"
-                      >
-                        {btn}
-                      </CButton>
-                    </CCol>
-                  ),
-                )}
-              </CRow>
+              {renderButtons()}
             </CCardBody>
           </CCard>
         </CCol>
@@ -194,13 +183,12 @@ const SystemMap = ({ homedata }) => {
     </CContainer>
   );
 
+  const ModalComponent =
+    modalContent && MODAL_CONTENTS[modalContent]?.component;
+
   return (
     <>
-      {season === 'Winter'
-        ? renderWinterView()
-        : season === 'Summer'
-        ? renderSummerView()
-        : renderLoadingView()}
+      {season === 0 ? renderWinterView() : renderSummerView()}
 
       <CModal
         alignment="center"
@@ -211,17 +199,17 @@ const SystemMap = ({ homedata }) => {
       >
         <CModalHeader>
           <CModalTitle>
-            {modalContent === 'advanced' && 'Advanced Boiler'}
-            {modalContent === 'sensors' && 'Sensors'}
-            {modalContent === 'mode' && 'Type Mode Settings'}
-            {modalContent === 'usersetting' && 'User Settings'}
+            {modalContent && MODAL_CONTENTS[modalContent].title}
           </CModalTitle>
         </CModalHeader>
         <CModalBody>
-          {modalContent === 'advanced' && <Modbus boiler={boiler} />}
-          {modalContent === 'sensors' && <TableTemplate homedata={homedata} />}
-          {modalContent === 'mode' && <TypeMode homedata={homedata} />}
-          {modalContent === 'usersetting' && <UserSetting data={homedata} />}
+          {ModalComponent && (
+            <ModalComponent
+              boiler={boiler}
+              homedata={homedata}
+              data={homedata}
+            />
+          )}
         </CModalBody>
         {modalContent !== 'usersetting' && (
           <CModalFooter>
@@ -233,6 +221,6 @@ const SystemMap = ({ homedata }) => {
       </CModal>
     </>
   );
-};
+});
 
 export default SystemMap;

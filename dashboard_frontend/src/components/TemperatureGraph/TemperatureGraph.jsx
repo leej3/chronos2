@@ -99,7 +99,7 @@ const TemperatureGraph = () => {
       clearInterval(updateIntervalId);
       window.removeEventListener('resize', handleResize);
     };
-  }, [data.length, error]);
+  }, []);
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {

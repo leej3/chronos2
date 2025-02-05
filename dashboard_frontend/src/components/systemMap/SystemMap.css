@@ -5,6 +5,11 @@
   max-width: 100%;
   height: auto;
 }
+.loading-state {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  min-height: auto !important;
+}
 h2,
 button {
   margin-bottom: 25px;

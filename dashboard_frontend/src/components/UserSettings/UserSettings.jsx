@@ -28,8 +28,8 @@ const UserSettings = ({ data }) => {
   };
 
   const [formData, setFormData] = useState(initialFormData);
-  const [showForm, setShowForm] = useState(false); // State để hiển thị form nhập liệu
-  const season = useSelector((state) => state.season.season); // Lấy giá trị mùa từ Redux
+  const [showForm, setShowForm] = useState(false);
+  const season = useSelector((state) => state.chronos.season);
 
   useEffect(() => {
     if (data?.results) {

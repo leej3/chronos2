@@ -61,7 +61,9 @@ describe('Login Component', () => {
     });
   });
   it('should display an error message when login fails', async () => {
-    mock.onPost('/auth/login').reply(400, { message: 'Invalid credentials' });
+    mock
+      .onPost('/auth/login')
+      .reply(400, { message: 'Error. Please try again' });
 
     render(
       <Provider store={store}>
@@ -81,7 +83,7 @@ describe('Login Component', () => {
     fireEvent.click(screen.getByRole('button', { name: /login/i }));
 
     await waitFor(() => {
-      const errorMessage = screen.getByText('Invalid credentials');
+      const errorMessage = screen.getByText('Error. Please try again');
       expect(errorMessage).toBeInTheDocument();
     });
   });
