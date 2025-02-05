@@ -15,7 +15,7 @@ import { useSelector } from 'react-redux';
 import './TypeMode.css';
 
 const TypeMode = ({ homedata }) => {
-  const season = useSelector((state) => state.season.season);
+  const season = useSelector((state) => state.chronos.season);
 
   const outdoorTemp = homedata?.results?.outside_temp || 'N/A';
   const avgTemp = homedata?.efficiency?.average_temperature_difference || 'N/A';

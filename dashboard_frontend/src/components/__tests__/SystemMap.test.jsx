@@ -21,115 +21,113 @@ const mockStore = (state) => {
 };
 
 describe('SystemMap component', () => {
-  it('should render system map for Winter season with boiler status', () => {
-    const state = {
-      season: { season: 'Winter' },
-      manualOverride: {
-        boiler: true,
-        chiller1: false,
-        chiller2: false,
-        chiller3: false,
-        chiller4: false,
-      },
-    };
+  const defaultState = {
+    manualOverride: {
+      boiler: false,
+      chiller1: false,
+      chiller2: false,
+      chiller3: false,
+      chiller4: false,
+    },
+  };
+
+  it('should render winter view correctly', () => {
     const homedata = {
       results: { water_out_temp: 50, return_temp: 40 },
       sensors: { water_out_temp: 50, return_temp: 40 },
     };
 
     render(
-      <Provider store={mockStore(state)}>
-        <SystemMap homedata={homedata} />
+      <Provider store={mockStore(defaultState)}>
+        <SystemMap homedata={homedata} season={0} />
       </Provider>,
     );
 
-    expect(screen.getByAltText('Boiler')).toHaveAttribute(
+    // Check title
+    expect(screen.getByText('System Map - Winter')).toBeInTheDocument();
+
+    // Check boiler image
+    const boilerImage = screen.getByAltText('Boiler');
+    expect(boilerImage).toHaveAttribute(
       'src',
-      'images/Icons/Boiler/Boiler-ON.png',
+      'images/Icons/Boiler/Boiler-OFF.png',
     );
 
-    // Check for exact temperature strings
-    const temperatures = screen.getAllByText('50.0°F');
-    expect(temperatures).toHaveLength(1);
-    const returnTemps = screen.getAllByText('40.0°F');
-    expect(returnTemps).toHaveLength(1);
+    // Check temperatures
+    expect(screen.getByText('50.0°F')).toBeInTheDocument();
+    expect(screen.getByText('40.0°F')).toBeInTheDocument();
+
+    // Check buttons
+    ['Advanced', 'Sensors', 'Mode', 'User Setting'].forEach((buttonText) => {
+      expect(screen.getByText(buttonText)).toBeInTheDocument();
+    });
   });
 
-  it('should render system map for Summer season with chiller status', () => {
-    const state = {
-      season: { season: 'Summer' },
-      manualOverride: {
-        boiler: false,
-        chiller1: false,
-        chiller2: false,
-        chiller3: false,
-        chiller4: false,
-      },
-    };
+  it('should render summer view correctly', () => {
     const homedata = {
       results: { water_out_temp: 70, return_temp: 60 },
       sensors: { water_out_temp: 70, return_temp: 60 },
     };
 
     render(
-      <Provider store={mockStore(state)}>
-        <SystemMap homedata={homedata} />
+      <Provider store={mockStore(defaultState)}>
+        <SystemMap homedata={homedata} season={1} />
       </Provider>,
     );
-    expect(screen.getByAltText('Chiller 1')).toHaveAttribute(
-      'src',
-      'images/Icons/Boiler/Chiller-OFF.png',
-    );
 
-    // Check for exact temperature strings
-    const outTemps = screen.getAllByText('70.0°F');
-    expect(outTemps).toHaveLength(1);
-    const returnTemps = screen.getAllByText('60.0°F');
-    expect(returnTemps).toHaveLength(1);
+    // Check title
+    expect(screen.getByText('System Map - Summer')).toBeInTheDocument();
+
+    // Check chiller images
+    for (let i = 1; i <= 4; i++) {
+      const chillerImage = screen.getByAltText(`Chiller ${i}`);
+      expect(chillerImage).toHaveAttribute(
+        'src',
+        'images/Icons/Boiler/Chiller-OFF.png',
+      );
+    }
+
+    // Check temperatures
+    expect(screen.getByText('70.0°F')).toBeInTheDocument();
+    expect(screen.getByText('60.0°F')).toBeInTheDocument();
   });
 
-  it('should show loading screen when season is not set', () => {
-    const state = {
-      season: { season: 'Unknown' },
-      manualOverride: {
-        boiler: false,
-        chiller1: false,
-        chiller2: false,
-        chiller3: false,
-        chiller4: false,
-      },
-    };
+  it('should handle null/undefined data gracefully', () => {
     const homedata = {
-      results: { water_out_temp: 'N/A', return_temp: 'N/A' },
-      sensors: { water_out_temp: 'N/A', return_temp: 'N/A' },
-    };
-
-    const { container } = render(
-      <Provider store={mockStore(state)}>
-        <SystemMap homedata={homedata} />
-      </Provider>,
-    );
-    const loadingContainer = container.querySelector('.container-fluid');
-    expect(loadingContainer).toBeInTheDocument();
-  });
-
-  it('should handle N/A temperatures correctly', () => {
-    const state = {
-      season: { season: 'Winter' },
-      manualOverride: { boiler: false },
-    };
-    const homedata = {
-      results: { water_out_temp: 'N/A', return_temp: 'N/A' },
+      results: { water_out_temp: null, return_temp: undefined },
       sensors: { water_out_temp: 'N/A', return_temp: 'N/A' },
     };
 
     render(
-      <Provider store={mockStore(state)}>
-        <SystemMap homedata={homedata} />
+      <Provider store={mockStore(defaultState)}>
+        <SystemMap homedata={homedata} season={0} />
       </Provider>,
     );
 
+    // Check that N/A is displayed for missing temperatures
     const naTemps = screen.getAllByText('N/A');
     expect(naTemps).toHaveLength(2);
+  });
+
+  it('should handle empty homedata object', () => {
+    render(
+      <Provider store={mockStore(defaultState)}>
+        <SystemMap homedata={{}} season={0} />
+      </Provider>,
+    );
+
+    // Component should render without crashing
+    expect(screen.getByText('System Map - Winter')).toBeInTheDocument();
+  });
+
+  it('should handle missing homedata prop', () => {
+    render(
+      <Provider store={mockStore(defaultState)}>
+        <SystemMap season={0} />
+      </Provider>,
+    );
+
+    // Component should render without crashing
+    expect(screen.getByText('System Map - Winter')).toBeInTheDocument();
   });
 });

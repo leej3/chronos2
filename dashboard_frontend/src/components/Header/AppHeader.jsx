@@ -19,7 +19,7 @@ const AppHeader = () => {
   // );
 
   // Get mockDevices state from Redux store
-  const mockDevices = useSelector((state) => state.season.mockDevices);
+  const mockDevices = useSelector((state) => state.chronos.mock_devices);
 
   // Add shadow effect on scroll
   useEffect(() => {

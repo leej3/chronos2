@@ -11,3 +11,6 @@ export const DEVICES = {
 export const getDeviceId = (device) => {
   return DEVICES[device];
 };
+
+export const REFRESH_TIME = 5;
+export const RETRY_TIME = 10;
