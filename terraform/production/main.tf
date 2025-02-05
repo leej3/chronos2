@@ -9,18 +9,38 @@ terraform {
   }
 
   backend "s3" {
-    bucket         = "${var.state_bucket_name}-${var.environment}"
-    key            = var.state_backend_key
-    region         = var.state_storage_region
-    dynamodb_table = "${var.state_table_name}-${var.environment}"
+    bucket         = "chronos2-terraform-state-storage"
+    key            = "environments/production/terraform.tfstate"
+    region         = "us-east-1"
+    dynamodb_table = "terraform-state-locks"
     encrypt        = true
   }
 }
 
+data "terraform_remote_state" "shared" {
+  backend = "s3"
+  config = {
+    bucket = "chronos2-terraform-state-storage"
+    key    = "environments/shared/terraform.tfstate"
+    region = "us-east-1"
+  }
+}
+
 module "ec2" {
-  source        = "../modules/ec2/"
-  environment   = var.environment
-  instance_type = var.instance_type
-  public_key    = var.public_key
+  source = "../modules/ec2"
+
+  environment     = "prod"
+  public_key      = var.public_key
   additional_public_key = var.additional_public_key
+  eip_allocation_id = data.terraform_remote_state.shared.outputs.production_eip_allocation_id
+
+  # Application Configuration
+  vite_api_base_url = var.vite_api_base_url
+  postgres_password = var.postgres_password
+  jwt_secret_key    = var.jwt_secret_key
+  edge_server_ip    = var.edge_server_ip
+  edge_server_port  = var.edge_server_port
+  user_1_email      = var.user_1_email
+  user_1_password   = var.user_1_password
+  frp_auth_token    = var.frp_auth_token
 }

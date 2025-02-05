@@ -1,7 +1,10 @@
-variable "environment" {
-  description = "The name of the environment. Usually `stage`."
-  default     = "stage"
+variable "deptype" {
+  description = "The deployment type (stage or prod)"
   type        = string
+  validation {
+    condition     = contains(["stage", "prod"], var.deptype)
+    error_message = "deptype must be either 'stage' or 'prod'"
+  }
 }
 
 variable "instance_type" {
@@ -11,18 +14,17 @@ variable "instance_type" {
 }
 
 variable "public_key" {
-  description = "Public SSH key for EC2 access"
+  description = "SSH public key for EC2 instance access"
   type        = string
 }
 
 variable "additional_public_key" {
-  description = "Additional public SSH key for EC2 access"
+  description = "Additional SSH public key for EC2 instance access"
   type        = string
 }
 
-# Application Configuration Variables
 variable "vite_api_base_url" {
-  description = "Base URL for the frontend API"
+  description = "Base URL for the Vite frontend API"
   type        = string
 }
 
@@ -33,18 +35,18 @@ variable "postgres_password" {
 }
 
 variable "jwt_secret_key" {
-  description = "Secret key for JWT token generation"
+  description = "Secret key for JWT authentication"
   type        = string
   sensitive   = true
 }
 
 variable "edge_server_ip" {
-  description = "IP address for the edge server"
+  description = "IP address of the edge server"
   type        = string
 }
 
 variable "edge_server_port" {
-  description = "Port for the edge server"
+  description = "Port number for the edge server"
   type        = string
 }
 
@@ -60,7 +62,7 @@ variable "user_1_password" {
 }
 
 variable "frp_auth_token" {
-  description = "Authentication token for FRP server"
+  description = "Authentication token for FRP"
   type        = string
   sensitive   = true
-}
+} 

@@ -11,10 +11,55 @@ variable "instance_type" {
 }
 
 variable "public_key" {
-  description = "The public key used to deploy to the EC2 instance via ssh. All caps because this should be set via an environment variable."
+  description = "SSH public key for EC2 instance access"
   type        = string
 }
+
 variable "additional_public_key" {
-  description = "An additional SSH public key to be added to the EC2 instance authorized_keys"
+  description = "Additional SSH public key for EC2 instance access"
   type        = string
+}
+
+variable "vite_api_base_url" {
+  description = "Base URL for the Vite frontend API"
+  type        = string
+}
+
+variable "postgres_password" {
+  description = "Password for PostgreSQL database"
+  type        = string
+  sensitive   = true
+}
+
+variable "jwt_secret_key" {
+  description = "Secret key for JWT authentication"
+  type        = string
+  sensitive   = true
+}
+
+variable "edge_server_ip" {
+  description = "IP address of the edge server"
+  type        = string
+}
+
+variable "edge_server_port" {
+  description = "Port number for the edge server"
+  type        = string
+}
+
+variable "user_1_email" {
+  description = "Email for the first user"
+  type        = string
+}
+
+variable "user_1_password" {
+  description = "Password for the first user"
+  type        = string
+  sensitive   = true
+}
+
+variable "frp_auth_token" {
+  description = "Authentication token for FRP"
+  type        = string
+  sensitive   = true
 }

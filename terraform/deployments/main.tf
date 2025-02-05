@@ -8,13 +8,7 @@ terraform {
     }
   }
 
-  backend "s3" {
-    bucket         = "chronos2-terraform-state-storage"
-    key            = "environments/staging/terraform.tfstate"
-    region         = "us-east-1"
-    dynamodb_table = "terraform-state-locks"
-    encrypt        = true
-  }
+  backend "s3" {}
 }
 
 data "terraform_remote_state" "shared" {
@@ -26,13 +20,18 @@ data "terraform_remote_state" "shared" {
   }
 }
 
+locals {
+  environment = var.deptype == "stage" ? "stage" : "prod"
+  eip_id = var.deptype == "stage" ? data.terraform_remote_state.shared.outputs.staging_eip_allocation_id : data.terraform_remote_state.shared.outputs.production_eip_allocation_id
+}
+
 module "ec2" {
   source = "../modules/ec2"
 
-  environment     = "stage"
+  environment     = local.environment
   public_key      = var.public_key
   additional_public_key = var.additional_public_key
-  eip_allocation_id = data.terraform_remote_state.shared.outputs.staging_eip_allocation_id
+  eip_allocation_id = local.eip_id
 
   # Application Configuration
   vite_api_base_url = var.vite_api_base_url
@@ -43,4 +42,4 @@ module "ec2" {
   user_1_email      = var.user_1_email
   user_1_password   = var.user_1_password
   frp_auth_token    = var.frp_auth_token
-}
+} 
