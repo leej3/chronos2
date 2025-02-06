@@ -1,6 +1,6 @@
 import moment from 'moment-timezone';
 
-const localTime = Intl.DateTimeFormat().resolvedOptions().timeZone;
+const localTime = 'America/Chicago';
 
 export const getFormattedTime = (
   format = `h:mm:ss A [${localTime}] , ddd, MMM DD YYYY`,
