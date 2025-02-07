@@ -7,6 +7,8 @@ import {
   CRow,
   CCol,
   CCardBody,
+  CContainer,
+  CCard,
 } from '@coreui/react';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
@@ -235,12 +237,9 @@ const UserSettings = ({ data }) => {
                     <CCol xs="12" key={key}>
                       <div style={{ marginBottom: '10px' }}>
                         <label
+                          className="font-weight-bold"
                           htmlFor={key}
-                          style={{
-                            fontWeight: 'bold',
-                            display: 'block',
-                            marginBottom: '5px',
-                          }}
+                          style={{ fontSize: '18px', fontWeight: 'bold' }}
                         >
                           {label}:
                           {help && (

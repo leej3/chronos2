@@ -13,6 +13,9 @@ import {
   CDropdownToggle,
   CDropdownMenu,
   CDropdownItem,
+  CContainer,
+  CCard,
+  CCardBody,
 } from '@coreui/react';
 
 import './Modbus.css';
@@ -168,47 +171,63 @@ const Modbus = ({ boiler }) => {
   );
 
   return (
-    <div className="modbus">
-      <CDropdown className="d-md-none">
-        <CDropdownToggle color="secondary">Menu</CDropdownToggle>
-        <CDropdownMenu>
-          {menuItems.map((item) => (
-            <CDropdownItem
-              key={item.tab}
-              onClick={() => setActiveTab(item.tab)}
-            >
-              {item.label}
-            </CDropdownItem>
-          ))}
-        </CDropdownMenu>
-      </CDropdown>
+    <CContainer fluid>
+      <CRow>
+        <CCol>
+          <CCard className="mb-4">
+            <CCardBody>
+              <div className="modbus">
+                <CDropdown className="d-md-none">
+                  <CDropdownToggle color="secondary">Menu</CDropdownToggle>
+                  <CDropdownMenu>
+                    {menuItems.map((item) => (
+                      <CDropdownItem
+                        key={item.tab}
+                        onClick={() => setActiveTab(item.tab)}
+                      >
+                        {item.label}
+                      </CDropdownItem>
+                    ))}
+                  </CDropdownMenu>
+                </CDropdown>
 
-      <CNav variant="tabs" role="tablist" className="d-none d-md-flex">
-        {menuItems.map((item) => (
-          <CNavItem key={item.tab} className="col-3">
-            <CNavLink
-              active={activeTab === item.tab}
-              onClick={() => setActiveTab(item.tab)}
-            >
-              {item.label}
-            </CNavLink>
-          </CNavItem>
-        ))}
-      </CNav>
+                <CNav
+                  variant="tabs"
+                  role="tablist"
+                  className="d-none d-md-flex"
+                >
+                  {menuItems.map((item) => (
+                    <CNavItem key={item.tab} className="col-3">
+                      <CNavLink
+                        active={activeTab === item.tab}
+                        onClick={() => setActiveTab(item.tab)}
+                      >
+                        {item.label}
+                      </CNavLink>
+                    </CNavItem>
+                  ))}
+                </CNav>
 
-      <CTabContent>
-        <CTabPane visible={activeTab === 'statsTab'}>
-          {renderStatsTab()}
-        </CTabPane>
-        <CTabPane visible={activeTab === 'statusTab'}>
-          {renderStatusTab()}
-        </CTabPane>
-        <CTabPane visible={activeTab === 'errorTab'}>
-          {renderErrorTab()}
-        </CTabPane>
-        <CTabPane visible={activeTab === 'infoTab'}>{renderInfoTab()}</CTabPane>
-      </CTabContent>
-    </div>
+                <CTabContent>
+                  <CTabPane visible={activeTab === 'statsTab'}>
+                    {renderStatsTab()}
+                  </CTabPane>
+                  <CTabPane visible={activeTab === 'statusTab'}>
+                    {renderStatusTab()}
+                  </CTabPane>
+                  <CTabPane visible={activeTab === 'errorTab'}>
+                    {renderErrorTab()}
+                  </CTabPane>
+                  <CTabPane visible={activeTab === 'infoTab'}>
+                    {renderInfoTab()}
+                  </CTabPane>
+                </CTabContent>
+              </div>
+            </CCardBody>
+          </CCard>
+        </CCol>
+      </CRow>
+    </CContainer>
   );
 };
 

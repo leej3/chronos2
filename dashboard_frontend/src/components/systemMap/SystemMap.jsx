@@ -22,6 +22,7 @@ import TypeMode from '../TypeMode/TypeMode';
 import UserSetting from '../UserSettings/UserSettings';
 
 import './SystemMap.css';
+import ManualOverride from '../ManualOverride/ManualOverride';
 
 const MODAL_CONTENTS = {
   advanced: {
@@ -50,12 +51,10 @@ const SystemMap = memo(({ homedata, season }) => {
   const [modalContent, setModalContent] = useState(null);
 
   const manualOverride = useSelector((state) => state.manualOverride);
-
   const handleButtonClick = (contentType) => {
     setModalContent(contentType);
     setIsModalOpen(true);
   };
-
   const closeModal = () => setIsModalOpen(false);
 
   const renderButtons = () => (
@@ -135,11 +134,10 @@ const SystemMap = memo(({ homedata, season }) => {
   const renderSummerView = () => (
     <CContainer fluid>
       <CRow>
-        <CCol xs={12}>
-          <CCard className="mb-4">
-            <CCardBody>
-              <h2 className="text-center mb-4">System Map - Summer</h2>
-              <CRow className="mb-4">
+        <CCol>
+          <CCard>
+            <CCardBody className="pb-0">
+              <CRow>
                 {[...Array(4)].map((_, index) => (
                   <CCol
                     key={index}
@@ -157,26 +155,31 @@ const SystemMap = memo(({ homedata, season }) => {
                   </CCol>
                 ))}
               </CRow>
-              <CRow className="d-flex align-items-center mb-3">
-                <CCol xs="auto">
-                  <span className="h5">
-                    {formatTemperature(results?.return_temp)}
+              <CCol>
+                <div className="d-flex mt-2 justify-content-center align-items-center mt-4">
+                  <span className="h4 text-center ">
+                    {formatTemperature(sensors?.water_out_temp)}
                   </span>
-                </CCol>
-                <CCol className="mx-2">
-                  <div
-                    className="border-bottom"
-                    style={{ height: '2px', backgroundColor: '#000' }}
-                  ></div>
-                </CCol>
-                <CCol xs="auto">
-                  <span className="h4">
-                    {formatTemperature(results?.water_out_temp)}
+                  <div className="arrow-line"></div>
+                  <span className="h4 text-center">
+                    {formatTemperature(sensors?.return_temp)}
                   </span>
-                </CCol>
-              </CRow>
+                  </div>
+              </CCol>
               {renderButtons()}
             </CCardBody>
+            <CRow className="d-flex justify-content-end ">
+              <CCol xs="auto" className="px-1 mt-2">
+                <CButton
+                  color="primary"
+                  className="mb-2"
+                  onClick={() => handleButtonClick('manual')}
+                  block="true"
+                >
+                  Manual Override
+                </CButton>
+              </CCol>
+            </CRow>
           </CCard>
         </CCol>
       </CRow>
@@ -211,13 +214,11 @@ const SystemMap = memo(({ homedata, season }) => {
             />
           )}
         </CModalBody>
-        {modalContent !== 'usersetting' && (
-          <CModalFooter>
-            <CButton color="secondary" onClick={closeModal}>
-              Close
-            </CButton>
-          </CModalFooter>
-        )}
+        <CModalFooter>
+          <CButton color="secondary" onClick={closeModal}>
+            Close
+          </CButton>
+        </CModalFooter>
       </CModal>
     </>
   );
