@@ -1,4 +1,11 @@
-import { CCardBody, CRow, CCol, CWidgetStatsD } from '@coreui/react';
+import {
+  CCardBody,
+  CRow,
+  CCol,
+  CWidgetStatsD,
+  CContainer,
+  CCard,
+} from '@coreui/react';
 import PropTypes from 'prop-types';
 
 import './tabletemplate.css';
@@ -35,24 +42,34 @@ const TableTemplate = ({ homedata }) => {
   const outletTemp = formatNumber(homedata?.sensors?.water_out_temp) || 'N/A';
 
   return (
-    <CRow className="sensor-table">
-      <CCol xs={12}>
-        <CCardBody>
-          <CRow>
-            <CCol xs={12}>
-              <CWidgetStatsD
-                icon={<HVACIcon />}
-                style={{ '--cui-card-cap-bg': 'none' }}
-                values={[
-                  { title: 'Intel Temp', value: `${intelTemp} °F` },
-                  { title: 'Outlet Temp', value: `${outletTemp} °F` },
-                ]}
-              />
-            </CCol>
-          </CRow>
-        </CCardBody>
-      </CCol>
-    </CRow>
+    <CContainer fluid>
+      <CRow>
+        <CCol>
+          <CCard className="mb-4 bgr p-0">
+            <CCardBody>
+              <CRow className="sensor-table">
+                <CCol>
+                  <h2 className="sensor-title text-center">Sensor</h2>
+
+                  <CRow>
+                    <CCol xs={12}>
+                      <CWidgetStatsD
+                        icon={<HVACIcon />}
+                        style={{ '--cui-card-cap-bg': 'none' }}
+                        values={[
+                          { title: 'Intel Temp', value: `${intelTemp} °F` },
+                          { title: 'Outlet Temp', value: `${outletTemp} °F` },
+                        ]}
+                      />
+                    </CCol>
+                  </CRow>
+                </CCol>
+              </CRow>
+            </CCardBody>
+          </CCard>
+        </CCol>
+      </CRow>
+    </CContainer>
   );
 };
 

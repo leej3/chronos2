@@ -106,3 +106,9 @@ button {
   background-color: #000;
   margin: 10px auto;
 }
+.arrow-line {
+  width: 100px;
+  height: 2px;
+  background-color: #4c5c77;
+  margin: 0 1rem;
+}
