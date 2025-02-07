@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 import requests
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -116,7 +116,7 @@ class Chronos(object):
         if mode in (WINTER, SUMMER):
             with session_scope() as session:
                 parameters = History(
-                    timestamp=datetime.now(),
+                    timestamp=datetime.now(UTC),
                     outside_temp=self.outside_temp,
                     water_out_temp=sensors["water_out_temp"],
                     return_temp=sensors["return_temp"],

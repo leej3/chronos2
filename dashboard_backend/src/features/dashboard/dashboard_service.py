@@ -75,7 +75,7 @@ class DashboardService:
             {
                 "column-1": row.water_out_temp,
                 "column-2": row.return_temp,
-                "date": row.timestamp.strftime("%Y-%m-%d %H:%M"),
+                "date": row.timestamp.strftime("%Y-%m-%dT%H:%MZ"),
             }
             for row in reversed(rows)
         ]
