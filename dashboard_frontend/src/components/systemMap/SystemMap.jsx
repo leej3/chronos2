@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 
 import { formatTemperature } from '../../utils/tranform';
 import './SystemMap.css';
+import ManualOverride from '../ManualOverride/ManualOverride';
 
 const SystemMap = memo(({ homedata, season, boiler }) => {
   const { sensors } = homedata || {};

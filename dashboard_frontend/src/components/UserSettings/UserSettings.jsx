@@ -6,6 +6,7 @@ import {
   CRow,
   CCol,
   CCardBody,
+  CContainer,
   CCard,
 } from '@coreui/react';
 import { toast } from 'react-toastify';
