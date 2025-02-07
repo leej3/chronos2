@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import desc
 from sqlalchemy.sql import func
@@ -21,7 +21,7 @@ class HistoryRepository:
 
     def get_last_histories(self, hours=1):
         with session_scope() as session:
-            timespan = datetime.now() - timedelta(hours=hours)
+            timespan = datetime.now(UTC) - timedelta(hours=hours)
             rows = (
                 session.query(History)
                 .filter(History.timestamp > timespan)
