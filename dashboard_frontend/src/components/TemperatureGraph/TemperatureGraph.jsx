@@ -15,6 +15,7 @@ import {
 import './TemperatureGraph.css';
 import { getCharData } from '../../api/getCharData';
 import { formatNumber } from '../../utils/tranform';
+import { convertUtcToLocal } from '../../utils/timezone';
 
 const TemperatureGraph = () => {
   const [data, setData] = useState([]);
@@ -37,19 +38,12 @@ const TemperatureGraph = () => {
         }
 
         const mappedData = result.map((entry) => {
-          const date = new Date(entry.date);
-          const formattedDate = date.toLocaleString('en-US', {
-            timeZone: 'America/Chicago',
-            year: 'numeric',
-            month: 'numeric',
-            day: 'numeric',
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true,
-          });
-
           return {
-            name: formattedDate,
+            name: convertUtcToLocal(
+              entry.date,
+              'America/Chicago',
+              'DD/MM/YYYY, h:mm A',
+            ),
             inlet: formatNumber(entry['column-2'], 0),
             outlet: formatNumber(entry['column-1'], 0),
           };
@@ -57,7 +51,6 @@ const TemperatureGraph = () => {
 
         setData(mappedData);
       } catch (error) {
-        console.error('Error fetching data:', error);
         setError('Failed to load data');
       } finally {
         setIsLoading(false);
@@ -186,7 +179,7 @@ const TemperatureGraph = () => {
                   angle={-45}
                   textAnchor="end"
                   height={60}
-                  interval={interval}
+                  interval="preserveStartEnd"
                 />
                 <YAxis
                   domain={[30, 90]}
