@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 import { formatTemperature } from '../../utils/tranform';
 import './SystemMap.css';
 
-const SystemMap = memo(({ homedata, season, boiler }) => {
+const SystemMap = ({ homedata, season, boiler }) => {
   const { sensors } = homedata || {};
   const {
     cascade_current_power,
