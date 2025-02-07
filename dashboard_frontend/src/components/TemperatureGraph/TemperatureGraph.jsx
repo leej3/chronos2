@@ -23,6 +23,21 @@ const TemperatureGraph = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const findYAxisDomain = (data) => {
+    if (!data || data.length === 0) return ['auto', 'auto'];
+
+    const allTemps = data.reduce((temps, entry) => {
+      temps.push(entry.inlet, entry.outlet);
+      return temps;
+    }, []);
+
+    const min = Math.min(...allTemps);
+    const max = Math.max(...allTemps);
+
+    const padding = (max - min) * 0.05;
+    return [Math.floor(min - padding), Math.ceil(max + padding)];
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -36,9 +51,8 @@ const TemperatureGraph = () => {
           return;
         }
 
-        const mappedData = result.map((entry) => {
-          const date = new Date(entry.date);
-          const formattedDate = date.toLocaleString('en-US', {
+        const mappedData = result.map((entry) => ({
+          date: new Date(entry.date).toLocaleString('en-US', {
             timeZone: 'America/Chicago',
             year: 'numeric',
             month: 'numeric',
@@ -46,35 +60,26 @@ const TemperatureGraph = () => {
             hour: 'numeric',
             minute: '2-digit',
             hour12: true,
-          });
-
-          return {
-            name: formattedDate,
-            inlet: formatNumber(entry['column-2'], 0),
-            outlet: formatNumber(entry['column-1'], 0),
-          };
-        });
+          }),
+          inlet: formatNumber(entry['column-2'], 1),
+          outlet: formatNumber(entry['column-1'], 1),
+        }));
 
         setData(mappedData);
       } catch (error) {
-        console.error('Error fetching data:', error);
         setError('Failed to load data');
       } finally {
         setIsLoading(false);
       }
     };
 
-    // Initial fetch
     fetchData();
-
-    // Retry every 10 seconds if no data or error
     const intervalId = setInterval(() => {
       if (data.length === 0 || error) {
         fetchData();
       }
     }, 10000);
 
-    // Regular updates every 2 minutes once we have data
     const updateIntervalId = setInterval(() => {
       if (data.length > 0) {
         fetchData();
@@ -139,7 +144,7 @@ const TemperatureGraph = () => {
       'Inlet Temperature (°F)',
       'Outlet Temperature (°F)',
     ];
-    const rows = data.map((entry) => [entry.name, entry.inlet, entry.outlet]);
+    const rows = data.map((entry) => [entry.date, entry.inlet, entry.outlet]);
 
     let csvContent = 'data:text/csv;charset=utf-8,';
     csvContent += header.join(',') + '\n';
@@ -170,69 +175,72 @@ const TemperatureGraph = () => {
             <p>{error}</p>
           </div>
         )}
-        {!isLoading && !error && data.length > 0 && (
-          <>
-            <ResponsiveContainer width="100%" height={chartHeight}>
-              <LineChart data={data}>
-                <CartesianGrid stroke="#4c5c77" strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="name"
-                  stroke="#dddddd"
-                  tick={{ fill: '#dddddd', fontSize: 12, fontWeight: 'bold' }}
-                  tickFormatter={(tick) => {
-                    const [, time] = tick.split(', ');
-                    return time;
-                  }}
-                  angle={-45}
-                  textAnchor="end"
-                  height={60}
-                  interval={interval}
-                />
-                <YAxis
-                  domain={[30, 90]}
-                  stroke="#dddddd"
-                  tick={{ fill: '#dddddd', fontSize: 12, fontWeight: 'bold' }}
-                  tickFormatter={(tick) => Math.round(tick)}
-                >
-                  <Label
-                    value="Temperature (°F)"
-                    angle={-90}
-                    position="insideLeft"
-                    fill="#dddddd"
-                    style={{ textAnchor: 'middle', fontSize: 18 }}
+        <>
+          {!isLoading && !error && data.length > 0 && (
+            <>
+              <ResponsiveContainer width="100%" height={chartHeight}>
+                <LineChart data={data}>
+                  <CartesianGrid stroke="#4c5c77" strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="date"
+                    stroke="#dddddd"
+                    tick={{ fill: '#dddddd', fontSize: 12, fontWeight: 'bold' }}
+                    tickFormatter={(tick) => {
+                      const [, time] = tick.split(', ');
+                      return time;
+                    }}
+                    angle={0}
+                    textAnchor="left"
+                    height={60}
+                    interval={interval}
                   />
-                </YAxis>
-                <Tooltip content={<CustomTooltip />} />
-                <Legend
-                  verticalAlign="top"
-                  align="right"
-                  wrapperStyle={{ fill: '#dddddd' }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="inlet"
-                  stroke="#ffca28"
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="outlet"
-                  stroke="#ff7043"
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-            <button
-              className="download-button"
-              onClick={downloadCSV}
-              disabled={isLoading || data.length === 0}
-            >
-              Download logs csv
-            </button>
-          </>
-        )}
+                  <YAxis
+                    stroke="#dddddd"
+                    tick={{ fill: '#dddddd', fontSize: 12, fontWeight: 'bold' }}
+                    tickFormatter={(tick) => parseFloat(tick.toFixed(1))}
+                    domain={findYAxisDomain(data)}
+                    padding={{ top: 30, bottom: 30 }}
+                  >
+                    <Label
+                      value="Temperature (°F)"
+                      angle={-90}
+                      position="insideLeft"
+                      fill="#dddddd"
+                      style={{ textAnchor: 'middle', fontSize: 18 }}
+                    />
+                  </YAxis>
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend
+                    verticalAlign="top"
+                    align="right"
+                    wrapperStyle={{ fill: '#dddddd' }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="inlet"
+                    stroke="#ffca28"
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="outlet"
+                    stroke="#ff7043"
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+              <button
+                className="download-button m-2"
+                onClick={downloadCSV}
+                disabled={isLoading || data.length === 0}
+              >
+                Download logs csv
+              </button>
+            </>
+          )}
+        </>
       </div>
     </div>
   );
