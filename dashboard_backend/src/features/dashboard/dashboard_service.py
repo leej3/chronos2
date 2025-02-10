@@ -236,3 +236,16 @@ class DashboardService:
 
     def get_boiler_stats(self):
         return self.edge_server.get_data_boiler_stats()
+
+    def update_settings(self, data):
+        mode = self.setting_repository._get_property_from_db("mode")
+        if mode == 0:
+            point = data.setpoint_offset_winter
+        else:
+            point = data.setpoint_offset_summer
+
+        reponse = self.edge_server.boiler_set_setpoint(point)
+        for key, value in data.dict().items():
+            if value is not None:
+                setattr(self.chronos, key, value)
+        return reponse

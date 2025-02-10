@@ -36,6 +36,7 @@ const UserSettings = ({ data }) => {
   });
   const [isInitialized, setIsInitialized] = useState(false);
   const season = useSelector((state) => state.chronos.season);
+  const [isEditing, setIsEditing] = useState(false);
 
   // Only fetch limits once on mount
   useEffect(() => {
@@ -52,7 +53,7 @@ const UserSettings = ({ data }) => {
 
   // Initialize form data only once when data is first received
   useEffect(() => {
-    if (data?.results && !isInitialized) {
+    if (data?.results && !isEditing) {
       setFormData({
         tolerance: data.results.tolerance ?? null,
         setpoint_min: data.results.setpoint_min ?? null,
@@ -65,7 +66,7 @@ const UserSettings = ({ data }) => {
       });
       setIsInitialized(true);
     }
-  }, [data, isInitialized]);
+  }, [data, isEditing]);
 
   if (!data?.results) {
     return (
@@ -78,10 +79,11 @@ const UserSettings = ({ data }) => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value === '' ? null : value,
-    }));
+    setIsEditing(true);
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -134,6 +136,7 @@ const UserSettings = ({ data }) => {
 
       const response = await updateSettings(processedData);
       toast.success(response?.data?.message);
+      setIsEditing(false);
     } catch (error) {
       console.error('Error response:', error);
       const errorMessage =

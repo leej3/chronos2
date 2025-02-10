@@ -76,114 +76,108 @@ const SystemMap = memo(({ homedata, season }) => {
   );
 
   const renderWinterView = () => (
-    <CContainer fluid className="p-0">
-      <CRow>
-        <CCol xs={12}>
-          <CCard className="mb-4 bgr p-0">
-            <CCardBody>
-              <h2 className="text-center mb-4">
-                System Map - {season === 0 ? 'Winter' : 'Summer'}
-              </h2>
-              <CRow className="mb-4">
-                <CCol
-                  xs={12}
-                  md={6}
-                  className="d-flex justify-content-md-end align-items-center mb-4 justify-content-center "
-                >
+    <CRow>
+      <CCol xs={12}>
+        <CCard className=" bgr p-0">
+          <CCardBody>
+            <h2 className="text-center mb-4"></h2>
+            <CRow className="mb-4">
+              <CCol
+                xs={12}
+                md={6}
+                className="d-flex justify-content-md-end align-items-center mb-4 justify-content-center "
+              >
+                <img
+                  src={
+                    manualOverride.boiler
+                      ? 'images/Icons/Boiler/Boiler-ON.png'
+                      : 'images/Icons/Boiler/Boiler-OFF.png'
+                  }
+                  alt="Boiler"
+                  className="responsive-image"
+                />
+              </CCol>
+              <CCol
+                xs={12}
+                md={6}
+                className="d-flex flex-column justify-content-md-center justify-content-center align-items-center align-items-md-start"
+              >
+                <div className="d-flex flex-column">
                   <img
-                    src={`images/Icons/Boiler/Boiler-${
-                      manualOverride.boiler ? 'ON' : 'OFF'
-                    }.png`}
-                    alt="Boiler"
-                    className="responsive-image"
+                    src="/images/Icons/Boiler/arrow4.png"
+                    alt="Arrow"
+                    className="mb-2 responsive-arrow"
                   />
-                </CCol>
-                <CCol
-                  xs={12}
-                  md={6}
-                  className="d-flex flex-column justify-content-md-center justify-content-center align-items-center align-items-md-start"
-                >
-                  <div className="d-flex flex-column">
-                    <img
-                      src="/images/Icons/Boiler/arrow4.png"
-                      alt="Arrow"
-                      className="mb-2 responsive-arrow"
-                    />
-                    <span className="h4 text-center">
-                      {formatTemperature(sensors?.water_out_temp)}
-                    </span>
-                    <img
-                      src="/images/Icons/Boiler/arrow3.png"
-                      alt="Arrow"
-                      className="mb-2 responsive-arrow"
-                    />
-                    <span className="h4 text-center">
-                      {formatTemperature(sensors?.return_temp)}
-                    </span>
-                  </div>
-                </CCol>
-              </CRow>
-              {renderButtons()}
-            </CCardBody>
-          </CCard>
-        </CCol>
-      </CRow>
-    </CContainer>
-  );
-
-  const renderSummerView = () => (
-    <CContainer fluid>
-      <CRow>
-        <CCol>
-          <CCard>
-            <CCardBody className="pb-0">
-              <CRow>
-                {[...Array(4)].map((_, index) => (
-                  <CCol
-                    key={index}
-                    xs={6}
-                    md={3}
-                    className="d-flex justify-content-center align-items-center"
-                  >
-                    <img
-                      src={`images/Icons/Boiler/Chiller-${
-                        manualOverride[`chiller${index + 1}`] ? 'ON' : 'OFF'
-                      }.png`}
-                      alt={`Chiller ${index + 1}`}
-                      className="responsive-image"
-                    />
-                  </CCol>
-                ))}
-              </CRow>
-              <CCol>
-                <div className="d-flex mt-2 justify-content-center align-items-center mt-4">
-                  <span className="h4 text-center ">
+                  <span className="h4 text-center">
                     {formatTemperature(sensors?.water_out_temp)}
                   </span>
-                  <div className="arrow-line"></div>
+                  <img
+                    src="/images/Icons/Boiler/arrow3.png"
+                    alt="Arrow"
+                    className="mb-2 responsive-arrow"
+                  />
                   <span className="h4 text-center">
                     {formatTemperature(sensors?.return_temp)}
                   </span>
-                  </div>
-              </CCol>
-              {renderButtons()}
-            </CCardBody>
-            <CRow className="d-flex justify-content-end ">
-              <CCol xs="auto" className="px-1 mt-2">
-                <CButton
-                  color="primary"
-                  className="mb-2"
-                  onClick={() => handleButtonClick('manual')}
-                  block="true"
-                >
-                  Manual Override
-                </CButton>
+                </div>
               </CCol>
             </CRow>
-          </CCard>
-        </CCol>
-      </CRow>
-    </CContainer>
+          </CCardBody>
+        </CCard>
+      </CCol>
+    </CRow>
+  );
+
+  const renderSummerView = () => (
+    <CRow>
+      <CCol xs={12}>
+        <CCard className=" bgr">
+          <CCardBody>
+            <CRow>
+              {[...Array(4)].map((_, index) => (
+                <CCol
+                  key={index}
+                  xs={6}
+                  md={3}
+                  className="d-flex justify-content-center align-items-center"
+                >
+                  <img
+                    src={
+                      manualOverride[`chiller${index + 1}`]
+                        ? 'images/Icons/Boiler/Chiller-ON.png'
+                        : 'images/Icons/Boiler/Chiller-OFF.png'
+                    }
+                    alt={`Chiller ${index + 1}`}
+                    className="responsive-image"
+                  />
+                </CCol>
+              ))}
+              <div className="d-flex mt-2 justify-content-center align-items-center mt-4">
+                <span className="h4 text-center ">
+                  {formatTemperature(sensors?.water_out_temp)}
+                </span>
+                <div className="arrow-line"></div>
+                <span className="h4 text-center">
+                  {formatTemperature(sensors?.return_temp)}
+                </span>
+              </div>
+            </CRow>
+          </CCardBody>
+          <CRow className="d-flex justify-content-end ">
+            <CCol xs="auto" className="px-1 mt-2">
+              <CButton
+                color="primary"
+                className="mb-2"
+                onClick={() => handleButtonClick('manual')}
+                block="true"
+              >
+                Manual Override
+              </CButton>
+            </CCol>
+          </CRow>
+        </CCard>
+      </CCol>
+    </CRow>
   );
 
   const ModalComponent =

@@ -70,69 +70,67 @@ const TypeMode = ({ homedata }) => {
   };
 
   return (
-    <CContainer fluid>
-      <CRow>
-        <CCol>
-          <CCard className="mb-4 bgr p-0">
-            <CCardBody>
-              <h2 className="sensor-title text-center">
-                {season === 'Winter' ? 'Winter Mode' : 'Summer Mode'}
-              </h2>
-              <CBadge color={systemStatus === 'ONLINE' ? 'success' : 'danger'}>
-                {systemStatus}
-              </CBadge>
+    <CRow>
+      <CCol>
+        <CCard className="bgr p-0">
+          <CCardBody>
+            <h2 className="sensor-title text-center">
+              {season === 'Winter' ? 'Winter Mode' : 'Summer Mode'}
+            </h2>
+            <CBadge color={systemStatus === 'ONLINE' ? 'success' : 'danger'}>
+              {systemStatus}
+            </CBadge>
 
-              <CCardBody className="mt-4">
-                <CRow className="d-flex justify-content-center">
-                  {/* For small screens, show dropdown */}
-                  {isSmallScreen ? (
-                    <CCol xs={12}>
-                      <CDropdown className="d-md-none">
-                        <CDropdownToggle color="secondary">
-                          Select Metric
-                        </CDropdownToggle>
-                        <CDropdownMenu>
-                          {menuItems.map((item) => (
-                            <CDropdownItem
-                              key={item.value}
-                              onClick={() => setSelectedOption(item.value)}
-                            >
-                              {item.label}
-                            </CDropdownItem>
-                          ))}
-                        </CDropdownMenu>
-                      </CDropdown>
+            <CCardBody className="mt-4">
+              <CRow className="d-flex justify-content-center">
+                {/* For small screens, show dropdown */}
+                {isSmallScreen ? (
+                  <CCol xs={12}>
+                    <CDropdown className="d-md-none">
+                      <CDropdownToggle color="secondary">
+                        Select Metric
+                      </CDropdownToggle>
+                      <CDropdownMenu>
+                        {menuItems.map((item) => (
+                          <CDropdownItem
+                            key={item.value}
+                            onClick={() => setSelectedOption(item.value)}
+                          >
+                            {item.label}
+                          </CDropdownItem>
+                        ))}
+                      </CDropdownMenu>
+                    </CDropdown>
 
-                      <CCol xs={12} className="mt-2">
-                        {getSelectedContent()}
-                      </CCol>
+                    <CCol xs={12} className="mt-2">
+                      {getSelectedContent()}
                     </CCol>
-                  ) : (
-                    <>
-                      <CCol xs={12} md={6}>
-                        <div className="temp-circle">
-                          <FaThermometerHalf size={50} color="#FFB600" />
-                          <div className="temp-value">{outdoorTemp}°F</div>
-                        </div>
-                        <div className="temp-label mt-2">Outdoor Temp</div>
-                      </CCol>
+                  </CCol>
+                ) : (
+                  <>
+                    <CCol xs={12} md={6}>
+                      <div className="temp-circle">
+                        <FaThermometerHalf size={50} color="#FFB600" />
+                        <div className="temp-value">{outdoorTemp}°F</div>
+                      </div>
+                      <div className="temp-label mt-2">Outdoor Temp</div>
+                    </CCol>
 
-                      <CCol xs={12} md={6}>
-                        <div className="temp-circle">
-                          <FaThermometerHalf size={50} color="#FFB600" />
-                          <div className="temp-value">{avgTemp}°F</div>
-                        </div>
-                        <div className="temp-label mt-2">Avg Temp (96 hrs)</div>
-                      </CCol>
-                    </>
-                  )}
-                </CRow>
-              </CCardBody>
+                    <CCol xs={12} md={6}>
+                      <div className="temp-circle">
+                        <FaThermometerHalf size={50} color="#FFB600" />
+                        <div className="temp-value">{avgTemp}°F</div>
+                      </div>
+                      <div className="temp-label mt-2">Avg Temp (96 hrs)</div>
+                    </CCol>
+                  </>
+                )}
+              </CRow>
             </CCardBody>
-          </CCard>
-        </CCol>
-      </CRow>
-    </CContainer>
+          </CCardBody>
+        </CCard>
+      </CCol>
+    </CRow>
   );
 };
 

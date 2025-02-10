@@ -131,6 +131,9 @@ async def update_settings(
             content={"detail": f"Error updating settings: {str(e)}"},
             status_code=400,
         )
+    # Update for winter
+    # data = dashboard_service.update_settings(data)
+    # return JSONResponse(content=data)
 
 
 @router.get("/boiler_stats")
