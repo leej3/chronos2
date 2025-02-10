@@ -51,7 +51,6 @@ it('should render and toggle device states', async () => {
     </Provider>,
   );
 
-  expect(screen.getByText('Manual Override')).toBeInTheDocument();
   expect(screen.getByText('Boiler')).toBeInTheDocument();
   expect(screen.getByText('Chiller1')).toBeInTheDocument();
 

@@ -8,14 +8,12 @@ import {
   CCol,
 } from '@coreui/react';
 import { useDispatch, useSelector } from 'react-redux';
-import { toast } from 'react-toastify';
 import { updateDeviceState } from '../../api/updateState';
 import {
   setOverride,
   setInitialState,
 } from '../../features/state/ManualOverrideSlice';
 import { getDeviceId } from '../../utils/constant';
-import { fetchSummerData } from '../../features/summer/summerSlice';
 import './ManualOverride.css';
 
 const ManualOverride = ({ data }) => {
@@ -27,7 +25,7 @@ const ManualOverride = ({ data }) => {
   // const [socket, setSocket] = useState(null);
 
   console.log('Read only mode state:', readOnlyMode);
-  const season = useSelector((state) => state.season.season);
+  const season = useSelector((state) => state.chronos.season);
 
   useEffect(() => {
     if (!data?.devices) return;
