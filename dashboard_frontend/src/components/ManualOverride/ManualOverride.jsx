@@ -21,7 +21,7 @@ import './ManualOverride.css';
 const ManualOverride = ({ data }) => {
   const dispatch = useDispatch();
   const state = useSelector((state) => state.manualOverride);
-  const season = useSelector((state) => state.season.season);
+  const season = useSelector((state) => state.season);
   const [alertMessage, setAlertMessage] = useState('');
 
   useEffect(() => {

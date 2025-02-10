@@ -8,6 +8,8 @@ import { createStore } from 'redux';
 import SystemMap from '../systemMap/SystemMap';
 
 jest.mock('../systemMap/SystemMap.css', () => {});
+jest.mock('../ManualOverride/ManualOverride.css', () => {});
+
 jest.mock('../Modebus/Modbus.css', () => {});
 jest.mock('../TypeMode/TypeMode.css', () => {});
 jest.mock('../UserSettings/UserSettings.css', () => {});
