@@ -192,7 +192,7 @@ const ManualOverride = ({ data }) => {
       </CCol>
     </CRow>
     <CCard className="bgr">
-      <h2 className="section-title">Manual Override</h2>
+      <h2 className="section-title">Manual Override - {season} Mode</h2>
       <CCardBody className="p-0">
         {alertMessage && (
           <CAlert
@@ -219,36 +219,7 @@ const ManualOverride = ({ data }) => {
                 index <= 4 &&
                 (device === 'boiler' || device.startsWith('chiller')),
             )
-            .map((device) => (
-              <CCol
-                xs={12}
-                sm={6}
-                md={4}
-                lg={2.4}
-                key={device}
-                className="d-flex flex-column align-items-center"
-              >
-                <p className="mb-3 h5 text-center">
-                  {device.charAt(0).toUpperCase() + device.slice(1)}
-                </p>
-                <div className="d-flex gap-2 align-items-center">
-                  <label>OFF</label>
-                  <CFormSwitch
-                    checked={state[device] === true}
-                    className="cursor-pointer"
-                    onChange={(e) =>
-                      handleRadioChange(device, e.target.checked)
-                    }
-                    size="xl"
-                    disabled={
-                      (season === 'Winter' && device.startsWith('chiller')) ||
-                      (season === 'Summer' && device === 'boiler')
-                    }
-                  />
-                  <label>ON</label>
-                </div>
-              </CCol>
-            ))}
+            .map(renderDeviceControl)}
         </CRow>
       </CCardBody>
     </CCard>

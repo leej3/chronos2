@@ -1,7 +1,6 @@
 import React from 'react';
 import { CFormLabel, CCol, CRow, CCard, CCardBody } from '@coreui/react';
 import React, { useState } from 'react';
-
 import {
   CFormLabel,
   CCol,
@@ -19,8 +18,6 @@ import {
   CCard,
   CCardBody,
 } from '@coreui/react';
-
-import './Modbus.css';
 import { formatNumber } from '../../utils/tranform';
 import './Modbus.css';
 
@@ -187,63 +184,65 @@ const Modbus = ({ boiler }) => {
   );
 
   return (
-    <CContainer fluid>
-      <CRow>
-        <CCol>
-          <CCard className="mb-4">
-            <CCardBody>
-              <div className="modbus">
-                <CDropdown className="d-md-none">
-                  <CDropdownToggle color="secondary">Menu</CDropdownToggle>
-                  <CDropdownMenu>
-                    {menuItems.map((item) => (
-                      <CDropdownItem
-                        key={item.tab}
-                        onClick={() => setActiveTab(item.tab)}
-                      >
-                        {item.label}
-                      </CDropdownItem>
-                    ))}
-                  </CDropdownMenu>
-                </CDropdown>
-
-                <CNav
-                  variant="tabs"
-                  role="tablist"
-                  className="d-none d-md-flex"
-                >
+    <CRow>
+      <CCol>
+        <CCard className="bgr modbus-card">
+          <CCardBody className="p-0">
+            <div className="modbus">
+              <CDropdown className="d-md-none mobile-dropdown">
+                <CDropdownToggle caret>
+                  {menuItems.find((item) => item.tab === activeTab)?.label ||
+                    'Menu'}
+                </CDropdownToggle>
+                <CDropdownMenu>
                   {menuItems.map((item) => (
-                    <CNavItem key={item.tab} className="col-3">
-                      <CNavLink
-                        active={activeTab === item.tab}
-                        onClick={() => setActiveTab(item.tab)}
-                      >
-                        {item.label}
-                      </CNavLink>
-                    </CNavItem>
+                    <CDropdownItem
+                      key={item.tab}
+                      onClick={() => setActiveTab(item.tab)}
+                      active={activeTab === item.tab}
+                    >
+                      {item.label}
+                    </CDropdownItem>
                   ))}
-                </CNav>
+                </CDropdownMenu>
+              </CDropdown>
 
-                <CTabContent>
-                  <CTabPane visible={activeTab === 'statsTab'}>
-                    {renderStatsTab()}
-                  </CTabPane>
-                  <CTabPane visible={activeTab === 'statusTab'}>
-                    {renderStatusTab()}
-                  </CTabPane>
-                  <CTabPane visible={activeTab === 'errorTab'}>
-                    {renderErrorTab()}
-                  </CTabPane>
-                  <CTabPane visible={activeTab === 'infoTab'}>
-                    {renderInfoTab()}
-                  </CTabPane>
-                </CTabContent>
-              </div>
-            </CCardBody>
-          </CCard>
-        </CCol>
-      </CRow>
-    </CContainer>
+              <CNav
+                variant="tabs"
+                role="tablist"
+                className="d-none d-md-flex nav-grid"
+              >
+                {menuItems.map((item) => (
+                  <CNavItem key={item.tab} className="nav-grid-item">
+                    <CNavLink
+                      active={activeTab === item.tab}
+                      onClick={() => setActiveTab(item.tab)}
+                    >
+                      {item.label}
+                    </CNavLink>
+                  </CNavItem>
+                ))}
+              </CNav>
+
+              <CTabContent>
+                <CTabPane visible={activeTab === 'statsTab'}>
+                  {renderTabContent(boilerData.stats.items)}
+                </CTabPane>
+                <CTabPane visible={activeTab === 'statusTab'}>
+                  {renderTabContent(boilerData.status.items)}
+                </CTabPane>
+                <CTabPane visible={activeTab === 'errorTab'}>
+                  {renderTabContent(boilerData.errors.items)}
+                </CTabPane>
+                <CTabPane visible={activeTab === 'infoTab'}>
+                  {renderTabContent(boilerData.info.items)}
+                </CTabPane>
+              </CTabContent>
+            </div>
+          </CCardBody>
+        </CCard>
+      </CCol>
+    </CRow>
   );
 };
 
