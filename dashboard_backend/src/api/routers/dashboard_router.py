@@ -56,17 +56,8 @@ async def update_settings(
     current_user: Annotated[UserToken, Security(get_current_user)],
 ):
     # Update for winter
-    try:
-        reponse = edge_server.boiler_set_setpoint(data.setpoint_offset_winter)
-        for key, value in data.dict().items():
-            if value is not None:
-                setattr(chronos, key, value)
-        return JSONResponse(content=reponse, status_code=200)
-
-    except Exception as e:
-        return JSONResponse(
-            content={"message": f"Error updating settings: {str(e)}"}, status_code=400
-        )
+    data = dashboard_service.update_settings(data)
+    return JSONResponse(content=data)
 
 
 @router.get("/boiler_stats")

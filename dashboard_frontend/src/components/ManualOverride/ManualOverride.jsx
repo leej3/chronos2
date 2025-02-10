@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-
 import {
   CCard,
   CCardBody,
@@ -9,59 +8,133 @@ import {
   CCol,
 } from '@coreui/react';
 import { useDispatch, useSelector } from 'react-redux';
-
-// import io from 'socket.io-client';
+import { toast } from 'react-toastify';
 import { updateDeviceState } from '../../api/updateState';
 import {
   setOverride,
   setInitialState,
 } from '../../features/state/ManualOverrideSlice';
 import { getDeviceId } from '../../utils/constant';
+import { fetchSummerData } from '../../features/summer/summerSlice';
+import './ManualOverride.css';
 
-const ManualOverride = ({ data, season }) => {
+const ManualOverride = ({ data }) => {
   const dispatch = useDispatch();
   const state = useSelector((state) => state.manualOverride);
+  const season = useSelector((state) => state.season.season);
   const [alertMessage, setAlertMessage] = useState('');
-  // const [socket, setSocket] = useState(null);
+
   useEffect(() => {
-    if (data?.devices) {
-      const devices = data.devices;
-      const initialState = {
+    if (!data?.devices) return;
+
+    const devices = data.devices;
+    dispatch(
+      setInitialState({
         boiler: devices[0],
         chiller1: devices[1],
         chiller2: devices[2],
         chiller3: devices[3],
         chiller4: devices[4],
-      };
-      dispatch(setInitialState(initialState));
+      }),
+    );
+  }, [data]);
+
+  const isDeviceDisabled = (device) => {
+    if (season === 'Winter') {
+      return device.startsWith('chiller');
     }
-  }, [data, dispatch]);
+    if (season === 'Summer') {
+      return device === 'boiler';
+    }
+    return false;
+  };
 
-  const handleRadioChange = async (device, state) => {
-    console.log(device, state);
-    dispatch(setOverride({ name: device, value: state }));
+  const handleDeviceStateChange = async (device, newState) => {
+    if (isDeviceDisabled(device)) return;
 
-    const payload = {
-      id: getDeviceId(device),
-      state: state,
-    };
+    const deviceName = device.charAt(0).toUpperCase() + device.slice(1);
+    const statusText = newState ? 'ON' : 'OFF';
 
-    updateDeviceState(payload)
-      .then((response) => {
-        if (!response.status) throw new Error('Network response was not ok');
-        return response.data;
-      })
-      .then((data) => {
-        if (data.error) setAlertMessage('Relay switching has failed.');
-      })
-      .catch(() => {
-        setAlertMessage('Relay switching has failed.');
+    try {
+      dispatch(setOverride({ name: device, value: newState }));
+
+      const response = await updateDeviceState({
+        id: getDeviceId(device),
+        state: newState,
       });
+
+      if (!response.status || response.data.error) {
+        throw new Error('Failed to switch relay');
+      }
+
+      await dispatch(fetchSummerData());
+
+      toast.success(`${deviceName} has been turned ${statusText}`, {
+        position: 'top-right',
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    } catch (error) {
+      dispatch(setOverride({ name: device, value: !newState }));
+
+      toast.error(
+        `Failed to turn ${deviceName} ${statusText}. Please try again.`,
+        {
+          position: 'top-right',
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        },
+      );
+
+      setAlertMessage('Relay switching has failed.');
+    }
+  };
+
+  const renderDeviceControl = (device) => {
+    const isDisabled = isDeviceDisabled(device);
+    const deviceName = device.charAt(0).toUpperCase() + device.slice(1);
+
+    return (
+      <CCol
+        xs={12}
+        sm={6}
+        md={4}
+        lg={2.4}
+        key={device}
+        className="device-column"
+      >
+        <p className={`device-name ${isDisabled ? 'text-muted' : ''}`}>
+          {deviceName}
+        </p>
+        <div
+          className={`device-control ${isDisabled ? 'disabled' : ''}`}
+          title={
+            isDisabled ? `${deviceName} not available in ${season} mode` : ''
+          }
+        >
+          <label>OFF</label>
+          <CFormSwitch
+            checked={state[device] === true}
+            className="device-switch"
+            onChange={(e) => handleDeviceStateChange(device, e.target.checked)}
+            size="xl"
+            disabled={isDisabled}
+          />
+          <label>ON</label>
+        </div>
+      </CCol>
+    );
   };
 
   return (
     <CCard className="bgr">
-      <h2 className="section-title">Manual Override</h2>
+      <h2 className="section-title">Manual Override - {season} Mode</h2>
       <CCardBody className="p-0">
         {alertMessage && (
           <CAlert
@@ -79,36 +152,7 @@ const ManualOverride = ({ data, season }) => {
                 index <= 4 &&
                 (device === 'boiler' || device.startsWith('chiller')),
             )
-            .map((device) => (
-              <CCol
-                xs={12}
-                sm={6}
-                md={4}
-                lg={2.4}
-                key={device}
-                className="d-flex flex-column align-items-center"
-              >
-                <p className="mb-3 h5 text-center">
-                  {device.charAt(0).toUpperCase() + device.slice(1)}
-                </p>
-                <div className="d-flex gap-2 align-items-center">
-                  <label>OFF</label>
-                  <CFormSwitch
-                    checked={state[device] === true}
-                    className="cursor-pointer"
-                    onChange={(e) =>
-                      handleRadioChange(device, e.target.checked)
-                    }
-                    size="xl"
-                    disabled={
-                      (season === 'Winter' && device.startsWith('chiller')) ||
-                      (season === 'Summer' && device === 'boiler')
-                    }
-                  />
-                  <label>ON</label>
-                </div>
-              </CCol>
-            ))}
+            .map(renderDeviceControl)}
         </CRow>
       </CCardBody>
     </CCard>

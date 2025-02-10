@@ -42,34 +42,32 @@ const TableTemplate = ({ homedata }) => {
   const outletTemp = formatNumber(homedata?.sensors?.water_out_temp) || 'N/A';
 
   return (
-    <CContainer fluid>
-      <CRow>
-        <CCol>
-          <CCard className="mb-4 bgr p-0">
-            <CCardBody>
-              <CRow className="sensor-table">
-                <CCol>
-                  <h2 className="sensor-title text-center">Sensor</h2>
+    <CRow>
+      <CCol>
+        <CCard className=" bgr p-0">
+          <CCardBody>
+            <CRow className="sensor-table">
+              <CCol>
+                <h2 className="sensor-title text-center">Sensor</h2>
 
-                  <CRow>
-                    <CCol xs={12}>
-                      <CWidgetStatsD
-                        icon={<HVACIcon />}
-                        style={{ '--cui-card-cap-bg': 'none' }}
-                        values={[
-                          { title: 'Intel Temp', value: `${intelTemp} °F` },
-                          { title: 'Outlet Temp', value: `${outletTemp} °F` },
-                        ]}
-                      />
-                    </CCol>
-                  </CRow>
-                </CCol>
-              </CRow>
-            </CCardBody>
-          </CCard>
-        </CCol>
-      </CRow>
-    </CContainer>
+                <CRow>
+                  <CCol xs={12}>
+                    <CWidgetStatsD
+                      icon={<HVACIcon />}
+                      style={{ '--cui-card-cap-bg': 'none' }}
+                      values={[
+                        { title: 'Intel Temp', value: `${intelTemp} °F` },
+                        { title: 'Outlet Temp', value: `${outletTemp} °F` },
+                      ]}
+                    />
+                  </CCol>
+                </CRow>
+              </CCol>
+            </CRow>
+          </CCardBody>
+        </CCard>
+      </CCol>
+    </CRow>
   );
 };
 
