@@ -1,5 +1,7 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { NavLink } from 'react-router-dom';
+import { getFormattedChicagoTime } from '../../utils/dateUtils';
+
 import { cilFactorySlash, cilLockLocked } from '@coreui/icons';
 import CIcon from '@coreui/icons-react';
 import {
@@ -42,6 +44,18 @@ const AppHeader = () => {
     }
     return '/images/Icons/WinterSummer/WOn.png';
   };
+
+  // Add time update effect
+  useEffect(() => {
+    const updateTime = () => {
+      setCurrentTime(getFormattedChicagoTime());
+    };
+
+    updateTime(); // Initial update
+    const timer = setInterval(updateTime, 1000); // Update every second
+
+    return () => clearInterval(timer); // Cleanup on unmount
+  }, []);
 
   return (
     <CHeader position="sticky" ref={headerRef}>
