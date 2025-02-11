@@ -81,7 +81,7 @@ const SystemMap = memo(({ homedata, season }) => {
         <CCard className=" bgr p-0">
           <CCardBody>
             <h2 className="text-center mb-4"></h2>
-            <CRow className="mb-4">
+            <CRow>
               <CCol
                 xs={12}
                 md={6}
@@ -120,6 +120,18 @@ const SystemMap = memo(({ homedata, season }) => {
                     {formatTemperature(sensors?.return_temp)}
                   </span>
                 </div>
+              </CCol>
+            </CRow>
+            <CRow className="d-flex justify-content-end ">
+              <CCol xs="auto" className="px-1 mt-2">
+                <CButton
+                  color="primary"
+                  className="mb-2"
+                  onClick={() => handleButtonClick('manual')}
+                  block="true"
+                >
+                  Manual Override
+                </CButton>
               </CCol>
             </CRow>
           </CCardBody>

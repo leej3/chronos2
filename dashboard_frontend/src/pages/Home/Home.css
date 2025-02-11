@@ -6,7 +6,10 @@
   border: 2px solid #6c7a96;
   padding: 16px; 
 }
-
+.container-fluid {
+  padding: 0 2%;
+}
+/* Mặc định cho màn hình lớn */
 .item {
   background-color: #212631;
   border: 0;

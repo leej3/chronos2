@@ -12,7 +12,6 @@ import {
   CDropdownToggle,
   CDropdownMenu,
   CDropdownItem,
-  CContainer,
   CCard,
   CCardBody,
 } from '@coreui/react';
@@ -136,8 +135,8 @@ const Modbus = ({ boiler }) => {
         <CCard className="bgr modbus-card">
           <CCardBody className="p-0">
             <div className="modbus">
-              <CDropdown className="d-md-none mobile-dropdown">
-                <CDropdownToggle caret>
+              <CDropdown className="d-md-none mobile-dropdown mb-2">
+                <CDropdownToggle caret className="mb-0">
                   {menuItems.find((item) => item.tab === activeTab)?.label ||
                     'Menu'}
                 </CDropdownToggle>

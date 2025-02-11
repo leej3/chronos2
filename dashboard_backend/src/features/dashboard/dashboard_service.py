@@ -8,7 +8,7 @@ from src.core.repositories.history_repository import HistoryRepository
 from src.core.repositories.setting_repository import SettingRepository
 from src.core.services.chronos import Chronos
 from src.core.services.edge_server import EdgeServer
-from src.core.utils.constant import EFFICIENCY_HOUR
+from src.core.utils.constant import EFFICIENCY_HOUR, SUMMER, WINTER
 
 
 class DashboardService:
@@ -21,6 +21,24 @@ class DashboardService:
     def get_data(self):
         history = self.history_repository.get_last_history()
         settings = self.setting_repository.get_last_settings()
+
+        # Get mode switch timestamp and calculate remaining lockout time
+        mode_switch_timestamp = self.setting_repository._get_property_from_db(
+            "mode_switch_timestamp"
+        )
+        current_time = datetime.now()
+
+        lockout_info = None
+        if mode_switch_timestamp:
+            unlock_time = mode_switch_timestamp + timedelta(
+                minutes=settings.mode_switch_lockout_time
+            )
+            if current_time < unlock_time:
+                lockout_info = {
+                    "mode_switch_timestamp": mode_switch_timestamp.isoformat(),
+                    "mode_switch_lockout_time": settings.mode_switch_lockout_time,
+                    "unlock_time": unlock_time.isoformat(),
+                }
 
         edge_server_data = self.edge_server.get_data()
         # edge_server_data["devices"][0]["state"] = True
@@ -45,6 +63,7 @@ class DashboardService:
                 else 0
             ),
             "wind_chill_avg": getattr(history, "avg_outside_temp", 0),
+            "lockout_info": lockout_info,
         }
 
         efficiency = self.calculate_efficiency()
@@ -249,3 +268,40 @@ class DashboardService:
             if value is not None:
                 setattr(self.chronos, key, value)
         return reponse
+
+    def switch_season_mode(self, season_value: int):
+        try:
+            if season_value not in [WINTER, SUMMER]:
+                raise ValueError(f"Invalid season value: {season_value}")
+
+            # TODO Update Edge Server mode
+
+            current_time = datetime.now()
+            self.setting_repository._update_property("mode", season_value)
+            self.setting_repository._update_property(
+                "mode_switch_timestamp", current_time
+            )
+
+            settings = self.setting_repository.get_last_settings()
+
+            message = (
+                "Switched to Winter mode successfully"
+                if season_value == WINTER
+                else "Switched to Summer mode successfully"
+            )
+
+            unlock_time = current_time + timedelta(
+                minutes=settings.mode_switch_lockout_time
+            )
+
+            return {
+                "message": message,
+                "status": "success",
+                "mode": season_value,
+                "mode_switch_timestamp": current_time.isoformat(),
+                "mode_switch_lockout_time": settings.mode_switch_lockout_time,
+                "unlock_time": unlock_time.isoformat(),
+            }
+
+        except Exception as e:
+            raise Exception(f"Failed to switch season mode: {str(e)}")

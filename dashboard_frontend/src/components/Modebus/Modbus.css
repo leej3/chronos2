@@ -35,8 +35,8 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   border-radius: 6px;
   border: 1px solid #2d2d3f;
-  max-height: 380px;
-  overflow: hidden;
+  min-height: 380px;
+  overflow-y: auto;
 }
 
 .modbus {
@@ -80,9 +80,8 @@
 .tab-content {
   flex: 1;
   overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: #3699ff #2d2d3f;
   margin-top: 5px;
+  padding-bottom: 16px;
 }
 
 .tab-content::-webkit-scrollbar {
@@ -100,7 +99,7 @@
 }
 
 .tab-content-container {
-  padding: 8px 4px 8px 0;
+  padding: 8px 4px;
 }
 
 .data-item {
@@ -213,5 +212,28 @@
   .nav-grid .nav-link {
     font-size: 11px;
     padding: 8px 4px;
+  }
+}
+
+@media (max-width: 768px) {
+  .modbus-card {
+    min-height: auto;
+    max-height: none;
+  }
+
+  .mobile-dropdown {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background-color: #1e1e2d;
+    padding: 8px 0;
+  }
+
+  .tab-content {
+    padding-bottom: 24px;
+  }
+
+  .data-item {
+    margin-bottom: 8px;
   }
 }

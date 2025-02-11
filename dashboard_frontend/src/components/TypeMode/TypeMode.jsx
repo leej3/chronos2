@@ -23,7 +23,6 @@ const TypeMode = ({ homedata }) => {
   const avgTemp = homedata?.efficiency?.average_temperature_difference || 'N/A';
   const systemStatus = homedata?.status ? 'ONLINE' : 'OFFLINE';
 
-  // State for screen size and selected dropdown item
   const [isSmallScreen, setIsSmallScreen] = useState(false);
   const [selectedOption, setSelectedOption] = useState('Outdoor Temp');
 
@@ -32,13 +31,12 @@ const TypeMode = ({ homedata }) => {
     { value: 'Avg Temp', label: 'Avg Temp (96 hrs)' },
   ];
 
-  // Handle screen resizing
   useEffect(() => {
     const handleResize = () => {
       setIsSmallScreen(window.innerWidth <= 768);
     };
 
-    handleResize(); // Initial check
+    handleResize();
     window.addEventListener('resize', handleResize);
 
     return () => window.removeEventListener('resize', handleResize);
@@ -74,23 +72,24 @@ const TypeMode = ({ homedata }) => {
       <CCol>
         <CCard className="bgr p-0">
           <CCardBody>
-            <h2 className="sensor-title text-center">
-              {season === 'Winter' ? 'Winter Mode' : 'Summer Mode'}
-            </h2>
-            <CBadge color={systemStatus === 'ONLINE' ? 'success' : 'danger'}>
-              {systemStatus}
-            </CBadge>
+            <div className="d-flex flex-column align-items-center">
+              <h2 className="sensor-title text-center mb-2">
+                {season === 'Winter' ? 'Winter Mode' : 'Summer Mode'}
+              </h2>
+              <CBadge color={systemStatus === 'ONLINE' ? 'success' : 'danger'}>
+                {systemStatus}
+              </CBadge>
+            </div>
 
-            <CCardBody className="mt-4">
-              <CRow className="d-flex justify-content-center">
-                {/* For small screens, show dropdown */}
+            <CCardBody className="mt-3">
+              <CRow className="justify-content-center g-3">
                 {isSmallScreen ? (
                   <CCol xs={12}>
-                    <CDropdown className="d-md-none">
-                      <CDropdownToggle color="secondary">
+                    <CDropdown className="d-md-none mb-3">
+                      <CDropdownToggle color="secondary" className="w-100">
                         Select Metric
                       </CDropdownToggle>
-                      <CDropdownMenu>
+                      <CDropdownMenu className="w-100">
                         {menuItems.map((item) => (
                           <CDropdownItem
                             key={item.value}
@@ -102,23 +101,21 @@ const TypeMode = ({ homedata }) => {
                       </CDropdownMenu>
                     </CDropdown>
 
-                    <CCol xs={12} className="mt-2">
-                      {getSelectedContent()}
-                    </CCol>
+                    <div className="text-center">{getSelectedContent()}</div>
                   </CCol>
                 ) : (
                   <>
-                    <CCol xs={12} md={6}>
+                    <CCol xs={12} sm={6} className="text-center">
                       <div className="temp-circle">
-                        <FaThermometerHalf size={50} color="#FFB600" />
+                        <FaThermometerHalf size={35} color="#FFB600" />
                         <div className="temp-value">{outdoorTemp}°F</div>
                       </div>
                       <div className="temp-label mt-2">Outdoor Temp</div>
                     </CCol>
 
-                    <CCol xs={12} md={6}>
+                    <CCol xs={12} sm={6} className="text-center">
                       <div className="temp-circle">
-                        <FaThermometerHalf size={50} color="#FFB600" />
+                        <FaThermometerHalf size={35} color="#FFB600" />
                         <div className="temp-value">{avgTemp}°F</div>
                       </div>
                       <div className="temp-label mt-2">Avg Temp (96 hrs)</div>

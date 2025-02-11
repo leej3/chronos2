@@ -3,34 +3,34 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  width: 120px;
-  height: 120px;
+  width: 100px;
+  height: 100px;
   background-color: #f8f9fa;
   border-radius: 50%;
   border: 2px solid #17a2b8;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   margin: 0 auto;
-  padding: 10px;
+  padding: 8px;
   box-sizing: border-box;
 }
 
 .temp-value {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: bold;
   color: #17a2b8;
-  margin-top: 5px;
+  margin-top: 4px;
 }
 
 .temp-label {
-  margin-top: 10px;
-  font-size: 18px;
+  margin-top: 8px;
+  font-size: 16px;
   color: #f0f0f0;
   flex-shrink: 0;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
 }
 
 .temp-circle svg {
-  margin-bottom: 5px;
+  margin-bottom: 4px;
 }
 
 @media (max-width: 768px) {
@@ -43,5 +43,25 @@
   .modbus .season-group .form-input {
     font-size: 14px;
     padding: 8px;
+  }
+  .temp-circle {
+    width: 90px;
+    height: 90px;
+  }
+  .temp-value {
+    font-size: 1rem;
+  }
+  .temp-label {
+    font-size: 14px;
+  }
+  .sensor-title {
+    font-size: 1.1rem;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1200px) {
+  .temp-circle {
+    width: 95px;
+    height: 95px;
   }
 }

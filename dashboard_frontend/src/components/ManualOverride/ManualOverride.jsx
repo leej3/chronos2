@@ -6,6 +6,7 @@ import {
   CFormSwitch,
   CRow,
   CCol,
+  CTooltip,
 } from '@coreui/react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
@@ -21,7 +22,7 @@ import './ManualOverride.css';
 const ManualOverride = ({ data }) => {
   const dispatch = useDispatch();
   const state = useSelector((state) => state.manualOverride);
-  const season = useSelector((state) => state.season);
+  const season = useSelector((state) => state.season?.season);
   const [alertMessage, setAlertMessage] = useState('');
 
   useEffect(() => {
@@ -99,6 +100,9 @@ const ManualOverride = ({ data }) => {
   const renderDeviceControl = (device) => {
     const isDisabled = isDeviceDisabled(device);
     const deviceName = device.charAt(0).toUpperCase() + device.slice(1);
+    const tooltipContent = isDisabled
+      ? `${deviceName} not available in ${season} mode`
+      : `Click to toggle ${deviceName} ON/OFF`;
 
     return (
       <CCol
@@ -109,25 +113,33 @@ const ManualOverride = ({ data }) => {
         key={device}
         className="device-column"
       >
-        <p className={`device-name ${isDisabled ? 'text-muted' : ''}`}>
-          {deviceName}
-        </p>
-        <div
-          className={`device-control ${isDisabled ? 'disabled' : ''}`}
-          title={
-            isDisabled ? `${deviceName} not available in ${season} mode` : ''
+        <CTooltip content={tooltipContent} placement="top">
+          <p className={`device-name ${isDisabled ? 'text-muted' : ''}`}>
+            {deviceName}
+          </p>
+        </CTooltip>
+        <CTooltip
+          content={
+            isDisabled
+              ? `${deviceName} not available in ${season} mode`
+              : 'Click to switch between ON and OFF'
           }
+          placement="top"
         >
-          <label>OFF</label>
-          <CFormSwitch
-            checked={state[device] === true}
-            className="device-switch"
-            onChange={(e) => handleDeviceStateChange(device, e.target.checked)}
-            size="xl"
-            disabled={isDisabled}
-          />
-          <label>ON</label>
-        </div>
+          <div className={`device-control ${isDisabled ? 'disabled' : ''}`}>
+            <label>OFF</label>
+            <CFormSwitch
+              checked={state[device] === true}
+              className="device-switch"
+              onChange={(e) =>
+                handleDeviceStateChange(device, e.target.checked)
+              }
+              size="xl"
+              disabled={isDisabled}
+            />
+            <label>ON</label>
+          </div>
+        </CTooltip>
       </CCol>
     );
   };
