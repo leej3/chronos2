@@ -1,10 +1,7 @@
 import React from 'react';
-
-import { render, act } from '@testing-library/react';
-
+import { render, act, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ResizeObserver from 'resize-observer-polyfill';
-
 import { getCharData } from '../../api/getCharData';
 import TemperatureGraph from '../TemperatureGraph/TemperatureGraph';
 
@@ -21,33 +18,30 @@ jest.mock('../../utils/constant', () => ({
 }));
 
 describe('TemperatureGraph', () => {
-  it('should render the graph and display temperature history after data is fetched', async () => {
-    const mockData = {
-      data: [
-        { date: '2024-12-31 16:07', 'column-1': 70, 'column-2': 75 },
-        { date: '2024-12-31 16:08', 'column-1': 71, 'column-2': 76 },
-      ],
-    };
+  it('No data available', async () => {
+    const mockData = [];
+    getCharData.mockResolvedValue({ data: mockData });
 
-    getCharData.mockResolvedValue(mockData);
     await act(async () => {
       render(<TemperatureGraph />);
     });
-    // screen.debug();
+
+    expect(screen.getByText(/No data available/)).toBeInTheDocument();
   });
 
-  it('should display an error message if the API call fails', async () => {
-    const mockData = {
-      data: [
-        { date: '2024-12-31 16:07', 'column-1': 70, 'column-2': 75 },
-        { date: '2024-12-31 16:08', 'column-1': 71, 'column-2': 76 },
-      ],
-    };
+  it('should render the graph and display temperature history after data is fetched', async () => {
+    const mockData = [
+      { date: '2024-07-31T12:00:00Z', 'column-2': 80, 'column-1': 75 },
+      { date: '2024-07-31T14:00:00Z', 'column-2': 85, 'column-1': 78 },
+    ];
+    getCharData.mockResolvedValue({ data: mockData });
 
-    getCharData.mockResolvedValue(mockData);
     await act(async () => {
       render(<TemperatureGraph />);
     });
-    // screen.debug();
+    console.log(screen.debug());
+    expect(
+      screen.getByText(/Inlet\/Outlet Temperature History/i),
+    ).toBeInTheDocument();
   });
 });
