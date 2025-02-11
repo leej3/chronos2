@@ -10,6 +10,7 @@ import {
   CHeaderNav,
   CNavLink,
   CNavItem,
+  CHeaderBrand,
 } from '@coreui/react';
 import { useSelector } from 'react-redux';
 
@@ -35,81 +36,81 @@ const AppHeader = () => {
     });
   }, []);
 
-  // Add time update effect
   useEffect(() => {
     const updateTime = () => {
       setCurrentTime(getFormattedChicagoTime());
     };
 
-    updateTime(); // Initial update
-    const timer = setInterval(updateTime, 1000); // Update every second
+    updateTime();
+    const timer = setInterval(updateTime, 1000);
 
-    return () => clearInterval(timer); // Cleanup on unmount
+    return () => clearInterval(timer);
   }, []);
 
   return (
-    <CHeader position="sticky" className="p-2" ref={headerRef}>
-      <CContainer fluid>
-        <CHeaderNav className="d-none d-md-flex">
-          <CNavItem>
-            <CNavLink to="/" as={NavLink}>
-              Chronus Dashboard
-            </CNavLink>
-          </CNavItem>
-        </CHeaderNav>
-        <CHeaderNav className="ms-auto">
-          <CNavItem>
+    <CHeader position="sticky" ref={headerRef}>
+      <CContainer fluid className="px-4">
+        <CHeaderBrand className="d-flex align-items-center">
+          <NavLink
+            to="/"
+            className="text-decoration-none text-white"
+            style={{ fontSize: { xs: '1rem', md: '1.25rem' } }}
+          >
+            Chronus Dashboard
+          </NavLink>
+        </CHeaderBrand>
+
+        <CHeaderNav className="ms-auto d-flex flex-column flex-md-row gap-2">
+          <CNavItem className="d-flex align-items-center w-100">
             <CNavLink
               href="#"
-              className="d-flex align-items-center justify-content-center m-1"
+              className="d-flex align-items-center px-3 py-2 w-100"
               style={{
-                minWidth: '250px',
                 borderRadius: '8px',
-                padding: '8px 16px',
-                color: '#fff',
-                textDecoration: 'none',
+                minWidth: { md: '250px' },
               }}
             >
               <CIcon
                 icon={cilClock}
+                className="me-2"
                 style={{
-                  width: '20px',
-                  height: '20px',
-                  marginRight: '8px',
-                  color: '#666',
+                  width: '1.25rem',
+                  height: '1.25rem',
                 }}
               />
               <span
+                className="fw-medium"
                 style={{
-                  fontSize: '0.95rem',
-                  fontWeight: '500',
                   letterSpacing: '0.3px',
+                  whiteSpace: 'nowrap',
                 }}
               >
                 {currentTime}
               </span>
             </CNavLink>
           </CNavItem>
+
           {mockDevices && (
-            <CNavItem>
+            <CNavItem className="d-flex align-items-center w-100">
               <CNavLink
                 href="#"
-                className="d-flex align-items-center text-danger m-1"
+                className="d-flex align-items-center text-danger px-3 py-2 w-100"
                 style={{
                   background: 'rgba(255, 0, 0, 0.05)',
                   borderRadius: '8px',
-                  padding: '8px 16px',
                 }}
               >
                 <CIcon
                   icon={cilFactorySlash}
+                  className="me-2"
                   style={{
-                    width: '20px',
-                    height: '20px',
-                    marginRight: '8px',
+                    width: '1.25rem',
+                    height: '1.25rem',
                   }}
                 />
-                <span className="font-weight-bold">Mock Devices Mode</span>
+                <span className="fw-medium" style={{ whiteSpace: 'nowrap' }}>
+                  Mock Devices Mode
+                </span>
               </CNavLink>
             </CNavItem>
           )}

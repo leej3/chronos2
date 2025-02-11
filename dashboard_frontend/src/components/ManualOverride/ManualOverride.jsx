@@ -6,6 +6,7 @@ import {
   CFormSwitch,
   CRow,
   CCol,
+  CTooltip,
 } from '@coreui/react';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateDeviceState } from '../../api/updateState';
@@ -20,12 +21,12 @@ const ManualOverride = ({ data }) => {
   const dispatch = useDispatch();
   const state = useSelector((state) => state.manualOverride);
   const readOnlyMode = useSelector((state) => state.chronos.read_only_mode);
+  const season = useSelector((state) => state.chronos?.season);
   const [alertMessage, setAlertMessage] = useState('');
   const [alertColor, setAlertColor] = useState('danger');
   // const [socket, setSocket] = useState(null);
 
   console.log('Read only mode state:', readOnlyMode);
-  const season = useSelector((state) => state.chronos.season);
 
   useEffect(() => {
     if (!data?.devices) return;
@@ -86,6 +87,9 @@ const ManualOverride = ({ data }) => {
   const renderDeviceControl = (device) => {
     const isDisabled = isDeviceDisabled(device);
     const deviceName = device.charAt(0).toUpperCase() + device.slice(1);
+    const tooltipContent = isDisabled
+      ? `${deviceName} not available in ${season} mode`
+      : `Click to toggle ${deviceName} ON/OFF`;
 
     return (
       <CCol
@@ -96,14 +100,18 @@ const ManualOverride = ({ data }) => {
         key={device}
         className="device-column"
       >
-        <p className={`device-name ${isDisabled ? 'text-muted' : ''}`}>
-          {deviceName}
-        </p>
-        <div
-          className={`device-control ${isDisabled ? 'disabled' : ''}`}
-          title={
-            isDisabled ? `${deviceName} not available in ${season} mode` : ''
+        <CTooltip content={tooltipContent} placement="top">
+          <p className={`device-name ${isDisabled ? 'text-muted' : ''}`}>
+            {deviceName}
+          </p>
+        </CTooltip>
+        <CTooltip
+          content={
+            isDisabled
+              ? `${deviceName} not available in ${season} mode`
+              : 'Click to switch between ON and OFF'
           }
+          placement="top"
         >
           <label>OFF</label>
           <CFormSwitch
@@ -114,8 +122,8 @@ const ManualOverride = ({ data }) => {
             disabled={isDisabled}
           />
           <label>ON</label>
-        </div>
-      </CCol>
+        </CTooltip >
+      </CCol >
     );
   };
 

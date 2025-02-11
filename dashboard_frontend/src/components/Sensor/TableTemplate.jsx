@@ -1,11 +1,4 @@
-import {
-  CCardBody,
-  CRow,
-  CCol,
-  CWidgetStatsD,
-  CContainer,
-  CCard,
-} from '@coreui/react';
+import { CCardBody, CRow, CCol, CWidgetStatsD, CCard } from '@coreui/react';
 import PropTypes from 'prop-types';
 
 import './tabletemplate.css';

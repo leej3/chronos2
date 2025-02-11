@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { format, parseISO } from 'date-fns';
+import { BsArrowRight, BsArrowLeft } from 'react-icons/bs';
 
 import {
   CForm,
@@ -7,14 +9,16 @@ import {
   CRow,
   CCol,
   CCardBody,
-  CContainer,
   CCard,
+  CTooltip,
 } from '@coreui/react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
 
 import { getTemperatureLimits } from '../../api/updateBoilerSetpoint';
 import { updateSettings } from '../../api/updateSetting';
+import { setSeason } from '../../features/state/seasonSlice';
+import { switchSeason } from '../../api/switchSeason';
 
 import './UserSettings.css';
 
@@ -29,12 +33,12 @@ const UserSettings = ({ data }) => {
     mode_switch_lockout_time: null,
     cascade_time: null,
   });
+  const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [tempLimits, setTempLimits] = useState({
     hard_limits: { min_setpoint: 70, max_setpoint: 110 },
     soft_limits: { min_setpoint: 70, max_setpoint: 110 },
   });
-  const [isInitialized, setIsInitialized] = useState(false);
   const season = useSelector((state) => state.chronos.season);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -64,18 +68,10 @@ const UserSettings = ({ data }) => {
         mode_switch_lockout_time: data.results.mode_switch_lockout_time ?? null,
         cascade_time: data.results.cascade_time ?? null,
       });
-      setIsInitialized(true);
+      setIsEditing(true);
+      setIsLoading(false);
     }
   }, [data, isEditing]);
-
-  if (!data?.results) {
-    return (
-      <div className="loading-container">
-        <div className="spinner"></div>
-        <p>Loading user settings...</p>
-      </div>
-    );
-  }
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -146,6 +142,16 @@ const UserSettings = ({ data }) => {
       toast.error(errorMessage);
     }
   };
+
+
+  if (isLoading) {
+    return (
+      <div className="loading-container">
+        <div className="spinner"></div>
+        <p>Loading user settings...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="text-start">
@@ -272,12 +278,12 @@ const UserSettings = ({ data }) => {
                     Update
                   </CButton>
                 </CCol>
-              </CRow>
-            </div>
-          </CRow>
-        </CForm>
-      </CCardBody>
-    </div>
+              </CRow >
+            </div >
+          </CRow >
+        </CForm >
+      </CCardBody >
+    </div >
   );
 };
 
