@@ -6,8 +6,8 @@ import {
   CRow,
   CCol,
   CCardBody,
-  CContainer,
   CCard,
+  CTooltip,
 } from '@coreui/react';
 import { toast } from 'react-toastify';
 
@@ -17,7 +17,7 @@ import './UserSettings.css';
 import SeasonSwitch from '../SeasonSwitch/SeasonSwitch';
 
 const UserSettings = ({ data }) => {
-  const [formData, setFormData] = useState({
+  const initialFormData = {
     tolerance: null,
     setpoint_min: null,
     setpoint_max: null,
@@ -28,15 +28,10 @@ const UserSettings = ({ data }) => {
     cascade_time: null,
   });
 
-  const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [tempLimits, setTempLimits] = useState({
-    hard_limits: { min_setpoint: 70, max_setpoint: 110 },
-    soft_limits: { min_setpoint: 70, max_setpoint: 110 },
-  });
-  const [isInitialized, setIsInitialized] = useState(false);
-  const season = useSelector((state) => state.chronos.season);
+  const [isEditing, setIsEditing] = useState(false);
+  const season = useSelector((state) => state.season.season);
 
   // Only fetch limits once on mount
   useEffect(() => {
@@ -80,14 +75,50 @@ const UserSettings = ({ data }) => {
     setIsInitialized(true);
   };
 
-  if (!data?.results) {
-    return (
-      <div className="loading-container">
-        <div className="spinner"></div>
-        <p>Loading user settings...</p>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (data?.results?.lockout_info) {
+      const unlockTime = parseISO(data.results.lockout_info.unlock_time);
+      const now = new Date();
+
+      if (unlockTime > now) {
+        setLockoutInfo({
+          lockoutTime: data.results.lockout_info.mode_switch_lockout_time,
+          unlockTime: unlockTime,
+        });
+
+        const currentMode = data.results.mode;
+        setSwitchDirection(currentMode === 0 ? 'toWinter' : 'toSummer');
+      } else {
+        setLockoutInfo(null);
+        setSwitchDirection(null);
+      }
+    }
+  }, [data]);
+
+  useEffect(() => {
+    let timer;
+    if (lockoutInfo?.unlockTime) {
+      timer = setInterval(() => {
+        const now = new Date();
+        const diff = lockoutInfo.unlockTime.getTime() - now.getTime();
+
+        if (diff <= 0) {
+          setLockoutInfo(null);
+          setSwitchDirection(null);
+          setCountdown(null);
+          clearInterval(timer);
+        } else {
+          const minutes = Math.floor(diff / 1000 / 60);
+          const seconds = Math.floor((diff / 1000) % 60);
+          setCountdown(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+        }
+      }, 1000);
+    }
+
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [lockoutInfo]);
 
   
 
@@ -144,12 +175,7 @@ const UserSettings = ({ data }) => {
       toast.success(response?.data?.message);
       setIsEditing(false);
     } catch (error) {
-      console.error('Error response:', error);
-      const errorMessage =
-        error?.data?.detail ||
-        error?.response?.data?.detail ||
-        'Failed to update settings';
-      toast.error(errorMessage);
+      toast.error(error?.response?.data?.message || 'Đã có lỗi xảy ra');
     }
   };
 

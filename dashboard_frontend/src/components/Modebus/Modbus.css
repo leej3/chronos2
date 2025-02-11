@@ -78,6 +78,9 @@
 
 .tab-content {
   flex: 1;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #3699ff #2d2d3f;
   margin-top: 5px;
   padding-bottom: 16px;
 }
@@ -210,32 +213,5 @@
   .nav-grid .nav-link {
     font-size: 11px;
     padding: 8px 4px;
-  }
-}
-@media (max-width: 1140px) {
-  .season-toggle {
-  }
-}
-
-@media (max-width: 768px) {
-  .modbus-card {
-    min-height: auto;
-    max-height: none;
-  }
-
-  .mobile-dropdown {
-    position: sticky;
-    top: 0;
-    z-index: 1;
-    background-color: #1e1e2d;
-    padding: 8px 0;
-  }
-
-  .tab-content {
-    padding-bottom: 24px;
-  }
-
-  .data-item {
-    margin-bottom: 8px;
   }
 }
