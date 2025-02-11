@@ -83,31 +83,6 @@ button {
   margin: auto;
 }
 
-.bgr {
-  background-color: #f8f9fa;
-  border-radius: 12px;
-  overflow-x: auto;
-  white-space: nowrap;
-}
-
-.bgr::-webkit-scrollbar {
-  height: 8px;
-}
-
-.bgr::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-.bgr::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
-}
-
-.bgr::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
-
 .modal-lg .CModalBody {
   display: flex;
   justify-content: center;

@@ -76,10 +76,8 @@
   background-color: transparent;
 }
 
-/* Content styles */
 .tab-content {
   flex: 1;
-  overflow-y: auto;
   margin-top: 5px;
   padding-bottom: 16px;
 }
@@ -212,6 +210,10 @@
   .nav-grid .nav-link {
     font-size: 11px;
     padding: 8px 4px;
+  }
+}
+@media (max-width: 1140px) {
+  .season-toggle {
   }
 }
 

@@ -53,18 +53,24 @@ const AppHeader = () => {
         <CHeaderBrand className="d-flex align-items-center">
           <NavLink
             to="/"
-            className="text-decoration-none text-white"
+            className="text-decoration-none text-white d-flex align-items-center "
             style={{ fontSize: { xs: '1rem', md: '1.25rem' } }}
           >
             Chronus Dashboard
+            <div
+              className={`season-icon ${season === 'Summer' ? 'active' : ''}`}
+            >
+              {season === 'Summer' && <span className="season-emoji">☀️</span>}
+              {season === 'Winter' && <span className="season-emoji">❄️</span>}
+            </div>
           </NavLink>
         </CHeaderBrand>
 
-        <CHeaderNav className="ms-auto d-flex flex-column flex-md-row gap-2">
+        <CHeaderNav className="d-flex flex-column flex-md-row gap-2 pl-md-0">
           <CNavItem className="d-flex align-items-center w-100">
             <CNavLink
               href="#"
-              className="d-flex align-items-center px-3 py-2 w-100"
+              className="d-flex align-items-center w-100 px-0"
               style={{
                 borderRadius: '8px',
                 minWidth: { md: '250px' },
@@ -79,7 +85,7 @@ const AppHeader = () => {
                 }}
               />
               <span
-                className="fw-medium"
+                className="fw-medium "
                 style={{
                   letterSpacing: '0.3px',
                   whiteSpace: 'nowrap',
@@ -94,7 +100,7 @@ const AppHeader = () => {
             <CNavItem className="d-flex align-items-center w-100">
               <CNavLink
                 href="#"
-                className="d-flex align-items-center text-danger px-3 py-2 w-100"
+                className="d-flex align-items-center text-danger  w-100 px-0"
                 style={{
                   background: 'rgba(255, 0, 0, 0.05)',
                   borderRadius: '8px',
@@ -102,7 +108,7 @@ const AppHeader = () => {
               >
                 <CIcon
                   icon={cilFactorySlash}
-                  className="me-2"
+                  className="me-2 p-0"
                   style={{
                     width: '1.25rem',
                     height: '1.25rem',

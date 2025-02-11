@@ -128,7 +128,7 @@ const ManualOverride = ({ data }) => {
   };
 
   return (
-    <CCard className="bgr">
+    <CCard>
       <h2 className="section-title">Manual Override - {season} Mode</h2>
       <CCardBody className="p-0">
         {alertMessage && (

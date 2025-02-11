@@ -78,7 +78,7 @@ const SystemMap = memo(({ homedata, season }) => {
   const renderWinterView = () => (
     <CRow>
       <CCol xs={12}>
-        <CCard className=" bgr p-0">
+        <CCard>
           <CCardBody>
             <h2 className="text-center mb-4"></h2>
             <CRow>
@@ -143,7 +143,7 @@ const SystemMap = memo(({ homedata, season }) => {
   const renderSummerView = () => (
     <CRow>
       <CCol xs={12}>
-        <CCard className=" bgr">
+        <CCard>
           <CCardBody>
             <CRow>
               {[...Array(4)].map((_, index) => (
@@ -151,7 +151,7 @@ const SystemMap = memo(({ homedata, season }) => {
                   key={index}
                   xs={6}
                   md={3}
-                  className="d-flex justify-content-center align-items-center"
+                  className="d-flex justify-content-center align-items-center  p-2"
                 >
                   <img
                     src={

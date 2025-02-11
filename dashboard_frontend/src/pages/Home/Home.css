@@ -1,4 +1,4 @@
-.bgr {
+.card {
   background-color: #1a1a1a;
   border-radius: 16px;
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
@@ -27,10 +27,6 @@
 }
 
 @media (max-width: 480px) {
-  .bgr {
-    padding: 12px;
-  }
-
   .item {
     width: 100%;
     margin: 0 auto;
