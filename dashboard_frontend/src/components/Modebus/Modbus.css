@@ -33,6 +33,10 @@
 .nav-tabs {
   border-bottom: 2px solid #444;
 }
+@media (max-width: 1140px) {
+  .season-toggle {
+  }
+}
 
 @media (max-width: 768px) {
   .modbus-card {

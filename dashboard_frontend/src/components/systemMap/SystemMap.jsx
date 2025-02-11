@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { CRow, CCol, CCard, CCardBody } from '@coreui/react';
+import { CRow, CCol, CCard, CCardBody, CButton } from '@coreui/react';
 import { useSelector } from 'react-redux';
 
 import { formatTemperature } from '../../utils/tranform';
@@ -246,6 +246,6 @@ const SystemMap = ({ homedata, season, boiler }) => {
   );
 
   return <>{season === 0 ? renderWinterView() : renderSummerView()}</>;
-});
+};
 
 export default SystemMap;

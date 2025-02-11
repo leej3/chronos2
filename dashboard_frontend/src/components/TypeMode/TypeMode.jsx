@@ -14,17 +14,12 @@ const TypeMode = ({ homedata }) => {
   const [currentTime, setCurrentTime] = useState('');
 
   const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const [selectedOption, setSelectedOption] = useState('Outdoor Temp');
 
-  useEffect(() => {
-    const updateTime = () => {
-      setCurrentTime(getFormattedChicagoTime());
-    };
-
-    updateTime();
-    const timer = setInterval(updateTime, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
+  const menuItems = [
+    { value: 'Outdoor Temp', label: 'Outdoor Temp' },
+    { value: 'Avg Temp', label: 'Avg Temp (96 hrs)' },
+  ];
 
   useEffect(() => {
     const handleResize = () => {
