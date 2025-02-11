@@ -132,7 +132,7 @@ const Modbus = ({ boiler }) => {
   return (
     <CRow>
       <CCol>
-        <CCard className="bgr modbus-card">
+        <CCard className="modbus-card">
           <CCardBody className="p-0">
             <div className="modbus">
               <CDropdown className="d-md-none mobile-dropdown mb-2">

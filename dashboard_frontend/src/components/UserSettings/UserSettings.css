@@ -60,11 +60,6 @@
   box-sizing: border-box;
 }
 
-.bgr {
-  white-space: normal !important;
-  overflow-x: hidden !important;
-}
-
 @media (max-width: 768px) {
   .user-settings-container {
     padding: 0.5rem;
@@ -77,19 +72,22 @@
 
 .season-toggle {
   display: flex;
-  gap: 2rem;
+  gap: 1rem;
   justify-content: center;
-  padding: 0.5rem;
+  padding: 0.3rem;
   align-items: center;
   position: relative;
+  max-width: 100%;
+  margin: 0 auto;
 }
 
 .season-arrow {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-  min-width: 120px;
+  gap: 0.3rem;
+  min-width: 60px;
+  padding: 0 5px;
 }
 
 .arrow-icon {
@@ -145,6 +143,8 @@
   background: transparent;
   border: none;
   opacity: 0.5;
+  width: 80px;
+  padding: 5px;
 }
 
 .season-icon:hover {
@@ -156,8 +156,8 @@
 }
 
 .season-emoji {
-  font-size: 2.8rem;
-  margin-bottom: 0.5rem;
+  font-size: 2rem;
+  margin-bottom: 0.3rem;
   transition: all 0.3s ease;
 }
 
@@ -190,4 +190,79 @@
   opacity: 0.5 !important;
   cursor: not-allowed;
   filter: grayscale(50%);
+}
+
+@media screen and (max-width: 1024px) {
+  .season-toggle {
+    gap: 0.5rem;
+  }
+
+  .season-icon {
+    width: 70px;
+  }
+
+  .season-emoji {
+    font-size: 1.8rem;
+  }
+
+  .season-icon span:not(.season-emoji) {
+    font-size: 0.8rem;
+  }
+
+  .season-arrow {
+    min-width: 50px;
+  }
+
+  .arrow-icon {
+    font-size: 1rem;
+  }
+
+  .switch-status {
+    font-size: 0.7rem;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .season-toggle {
+    gap: 0.3rem;
+  }
+
+  .season-icon {
+    width: 60px;
+  }
+
+  .season-emoji {
+    font-size: 1.5rem;
+  }
+
+  .season-arrow {
+    min-width: 40px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .season-toggle {
+    gap: 0.2rem;
+  }
+
+  .season-icon {
+    width: 50px;
+  }
+
+  .season-emoji {
+    font-size: 2.1rem;
+  }
+
+  .season-icon span:not(.season-emoji) {
+    font-size: 0.9rem;
+  }
+
+  .season-arrow {
+    min-width: 30px;
+  }
+  label,
+  input,
+  button {
+    font-size: 0.8rem !important;
+  }
 }

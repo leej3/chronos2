@@ -37,7 +37,7 @@ const TableTemplate = ({ homedata }) => {
   return (
     <CRow>
       <CCol>
-        <CCard className=" bgr p-0">
+        <CCard>
           <CCardBody>
             <CRow className="sensor-table">
               <CCol>

@@ -159,7 +159,7 @@ const UserSettings = ({ data }) => {
   return (
     <CRow>
       <CCol>
-        <CCard className="bgr p-0 text-start">
+        <CCard className=" text-start">
           <CCardBody>
             <CRow className="mb-4">
               <CCol className="d-flex justify-content-center">
