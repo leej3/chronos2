@@ -7,6 +7,7 @@ import {
   CCol,
   CCardBody,
   CCard,
+  CTooltip,
 } from '@coreui/react';
 import { toast } from 'react-toastify';
 import { useSelector } from 'react-redux';
@@ -16,6 +17,7 @@ import './UserSettings.css';
 import SeasonSwitch from '../SeasonSwitch/SeasonSwitch';
 
 const UserSettings = ({ data }) => {
+  const dispatch = useDispatch();
   const initialFormData = {
     tolerance: null,
     setpoint_min: null,
@@ -130,7 +132,7 @@ const UserSettings = ({ data }) => {
       toast.success(response?.data?.message);
       setIsEditing(false);
     } catch (error) {
-      toast.error(error?.response?.data?.message || 'Đã có lỗi xảy ra');
+      toast.error(error?.response?.data?.message || 'Something went wrong');
     }
   };
 

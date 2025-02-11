@@ -108,6 +108,18 @@ const SystemMap = ({ homedata, season, boiler }) => {
                 </div>
               </CCol>
             </CRow>
+            <CRow className="d-flex justify-content-end ">
+              <CCol xs="auto" className="px-1 mt-2">
+                <CButton
+                  color="primary"
+                  className="mb-2"
+                  onClick={() => handleButtonClick('manual')}
+                  block="true"
+                >
+                  Manual Override
+                </CButton>
+              </CCol>
+            </CRow>
           </CCardBody>
         </CCard>
       </CCol>

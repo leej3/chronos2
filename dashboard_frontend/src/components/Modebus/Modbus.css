@@ -33,3 +33,26 @@
 .nav-tabs {
   border-bottom: 2px solid #444;
 }
+
+@media (max-width: 768px) {
+  .modbus-card {
+    min-height: auto;
+    max-height: none;
+  }
+
+  .mobile-dropdown {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background-color: #1e1e2d;
+    padding: 8px 0;
+  }
+
+  .tab-content {
+    padding-bottom: 24px;
+  }
+
+  .data-item {
+    margin-bottom: 8px;
+  }
+}

@@ -44,16 +44,15 @@ const AppHeader = () => {
     return '/images/Icons/WinterSummer/WOn.png';
   };
 
-  // Add time update effect
   useEffect(() => {
     const updateTime = () => {
       setCurrentTime(getFormattedChicagoTime());
     };
 
-    updateTime(); // Initial update
-    const timer = setInterval(updateTime, 1000); // Update every second
+    updateTime();
+    const timer = setInterval(updateTime, 1000);
 
-    return () => clearInterval(timer); // Cleanup on unmount
+    return () => clearInterval(timer);
   }, []);
 
   return (
