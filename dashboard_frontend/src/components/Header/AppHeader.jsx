@@ -35,17 +35,6 @@ const AppHeader = () => {
     });
   }, []);
 
-  useEffect(() => {
-    const updateTime = () => {
-      setCurrentTime(getFormattedChicagoTime());
-    };
-
-    updateTime();
-    const timer = setInterval(updateTime, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
   return (
     <CHeader position="sticky" ref={headerRef}>
       <CContainer fluid className="px-2 px-sm-3">

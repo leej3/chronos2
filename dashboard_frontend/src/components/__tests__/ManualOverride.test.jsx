@@ -8,7 +8,7 @@ import configureStore from 'redux-mock-store';
 import { updateDeviceState } from '../../api/updateState';
 import ManualOverride from '../ManualOverride/ManualOverride';
 
-jest.mock('../ManualOverride/ManualOverride.css', () => {});
+jest.mock('../ManualOverride/ManualOverride.css', () => { });
 jest.mock('../../api/updateState');
 jest.mock('../../utils/constant', () => ({
   getDeviceId: jest.fn(() => 1),
@@ -31,6 +31,7 @@ it('should render and toggle device states', async () => {
     },
     chronos: {
       read_only_mode: false,
+      season: 0,
     },
   });
 
@@ -46,7 +47,6 @@ it('should render and toggle device states', async () => {
             { id: 5, state: true },
           ],
         }}
-        season="Summer"
       />
     </Provider>,
   );

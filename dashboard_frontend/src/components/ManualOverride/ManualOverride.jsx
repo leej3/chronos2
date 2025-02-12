@@ -1,13 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import {
-  CCard,
-  CCardBody,
-  CAlert,
-  CFormSwitch,
-  CRow,
-  CCol,
-  CTooltip,
-} from '@coreui/react';
+import { CAlert, CFormSwitch, CRow, CCol, CTooltip } from '@coreui/react';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateDeviceState } from '../../api/updateState';
 import {
@@ -44,11 +36,11 @@ const ManualOverride = ({ data }) => {
   }, [data]);
 
   const isDeviceDisabled = (device) => {
-    if (season === 'Winter') {
-      return device.startsWith('chiller');
-    }
-    if (season === 'Summer') {
+    if (season === 1) {
       return device === 'boiler';
+    }
+    if (season === 0) {
+      return device.startsWith('chiller');
     }
     return false;
   };
@@ -128,9 +120,11 @@ const ManualOverride = ({ data }) => {
   };
 
   return (
-    <CCard>
-      <h2 className="section-title">Manual Override - {season} Mode</h2>
-      <CCardBody className="p-0">
+    <div className="manual-override">
+      <h2 className="section-title px-3 py-2 m-0">
+        Manual Override - {season === 1 ? 'Summer' : 'Winter'} Mode
+      </h2>
+      <div className="p-3">
         {alertMessage && (
           <CAlert
             color={alertColor}
@@ -158,8 +152,8 @@ const ManualOverride = ({ data }) => {
             )
             .map(renderDeviceControl)}
         </CRow>
-      </CCardBody>
-    </CCard>
+      </div>
+    </div>
   );
 };
 

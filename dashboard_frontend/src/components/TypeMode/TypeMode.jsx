@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { CCardBody, CRow, CCol, CBadge, CCard } from '@coreui/react';
 import { FaThermometerHalf } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
+import { getFormattedChicagoTime } from '../../utils/dateUtils';
 import './TypeMode.css';
 
 const TypeMode = ({ homedata }) => {
@@ -10,9 +11,20 @@ const TypeMode = ({ homedata }) => {
 
   const outdoorTemp = homedata?.results?.outside_temp || 'N/A';
   const avgTemp = homedata?.efficiency?.average_temperature_difference || 'N/A';
-  const systemStatus = homedata?.status ? 'ONLINE' : 'OFFLINE';
+  const [currentTime, setCurrentTime] = useState('');
 
   const [isSmallScreen, setIsSmallScreen] = useState(false);
+
+  useEffect(() => {
+    const updateTime = () => {
+      setCurrentTime(getFormattedChicagoTime());
+    };
+
+    updateTime();
+    const timer = setInterval(updateTime, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -31,12 +43,10 @@ const TypeMode = ({ homedata }) => {
         <CCard>
           <CCardBody>
             <div className="d-flex flex-column align-items-center">
-              <h2 className="sensor-title text-center mb-2">
+              <h2 className="chronous-title text-center mb-2">
                 {season === 'Winter' ? 'Winter Mode' : 'Summer Mode'}
               </h2>
-              <CBadge color={systemStatus === 'ONLINE' ? 'success' : 'danger'}>
-                {systemStatus}
-              </CBadge>
+              <div className="current-time">{currentTime}</div>
             </div>
 
             <CCardBody className="mt-3">
