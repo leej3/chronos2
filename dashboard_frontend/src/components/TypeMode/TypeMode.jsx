@@ -22,6 +22,17 @@ const TypeMode = ({ homedata }) => {
   ];
 
   useEffect(() => {
+    const updateTime = () => {
+      setCurrentTime(getFormattedChicagoTime());
+    };
+
+    updateTime();
+    const timer = setInterval(updateTime, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
     const handleResize = () => {
       setIsSmallScreen(window.innerWidth <= 768);
     };
