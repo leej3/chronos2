@@ -170,25 +170,6 @@
 }
 
 @media screen and (max-width: 480px) {
-  .season-toggle {
-    gap: 0.2rem;
-  }
-
-  .season-icon {
-    width: 50px;
-  }
-
-  .season-emoji {
-    font-size: 2.1rem;
-  }
-
-  .season-icon span:not(.season-emoji) {
-    font-size: 0.9rem;
-  }
-
-  .season-arrow {
-    min-width: 30px;
-  }
   label,
   input,
   button {

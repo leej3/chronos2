@@ -7,7 +7,6 @@ import {
   CCol,
   CCardBody,
   CCard,
-  CTooltip,
 } from '@coreui/react';
 import { toast } from 'react-toastify';
 import { useSelector } from 'react-redux';
@@ -17,7 +16,6 @@ import './UserSettings.css';
 import SeasonSwitch from '../SeasonSwitch/SeasonSwitch';
 
 const UserSettings = ({ data }) => {
-  const dispatch = useDispatch();
   const initialFormData = {
     tolerance: null,
     setpoint_min: null,
