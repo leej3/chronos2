@@ -53,7 +53,7 @@ describe('AppHeader Component', () => {
     renderAppHeader(state);
 
     expect(screen.getByText('Chronus Dashboard')).toBeInTheDocument();
-    expect(screen.getByText('SYSTEM -')).toBeInTheDocument();
+    expect(screen.getByText('SYSTEM')).toBeInTheDocument();
     expect(screen.getByText('ONLINE')).toBeInTheDocument();
   });
 

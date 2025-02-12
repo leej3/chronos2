@@ -88,42 +88,52 @@ const SeasonSwitch = () => {
           content={
             lockoutInfo
               ? `Locked - ${countdown} remaining`
-              : season === 'Winter'
+              : season === 0
               ? 'Currently in Winter mode'
-              : 'Click to switch to Winter mode'
+              : 'Switch to Winter mode'
           }
           placement="bottom"
         >
           <div
-            className={`season-icon ${season === 'Winter' ? 'active' : ''} ${
+            className={`season-icon ${season === 0 ? 'active disabled' : ''} ${
               lockoutInfo ? 'locked' : ''
             }`}
-            onClick={() => !lockoutInfo && handleSeasonChange('Winter')}
+            onClick={() =>
+              !lockoutInfo && season !== 0 && handleSeasonChange('Winter')
+            }
           >
             <span className="season-emoji">❄️</span>
             <span>Winter</span>
           </div>
         </CTooltip>
 
-        <BsArrowRight
-          className={`arrow-icon ${switchDirection ? 'switching' : ''}`}
-        />
+        {season === 0 ? (
+          <BsArrowRight
+            className={`arrow-icon ${switchDirection ? 'switching' : ''}`}
+          />
+        ) : (
+          <BsArrowLeft
+            className={`arrow-icon ${switchDirection ? 'switching' : ''}`}
+          />
+        )}
 
         <CTooltip
           content={
             lockoutInfo
               ? `Locked - ${countdown} remaining`
-              : season === 'Summer'
+              : season === 1
               ? 'Currently in Summer mode'
-              : 'Click to switch to Summer mode'
+              : 'Switch to Summer mode'
           }
           placement="bottom"
         >
           <div
-            className={`season-icon ${season === 'Summer' ? 'active' : ''} ${
+            className={`season-icon ${season === 1 ? 'active disabled' : ''} ${
               lockoutInfo ? 'locked' : ''
             }`}
-            onClick={() => !lockoutInfo && handleSeasonChange('Summer')}
+            onClick={() =>
+              !lockoutInfo && season !== 1 && handleSeasonChange('Summer')
+            }
           >
             <span className="season-emoji">☀️</span>
             <span>Summer</span>

@@ -76,7 +76,7 @@ const SystemMap = memo(({ homedata, season }) => {
               <CCol xs="auto" className="px-1 mt-2">
                 <CButton
                   color="primary"
-                  className="mb-2"
+                  className="mb-2 mt-2"
                   onClick={openModal}
                   block="true"
                 >
@@ -95,7 +95,7 @@ const SystemMap = memo(({ homedata, season }) => {
       <CCol xs={12}>
         <CCard>
           <CCardBody className="p-0">
-            <CRow className="mb-2">
+            <CRow className="mb-2 mt-2">
               <CCol className="d-flex justify-content-center">
                 <img
                   src="/images/Icons/Boiler/arrow4.png"

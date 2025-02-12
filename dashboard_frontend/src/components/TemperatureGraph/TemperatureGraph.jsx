@@ -22,6 +22,7 @@ const TemperatureGraph = () => {
   const [chartHeight, setChartHeight] = useState(600);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [dataInterval, setDataInterval] = useState(1);
 
   const findYAxisDomain = (data) => {
     if (!data || data.length === 0) return ['auto', 'auto'];
@@ -88,11 +89,17 @@ const TemperatureGraph = () => {
 
     const handleResize = () => {
       if (window.innerWidth < 768) {
-        setInterval(16);
-        setChartHeight(400);
+        setInterval(8);
+        setChartHeight(350);
+        setDataInterval(4);
+      } else if (window.innerWidth < 1024) {
+        setInterval(8);
+        setChartHeight(450);
+        setDataInterval(1);
       } else {
         setInterval(8);
         setChartHeight(600);
+        setDataInterval(1);
       }
     };
 
@@ -160,10 +167,23 @@ const TemperatureGraph = () => {
     link.click();
   };
 
+  const getResponsiveFontSize = () => {
+    return window.innerWidth < 768 ? 10 : 12;
+  };
+
+  const getFilteredData = (data) => {
+    if (window.innerWidth < 768) {
+      return data.filter((_, index) => index % dataInterval === 0);
+    }
+    return data;
+  };
+
   return (
     <div className="graph-container">
       <div className="graphbody">
-        <h3>Inlet/Outlet Temperature History</h3>
+        <h3 style={{ fontSize: window.innerWidth < 768 ? '1.2rem' : '1.5rem' }}>
+          Inlet/Outlet Temperature History
+        </h3>
         {isLoading && (
           <div className="loading-state">
             <div className="spinner"></div>
@@ -179,55 +199,88 @@ const TemperatureGraph = () => {
           {!isLoading && !error && data.length > 0 && (
             <>
               <ResponsiveContainer width="100%" height={chartHeight}>
-                <LineChart data={data}>
+                <LineChart
+                  data={getFilteredData(data)}
+                  margin={{
+                    top: 20,
+                    right: 20,
+                    left: window.innerWidth < 768 ? 10 : 20,
+                    bottom: 30,
+                  }}
+                >
                   <CartesianGrid stroke="#4c5c77" strokeDasharray="3 3" />
                   <XAxis
                     dataKey="date"
                     stroke="#dddddd"
-                    tick={{ fill: '#dddddd', fontSize: 12, fontWeight: 'bold' }}
+                    tick={{
+                      fill: '#dddddd',
+                      fontSize: getResponsiveFontSize(),
+                      fontWeight: 'bold',
+                    }}
                     tickFormatter={(tick) => {
                       const [, time] = tick.split(', ');
                       return time;
                     }}
-                    angle={0}
-                    textAnchor="left"
-                    height={60}
+                    angle={window.innerWidth < 768 ? -45 : 0}
+                    textAnchor={window.innerWidth < 768 ? 'end' : 'middle'}
+                    height={window.innerWidth < 768 ? 60 : 50}
                     interval={interval}
+                    padding={{ left: 10, right: 10 }}
                   />
                   <YAxis
                     stroke="#dddddd"
-                    tick={{ fill: '#dddddd', fontSize: 12, fontWeight: 'bold' }}
+                    tick={{
+                      fill: '#dddddd',
+                      fontSize: getResponsiveFontSize(),
+                      fontWeight: 'bold',
+                    }}
                     tickFormatter={(tick) => parseFloat(tick.toFixed(1))}
                     domain={findYAxisDomain(data)}
-                    padding={{ top: 30, bottom: 30 }}
+                    padding={{ top: 20, bottom: 20 }}
+                    width={45}
                   >
                     <Label
                       value="Temperature (°F)"
                       angle={-90}
                       position="insideLeft"
                       fill="#dddddd"
-                      style={{ textAnchor: 'middle', fontSize: 18 }}
+                      style={{
+                        textAnchor: 'middle',
+                        fontSize: window.innerWidth < 768 ? 14 : 16,
+                        dy: -20,
+                      }}
                     />
                   </YAxis>
                   <Tooltip content={<CustomTooltip />} />
                   <Legend
                     verticalAlign="top"
                     align="right"
-                    wrapperStyle={{ fill: '#dddddd' }}
+                    wrapperStyle={{
+                      fontSize: getResponsiveFontSize(),
+                      fill: '#dddddd',
+                    }}
                   />
                   <Line
                     type="monotone"
                     dataKey="inlet"
                     stroke="#ffca28"
                     strokeWidth={2}
-                    dot={{ r: 3 }}
+                    dot={{
+                      r: window.innerWidth < 768 ? 2.5 : 3.5,
+                      strokeWidth: 1,
+                    }}
+                    activeDot={{ r: 6 }}
                   />
                   <Line
                     type="monotone"
                     dataKey="outlet"
                     stroke="#ff7043"
                     strokeWidth={2}
-                    dot={{ r: 3 }}
+                    dot={{
+                      r: window.innerWidth < 768 ? 2.5 : 3.5,
+                      strokeWidth: 1,
+                    }}
+                    activeDot={{ r: 6 }}
                   />
                 </LineChart>
               </ResponsiveContainer>

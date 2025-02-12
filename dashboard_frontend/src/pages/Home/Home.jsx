@@ -8,7 +8,6 @@ import {
   CCard,
   CCardBody,
   CSpinner,
-  CCardHeader,
 } from '@coreui/react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
@@ -111,6 +110,16 @@ const Home = () => {
       )}
 
       <CContainer fluid>
+        <CRow className="d-block d-lg-none mt-4">
+          <CCol lg={12}>
+            <CCard>
+              <CCardBody className="p-0">
+                <TemperatureGraph />
+              </CCardBody>
+            </CCard>
+          </CCol>
+        </CRow>
+
         <CRow className="mt-4 g-3">
           <CCol lg={3}>
             <TypeMode homedata={data} />
@@ -154,7 +163,7 @@ const Home = () => {
           </CCol>
         </CRow>
 
-        <CRow>
+        <CRow className="d-none d-lg-block">
           <CCol lg={12}>
             <CCard className="mt-3">
               <CCardBody className="p-0">
