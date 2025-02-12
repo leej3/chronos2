@@ -45,7 +45,7 @@ describe('AppHeader Component', () => {
   it('should render header with basic elements', () => {
     const state = {
       chronos: {
-        mockDevices: false,
+        mock_devices: false,
         systemStatus: 'ONLINE',
       },
     };
@@ -62,7 +62,7 @@ describe('AppHeader Component', () => {
   it('should show system status as OFFLINE with red indicator', () => {
     const state = {
       chronos: {
-        mockDevices: false,
+        mock_devices: false,
         systemStatus: 'OFFLINE',
       },
     };
@@ -79,7 +79,7 @@ describe('AppHeader Component', () => {
   it('should show system status as ONLINE with green indicator', () => {
     const state = {
       chronos: {
-        mockDevices: false,
+        mock_devices: false,
         systemStatus: 'ONLINE',
       },
     };
@@ -93,10 +93,10 @@ describe('AppHeader Component', () => {
     expect(statusIndicator).toHaveStyle({ backgroundColor: '#198754' });
   });
 
-  it('should show Mock Devices Mode when mockDevices is true', () => {
+  it('should show Mock Devices Mode when mock_devices is true', () => {
     const state = {
       chronos: {
-        mockDevices: true,
+        mock_devices: true,
         systemStatus: 'ONLINE',
       },
     };
@@ -108,10 +108,10 @@ describe('AppHeader Component', () => {
     expect(mockDeviceElements[0]).toBeInTheDocument();
   });
 
-  it('should not show Mock Devices Mode when mockDevices is false', () => {
+  it('should not show Mock Devices Mode when mock_devices is false', () => {
     const state = {
       chronos: {
-        mockDevices: false,
+        mock_devices: false,
         systemStatus: 'ONLINE',
       },
     };

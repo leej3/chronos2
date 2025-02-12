@@ -7,7 +7,6 @@ import {
   CCol,
   CCardBody,
   CCard,
-  CTooltip,
 } from '@coreui/react';
 import { toast } from 'react-toastify';
 

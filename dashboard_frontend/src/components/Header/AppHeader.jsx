@@ -29,7 +29,6 @@ const AppHeader = () => {
   const mockDevices = useSelector((state) => state.chronos.mock_devices);
   const readOnlyMode = useSelector((state) => state.chronos.read_only_mode);
 
-  // Add shadow effect on scroll
   useEffect(() => {
     document.addEventListener('scroll', () => {
       headerRef.current?.classList.toggle(
