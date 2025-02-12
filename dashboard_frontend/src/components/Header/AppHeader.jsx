@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { getFormattedChicagoTime } from '../../utils/dateUtils';
-
 import { cilFactorySlash, cilClock } from '@coreui/icons';
 import CIcon from '@coreui/icons-react';
 import {
@@ -13,6 +12,7 @@ import {
   CHeaderBrand,
 } from '@coreui/react';
 import { useSelector } from 'react-redux';
+import SeasonSwitch from '../SeasonSwitch/SeasonSwitch';
 
 const AppHeader = () => {
   const headerRef = useRef();
@@ -21,17 +21,15 @@ const AppHeader = () => {
   //   'coreui-free-react-admin-template-theme'
   // );
 
-  // Get mockDevices state from Redux store
-  const mockDevices = useSelector((state) => state.chronos.mock_devices);
+  const mockDevices = useSelector((state) => state.season.mockDevices);
+  const systemStatus = useSelector((state) => state.season.systemStatus);
 
-  // Add shadow effect on scroll
   useEffect(() => {
     document.addEventListener('scroll', () => {
-      headerRef.current &&
-        headerRef.current.classList.toggle(
-          'shadow-sm',
-          document.documentElement.scrollTop > 0,
-        );
+      headerRef.current?.classList.toggle(
+        'shadow-sm',
+        document.documentElement.scrollTop > 0,
+      );
     });
   }, []);
 
@@ -48,78 +46,80 @@ const AppHeader = () => {
 
   return (
     <CHeader position="sticky" ref={headerRef}>
-      <CContainer fluid className="px-4">
-        <CHeaderBrand className="d-flex align-items-center">
-          <NavLink
-            to="/"
-            className="text-decoration-none text-white d-flex align-items-center "
-            style={{ fontSize: { xs: '1rem', md: '1.25rem' } }}
-          >
-            Chronus Dashboard
-            <div
-              className={`season-icon ${season === 'Summer' ? 'active' : ''}`}
-            >
-              {season === 'Summer' && <span className="season-emoji">☀️</span>}
-              {season === 'Winter' && <span className="season-emoji">❄️</span>}
+      <CContainer fluid className="px-2 px-sm-3">
+        <div className="d-flex flex-wrap align-items-center justify-content-between w-100 gap-1 gap-sm-2">
+          <CHeaderBrand className="me-0">
+            <div className="d-flex flex-column">
+              <NavLink
+                to="/"
+                className="text-decoration-none text-white mb-0"
+                style={{ fontSize: '1.1rem' }}
+              >
+                Chronus Dashboard
+              </NavLink>
+              <div
+                className="d-flex align-items-center mt-0 mt-sm-1"
+                style={{ fontSize: '0.8rem' }}
+              >
+                <span className="text-white-50 me-1 me-sm-2">SYSTEM - </span>
+                <span
+                  className={`${
+                    systemStatus === 'ONLINE' ? 'text-success' : 'text-danger'
+                  } d-flex align-items-center`}
+                >
+                  <span
+                    className="d-inline-block rounded-circle me-1"
+                    style={{
+                      width: '6px',
+                      height: '6px',
+                      backgroundColor:
+                        systemStatus === 'ONLINE' ? '#198754' : '#dc3545',
+                    }}
+                  />
+                  {systemStatus}
+                </span>
+              </div>
             </div>
-          </NavLink>
-        </CHeaderBrand>
+          </CHeaderBrand>
 
-        <CHeaderNav className="d-flex flex-column flex-md-row gap-2 pl-md-0">
-          <CNavItem className="d-flex align-items-center w-100">
-            <CNavLink
-              href="#"
-              className="d-flex align-items-center w-100 px-0"
-              style={{
-                borderRadius: '8px',
-                minWidth: { md: '250px' },
-              }}
-            >
-              <CIcon
-                icon={cilClock}
-                className="me-2"
-                style={{
-                  width: '1.25rem',
-                  height: '1.25rem',
-                }}
-              />
-              <span
-                className="fw-medium "
-                style={{
-                  letterSpacing: '0.3px',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {currentTime}
-              </span>
-            </CNavLink>
-          </CNavItem>
-
-          {mockDevices && (
-            <CNavItem className="d-flex align-items-center w-100">
-              <CNavLink
-                href="#"
-                className="d-flex align-items-center text-danger  w-100 px-0"
-                style={{
-                  background: 'rgba(255, 0, 0, 0.05)',
-                  borderRadius: '8px',
-                }}
-              >
+          <CHeaderNav className="d-flex flex-wrap align-items-center gap-2 gap-sm-3">
+            <CNavItem>
+              <CNavLink href="#" className="d-flex align-items-center p-0">
                 <CIcon
-                  icon={cilFactorySlash}
-                  className="me-2 p-0"
-                  style={{
-                    width: '1.25rem',
-                    height: '1.25rem',
-                  }}
+                  icon={cilClock}
+                  className="me-1 me-sm-2"
+                  style={{ width: '0.9rem' }}
                 />
-                <span className="fw-medium" style={{ whiteSpace: 'nowrap' }}>
-                  Mock Devices Mode
+                <span className="text-nowrap" style={{ fontSize: '0.9rem' }}>
+                  {currentTime}
                 </span>
               </CNavLink>
             </CNavItem>
-          )}
-        </CHeaderNav>
+
+            {mockDevices && (
+              <CNavItem>
+                <CNavLink
+                  href="#"
+                  className="d-flex align-items-center text-danger p-0"
+                >
+                  <CIcon
+                    icon={cilFactorySlash}
+                    className="me-1 me-sm-2"
+                    style={{ width: '0.9rem' }}
+                  />
+                  <span className="text-nowrap" style={{ fontSize: '0.9rem' }}>
+                    Mock Devices Mode
+                  </span>
+                </CNavLink>
+              </CNavItem>
+            )}
+            <CNavItem>
+              <CNavLink href="#" className="d-flex align-items-center p-0">
+                <SeasonSwitch />
+              </CNavLink>
+            </CNavItem>
+          </CHeaderNav>
+        </div>
       </CContainer>
     </CHeader>
   );

@@ -2,7 +2,8 @@ import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
   season: 'Summer',
-  timer: false,
+  mockDevices: false,
+  systemStatus: 'OFFLINE',
 };
 
 // Create the slice
@@ -12,16 +13,19 @@ const seasonSlice = createSlice({
   reducers: {
     setSeason: (state, action) => {
       state.season = action.payload;
-      state.timer = true;
     },
     setMockDevices: (state, action) => {
       state.mockDevices = action.payload;
+    },
+    setSystemStatus: (state, action) => {
+      state.systemStatus = action.payload;
     },
   },
 });
 
 // Export the action creator
-export const { setSeason, setMockDevices } = seasonSlice.actions;
+export const { setSeason, setMockDevices, setSystemStatus } =
+  seasonSlice.actions;
 
 // Export the reducer
 export default seasonSlice.reducer;

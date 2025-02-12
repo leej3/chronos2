@@ -1,7 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { format, parseISO } from 'date-fns';
-import { BsArrowRight, BsArrowLeft } from 'react-icons/bs';
-
 import {
   CForm,
   CFormInput,
@@ -10,19 +7,12 @@ import {
   CCol,
   CCardBody,
   CCard,
-  CTooltip,
 } from '@coreui/react';
-import { useSelector, useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
-
 import { updateSettings } from '../../api/updateSetting';
-import { setSeason } from '../../features/state/seasonSlice';
-import { switchSeason } from '../../api/switchSeason';
-
 import './UserSettings.css';
 
 const UserSettings = ({ data }) => {
-  const dispatch = useDispatch();
   const initialFormData = {
     tolerance: null,
     setpoint_min: null,
@@ -37,11 +27,7 @@ const UserSettings = ({ data }) => {
   const [formData, setFormData] = useState(initialFormData);
   const [showForm, setShowForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const season = useSelector((state) => state.season.season);
-  const [lockoutInfo, setLockoutInfo] = useState(null);
-  const [countdown, setCountdown] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [switchDirection, setSwitchDirection] = useState(null);
 
   useEffect(() => {
     if (data?.results && !isEditing) {
@@ -58,51 +44,6 @@ const UserSettings = ({ data }) => {
       setIsLoading(false);
     }
   }, [data, isEditing]);
-
-  useEffect(() => {
-    if (data?.results?.lockout_info) {
-      const unlockTime = parseISO(data.results.lockout_info.unlock_time);
-      const now = new Date();
-
-      if (unlockTime > now) {
-        setLockoutInfo({
-          lockoutTime: data.results.lockout_info.mode_switch_lockout_time,
-          unlockTime: unlockTime,
-        });
-
-        const currentMode = data.results.mode;
-        setSwitchDirection(currentMode === 0 ? 'toWinter' : 'toSummer');
-      } else {
-        setLockoutInfo(null);
-        setSwitchDirection(null);
-      }
-    }
-  }, [data]);
-
-  useEffect(() => {
-    let timer;
-    if (lockoutInfo?.unlockTime) {
-      timer = setInterval(() => {
-        const now = new Date();
-        const diff = lockoutInfo.unlockTime.getTime() - now.getTime();
-
-        if (diff <= 0) {
-          setLockoutInfo(null);
-          setSwitchDirection(null);
-          setCountdown(null);
-          clearInterval(timer);
-        } else {
-          const minutes = Math.floor(diff / 1000 / 60);
-          const seconds = Math.floor((diff / 1000) % 60);
-          setCountdown(`${minutes}:${seconds.toString().padStart(2, '0')}`);
-        }
-      }, 1000);
-    }
-
-    return () => {
-      if (timer) clearInterval(timer);
-    };
-  }, [lockoutInfo]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -124,29 +65,6 @@ const UserSettings = ({ data }) => {
     }
   };
 
-  const handleSeasonChange = async (newSeason) => {
-    try {
-      const seasonValue = newSeason === 'Winter' ? 0 : 1;
-      setSwitchDirection(newSeason === 'Winter' ? 'toWinter' : 'toSummer');
-
-      const response = await switchSeason(seasonValue);
-
-      if (response?.data?.status === 'success') {
-        dispatch(setSeason(newSeason));
-        toast.success(response.data.message);
-
-        const unlockTime = parseISO(response.data.unlock_time);
-        setLockoutInfo({
-          lockoutTime: response.data.mode_switch_lockout_time,
-          unlockTime: unlockTime,
-        });
-      }
-    } catch (error) {
-      setSwitchDirection(null);
-      toast.error(error?.response?.data?.message || 'Failed to switch season');
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="loading-container">
@@ -159,100 +77,8 @@ const UserSettings = ({ data }) => {
   return (
     <CRow>
       <CCol>
-        <CCard className=" text-start">
+        <CCard className="text-start">
           <CCardBody>
-            <CRow className="mb-4">
-              <CCol className="d-flex justify-content-center">
-                <div className="season-toggle w-100 justify-content-evenly">
-                  <CTooltip
-                    content={
-                      lockoutInfo
-                        ? `Locked - ${countdown} remaining`
-                        : season === 'Winter'
-                        ? 'Currently in Winter mode'
-                        : 'Click to switch to Winter mode'
-                    }
-                    placement="top"
-                  >
-                    <div
-                      className={`season-icon ${
-                        season === 'Winter' ? 'active' : ''
-                      } ${lockoutInfo ? 'locked' : ''}`}
-                      onClick={() =>
-                        !lockoutInfo && handleSeasonChange('Winter')
-                      }
-                    >
-                      <span className="season-emoji">❄️</span>
-                      <span>Winter</span>
-                      {lockoutInfo && (
-                        <div className="lockout-overlay">
-                          <span className="lock-icon">🔒</span>
-                          <span className="countdown">{countdown}</span>
-                        </div>
-                      )}
-                    </div>
-                  </CTooltip>
-
-                  <div className="season-arrow">
-                    {switchDirection ? (
-                      <>
-                        {switchDirection === 'toWinter' ? (
-                          <BsArrowLeft
-                            className={`arrow-icon switching`}
-                            size={24}
-                          />
-                        ) : (
-                          <BsArrowRight
-                            className={`arrow-icon switching`}
-                            size={24}
-                          />
-                        )}
-                        <div className="switch-status">
-                          <span>
-                            Switching to{' '}
-                            {switchDirection === 'toWinter'
-                              ? 'Winter'
-                              : 'Summer'}
-                          </span>
-                          <span className="countdown">{countdown}</span>
-                        </div>
-                      </>
-                    ) : (
-                      <BsArrowRight className="arrow-icon" size={24} />
-                    )}
-                  </div>
-
-                  <CTooltip
-                    content={
-                      lockoutInfo
-                        ? `Locked - ${countdown} remaining`
-                        : season === 'Summer'
-                        ? 'Currently in Summer mode'
-                        : 'Click to switch to Summer mode'
-                    }
-                    placement="top"
-                  >
-                    <div
-                      className={`season-icon ${
-                        season === 'Summer' ? 'active' : ''
-                      } ${lockoutInfo ? 'locked' : ''}`}
-                      onClick={() =>
-                        !lockoutInfo && handleSeasonChange('Summer')
-                      }
-                    >
-                      <span className="season-emoji">☀️</span>
-                      <span>Summer</span>
-                      {lockoutInfo && (
-                        <div className="lockout-overlay">
-                          <span className="lock-icon">🔒</span>
-                          <span className="countdown">{countdown}</span>
-                        </div>
-                      )}
-                    </div>
-                  </CTooltip>
-                </div>
-              </CCol>
-            </CRow>
             <CForm onSubmit={handleSubmit}>
               <CRow>
                 <CRow className="position-relative mb-2">
@@ -301,11 +127,11 @@ const UserSettings = ({ data }) => {
                       { label: 'Tolerance', key: 'tolerance' },
                       { label: 'Min. Setpoint', key: 'setpoint_min' },
                       { label: 'Max. Setpoint', key: 'setpoint_max' },
-                      season === 'Summer' && {
+                      {
                         label: 'Setpoint Offset (Summer)',
                         key: 'setpoint_offset_summer',
                       },
-                      season === 'Winter' && {
+                      {
                         label: 'Setpoint Offset (Winter)',
                         key: 'setpoint_offset_winter',
                       },
@@ -323,34 +149,32 @@ const UserSettings = ({ data }) => {
                         key: 'cascade_time',
                         unit: 'min.',
                       },
-                    ]
-                      .filter(Boolean)
-                      .map(({ label, key, unit = '' }) => (
-                        <CCol xs="12" key={key}>
-                          <div style={{ marginBottom: '10px' }}>
-                            <label
-                              htmlFor={key}
-                              style={{
-                                fontWeight: 'bold',
-                                display: 'block',
-                                marginBottom: '5px',
-                              }}
-                            >
-                              {label}:
-                            </label>
-                            <CFormInput
-                              type="number"
-                              name={key}
-                              id={key}
-                              value={formData[key] ?? ''}
-                              onChange={handleInputChange}
-                              placeholder={`${
-                                data.results[key] ?? '0.0'
-                              } ${unit}`}
-                            />
-                          </div>
-                        </CCol>
-                      ))}
+                    ].map(({ label, key, unit = '' }) => (
+                      <CCol xs="12" key={key}>
+                        <div style={{ marginBottom: '10px' }}>
+                          <label
+                            htmlFor={key}
+                            style={{
+                              fontWeight: 'bold',
+                              display: 'block',
+                              marginBottom: '5px',
+                            }}
+                          >
+                            {label}:
+                          </label>
+                          <CFormInput
+                            type="number"
+                            name={key}
+                            id={key}
+                            value={formData[key] ?? ''}
+                            onChange={handleInputChange}
+                            placeholder={`${
+                              data.results[key] ?? '0.0'
+                            } ${unit}`}
+                          />
+                        </div>
+                      </CCol>
+                    ))}
                     <CCol xs="12" className="text-end">
                       <CButton
                         type="submit"
