@@ -1,5 +1,4 @@
-import React, { useState, useEffect, memo } from 'react';
-
+import React, { useState, memo } from 'react';
 import {
   CButton,
   CModal,
@@ -9,71 +8,22 @@ import {
   CCol,
   CCard,
   CCardBody,
-  CContainer,
   CModalHeader,
   CModalTitle,
 } from '@coreui/react';
 import { useSelector } from 'react-redux';
 
 import { formatTemperature } from '../../utils/tranform';
-import Modbus from '../Modebus/Modbus';
-import TableTemplate from '../Sensor/TableTemplate';
-import TypeMode from '../TypeMode/TypeMode';
-import UserSetting from '../UserSettings/UserSettings';
-
-import './SystemMap.css';
 import ManualOverride from '../ManualOverride/ManualOverride';
-
-const MODAL_CONTENTS = {
-  advanced: {
-    title: 'Advanced Boiler',
-    component: ({ boiler }) => <Modbus boiler={boiler} />,
-  },
-  sensors: {
-    title: 'Sensors',
-    component: ({ homedata }) => <TableTemplate homedata={homedata} />,
-  },
-  mode: {
-    title: 'Type Mode Settings',
-    component: ({ homedata }) => <TypeMode homedata={homedata} />,
-  },
-  usersetting: {
-    title: 'User Settings',
-    component: ({ data }) => <UserSetting data={data} />,
-  },
-};
-
-const BUTTONS = ['Advanced', 'Sensors', 'Mode', 'User Setting'];
+import './SystemMap.css';
 
 const SystemMap = memo(({ homedata, season }) => {
-  const { results, sensors, boiler } = homedata || {};
+  const { sensors } = homedata || {};
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalContent, setModalContent] = useState(null);
-
   const manualOverride = useSelector((state) => state.manualOverride);
-  const handleButtonClick = (contentType) => {
-    setModalContent(contentType);
-    setIsModalOpen(true);
-  };
-  const closeModal = () => setIsModalOpen(false);
 
-  const renderButtons = () => (
-    <CRow className="d-flex justify-content-center mb-4 w-100">
-      {BUTTONS.map((btn, idx) => (
-        <CCol xs="auto" key={idx} className="px-1">
-          <CButton
-            color="primary"
-            onClick={() =>
-              handleButtonClick(btn.toLowerCase().replace(' ', ''))
-            }
-            block="true"
-          >
-            {btn}
-          </CButton>
-        </CCol>
-      ))}
-    </CRow>
-  );
+  const closeModal = () => setIsModalOpen(false);
+  const openModal = () => setIsModalOpen(true);
 
   const renderWinterView = () => (
     <CRow>
@@ -109,7 +59,7 @@ const SystemMap = memo(({ homedata, season }) => {
                     className="mb-2 responsive-arrow"
                   />
                   <span className="h4 text-center">
-                    {formatTemperature(sensors?.water_out_temp)}
+                    Water Out: {formatTemperature(sensors?.water_out_temp)}
                   </span>
                   <img
                     src="/images/Icons/Boiler/arrow3.png"
@@ -117,17 +67,17 @@ const SystemMap = memo(({ homedata, season }) => {
                     className="mb-2 responsive-arrow"
                   />
                   <span className="h4 text-center">
-                    {formatTemperature(sensors?.return_temp)}
+                    Return: {formatTemperature(sensors?.return_temp)}
                   </span>
                 </div>
               </CCol>
             </CRow>
-            <CRow className="d-flex justify-content-end ">
+            <CRow className="d-flex justify-content-end d-lg-none">
               <CCol xs="auto" className="px-1 mt-2">
                 <CButton
                   color="primary"
                   className="mb-2"
-                  onClick={() => handleButtonClick('manual')}
+                  onClick={openModal}
                   block="true"
                 >
                   Manual Override
@@ -144,45 +94,102 @@ const SystemMap = memo(({ homedata, season }) => {
     <CRow>
       <CCol xs={12}>
         <CCard>
-          <CCardBody>
+          <CCardBody className="p-0">
+            <CRow className="mb-2">
+              <CCol className="d-flex justify-content-center">
+                <img
+                  src="/images/Icons/Boiler/arrow4.png"
+                  alt="Arrow Down"
+                  className="responsive-arrow"
+                />
+              </CCol>
+            </CRow>
+
+            <CRow className="g-0 mb-2">
+              <CCol xs={12}>
+                <CRow className="g-0">
+                  <CCol xs={6} className="d-flex justify-content-end pe-4">
+                    <img
+                      src={
+                        manualOverride[`chiller1`]
+                          ? 'images/Icons/Boiler/Chiller-ON.png'
+                          : 'images/Icons/Boiler/Chiller-OFF.png'
+                      }
+                      alt="Chiller 1"
+                      className="responsive-image"
+                    />
+                  </CCol>
+                  <CCol xs={6} className="d-flex justify-content-start ps-4">
+                    <img
+                      src={
+                        manualOverride[`chiller2`]
+                          ? 'images/Icons/Boiler/Chiller-ON.png'
+                          : 'images/Icons/Boiler/Chiller-OFF.png'
+                      }
+                      alt="Chiller 2"
+                      className="responsive-image"
+                    />
+                  </CCol>
+                </CRow>
+              </CCol>
+            </CRow>
+
+            <CRow className="g-0 mb-2">
+              <CCol xs={12}>
+                <CRow className="g-0">
+                  <CCol xs={6} className="d-flex justify-content-end pe-4">
+                    <img
+                      src={
+                        manualOverride[`chiller3`]
+                          ? 'images/Icons/Boiler/Chiller-ON.png'
+                          : 'images/Icons/Boiler/Chiller-OFF.png'
+                      }
+                      alt="Chiller 3"
+                      className="responsive-image"
+                    />
+                  </CCol>
+                  <CCol xs={6} className="d-flex justify-content-start ps-4">
+                    <img
+                      src={
+                        manualOverride[`chiller4`]
+                          ? 'images/Icons/Boiler/Chiller-ON.png'
+                          : 'images/Icons/Boiler/Chiller-OFF.png'
+                      }
+                      alt="Chiller 4"
+                      className="responsive-image"
+                    />
+                  </CCol>
+                </CRow>
+              </CCol>
+            </CRow>
+
             <CRow>
-              {[...Array(4)].map((_, index) => (
-                <CCol
-                  key={index}
-                  xs={6}
-                  md={3}
-                  className="d-flex justify-content-center align-items-center  p-2"
-                >
-                  <img
-                    src={
-                      manualOverride[`chiller${index + 1}`]
-                        ? 'images/Icons/Boiler/Chiller-ON.png'
-                        : 'images/Icons/Boiler/Chiller-OFF.png'
-                    }
-                    alt={`Chiller ${index + 1}`}
-                    className="responsive-image"
-                  />
-                </CCol>
-              ))}
-              <div className="d-flex mt-2 justify-content-center align-items-center mt-4">
-                <span className="h4 text-center ">
-                  {formatTemperature(sensors?.water_out_temp)}
-                </span>
-                <div className="arrow-line"></div>
-                <span className="h4 text-center">
-                  {formatTemperature(sensors?.return_temp)}
-                </span>
-              </div>
+              <CCol className="d-flex justify-content-center">
+                <img
+                  src="/images/Icons/Boiler/arrow3.png"
+                  alt="Arrow Up"
+                  className="responsive-arrow"
+                />
+              </CCol>
+            </CRow>
+
+            <CRow>
+              <CCol className="d-flex justify-content-center align-items-center mb-4">
+                <div className="d-flex align-items-center gap-2">
+                  <span className="h4 mb-0">
+                    Water Out: {formatTemperature(sensors?.water_out_temp)}
+                  </span>
+                  <div className="arrow-line mx-2"></div>
+                  <span className="h4 mb-0">
+                    Return: {formatTemperature(sensors?.return_temp)}
+                  </span>
+                </div>
+              </CCol>
             </CRow>
           </CCardBody>
-          <CRow className="d-flex justify-content-end ">
-            <CCol xs="auto" className="px-1 mt-2">
-              <CButton
-                color="primary"
-                className="mb-2"
-                onClick={() => handleButtonClick('manual')}
-                block="true"
-              >
+          <CRow className="d-flex justify-content-end d-lg-none m-2">
+            <CCol xs="auto">
+              <CButton color="primary" onClick={openModal} block="true">
                 Manual Override
               </CButton>
             </CCol>
@@ -192,9 +199,6 @@ const SystemMap = memo(({ homedata, season }) => {
     </CRow>
   );
 
-  const ModalComponent =
-    modalContent && MODAL_CONTENTS[modalContent]?.component;
-
   return (
     <>
       {season === 0 ? renderWinterView() : renderSummerView()}
@@ -203,22 +207,14 @@ const SystemMap = memo(({ homedata, season }) => {
         alignment="center"
         visible={isModalOpen}
         onClose={closeModal}
-        aria-labelledby="ModbusModal"
+        aria-labelledby="ManualOverrideModal"
         className="modal-lg"
       >
         <CModalHeader>
-          <CModalTitle>
-            {modalContent && MODAL_CONTENTS[modalContent].title}
-          </CModalTitle>
+          <CModalTitle>Manual Override</CModalTitle>
         </CModalHeader>
         <CModalBody>
-          {ModalComponent && (
-            <ModalComponent
-              boiler={boiler}
-              homedata={homedata}
-              data={homedata}
-            />
-          )}
+          <ManualOverride data={homedata} season={season} />
         </CModalBody>
         <CModalFooter>
           <CButton color="secondary" onClick={closeModal}>

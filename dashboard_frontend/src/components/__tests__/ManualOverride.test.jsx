@@ -28,6 +28,9 @@ it('should render and toggle device states', async () => {
       chiller3: false,
       chiller4: true,
     },
+    chronos: {
+      season: 0,
+    },
   });
 
   render(
@@ -42,7 +45,6 @@ it('should render and toggle device states', async () => {
             { id: 5, state: true },
           ],
         }}
-        season="Summer"
       />
     </Provider>,
   );

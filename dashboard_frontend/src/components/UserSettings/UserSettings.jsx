@@ -179,7 +179,7 @@ const UserSettings = ({ data }) => {
                       <CButton
                         type="submit"
                         color="primary"
-                        className="update-btn"
+                        className="update-btn m-2"
                       >
                         Update
                       </CButton>

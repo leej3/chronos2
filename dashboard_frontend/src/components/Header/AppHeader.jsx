@@ -16,11 +16,6 @@ import SeasonSwitch from '../SeasonSwitch/SeasonSwitch';
 
 const AppHeader = () => {
   const headerRef = useRef();
-  const [currentTime, setCurrentTime] = useState('');
-  // const { colorMode, setColorMode } = useColorModes(
-  //   'coreui-free-react-admin-template-theme'
-  // );
-
   const mockDevices = useSelector((state) => state.chronos.mockDevices);
   const systemStatus = useSelector((state) => state.chronos.systemStatus);
 
@@ -31,17 +26,6 @@ const AppHeader = () => {
         document.documentElement.scrollTop > 0,
       );
     });
-  }, []);
-
-  useEffect(() => {
-    const updateTime = () => {
-      setCurrentTime(getFormattedChicagoTime());
-    };
-
-    updateTime();
-    const timer = setInterval(updateTime, 1000);
-
-    return () => clearInterval(timer);
   }, []);
 
   return (
@@ -83,19 +67,6 @@ const AppHeader = () => {
           </CHeaderBrand>
 
           <CHeaderNav className="d-flex flex-wrap align-items-center gap-2 gap-sm-3">
-            <CNavItem>
-              <CNavLink href="#" className="d-flex align-items-center p-0">
-                <CIcon
-                  icon={cilClock}
-                  className="me-1 me-sm-2"
-                  style={{ width: '0.9rem' }}
-                />
-                <span className="text-nowrap" style={{ fontSize: '0.9rem' }}>
-                  {currentTime}
-                </span>
-              </CNavLink>
-            </CNavItem>
-
             {mockDevices && (
               <CNavItem>
                 <CNavLink

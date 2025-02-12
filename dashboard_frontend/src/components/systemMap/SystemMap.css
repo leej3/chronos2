@@ -2,8 +2,9 @@
   padding: 0 !important;
 }
 .responsive-image {
-  max-width: 100%;
+  max-width: 85%;
   height: auto;
+  display: block;
 }
 .loading-state {
   margin-top: 10px;
@@ -18,8 +19,10 @@ button {
   font-weight: bold;
 }
 .responsive-arrow {
-  max-width: 100%;
+  max-width: 220px;
   height: auto;
+  display: block;
+  margin: 8px auto;
   filter: brightness(0) invert(1);
 }
 
@@ -37,7 +40,11 @@ button {
   }
 
   .responsive-arrow {
-    max-width: 100%;
+    max-width: 100px;
+  }
+
+  .responsive-image {
+    max-width: 90%;
   }
 }
 
@@ -51,20 +58,12 @@ button {
   }
 
   .responsive-arrow {
-    max-width: 100%;
+    max-width: 80px;
   }
-}
 
-.responsive-image {
-  max-width: 100%;
-  height: auto;
-  display: block;
-}
-
-.responsive-arrow {
-  width: 200px;
-  height: auto;
-  display: block;
+  .responsive-image {
+    max-width: 95%;
+  }
 }
 
 .text-center {
@@ -102,8 +101,7 @@ button {
   margin: 10px auto;
 }
 .arrow-line {
-  width: 100px;
+  width: 40px;
   height: 2px;
-  background-color: #4c5c77;
-  margin: 0 1rem;
+  background-color: #fff;
 }

@@ -41,8 +41,7 @@ const TableTemplate = ({ homedata }) => {
           <CCardBody>
             <CRow className="sensor-table">
               <CCol>
-                <h2 className="sensor-title text-center">Sensor</h2>
-
+                <h2 className="chronous-title text-center">Sensor</h2>
                 <CRow>
                   <CCol xs={12}>
                     <CWidgetStatsD

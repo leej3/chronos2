@@ -1,13 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import {
-  CCard,
-  CCardBody,
-  CAlert,
-  CFormSwitch,
-  CRow,
-  CCol,
-  CTooltip,
-} from '@coreui/react';
+import { CAlert, CFormSwitch, CRow, CCol, CTooltip } from '@coreui/react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { updateDeviceState } from '../../api/updateState';
@@ -16,13 +8,13 @@ import {
   setInitialState,
 } from '../../features/state/ManualOverrideSlice';
 import { getDeviceId } from '../../utils/constant';
-import { fetchSummerData } from '../../features/summer/summerSlice';
+import { fetchData } from '../../features/chronos/chronosSlice';
 import './ManualOverride.css';
 
 const ManualOverride = ({ data }) => {
   const dispatch = useDispatch();
   const state = useSelector((state) => state.manualOverride);
-  const season = useSelector((state) => state.season?.season);
+  const season = useSelector((state) => state.chronos.season);
   const [alertMessage, setAlertMessage] = useState('');
 
   useEffect(() => {
@@ -41,11 +33,11 @@ const ManualOverride = ({ data }) => {
   }, [data]);
 
   const isDeviceDisabled = (device) => {
-    if (season === 'Winter') {
-      return device.startsWith('chiller');
-    }
-    if (season === 'Summer') {
+    if (season === 1) {
       return device === 'boiler';
+    }
+    if (season === 0) {
+      return device.startsWith('chiller');
     }
     return false;
   };
@@ -68,7 +60,7 @@ const ManualOverride = ({ data }) => {
         throw new Error('Failed to switch relay');
       }
 
-      await dispatch(fetchSummerData());
+      await dispatch(fetchData());
 
       toast.success(`${deviceName} has been turned ${statusText}`, {
         position: 'top-right',
@@ -145,9 +137,11 @@ const ManualOverride = ({ data }) => {
   };
 
   return (
-    <CCard>
-      <h2 className="section-title">Manual Override - {season} Mode</h2>
-      <CCardBody className="p-0">
+    <div className="manual-override">
+      <h2 className="section-title px-3 py-2 m-0">
+        Manual Override - {season === 1 ? 'Summer' : 'Winter'} Mode
+      </h2>
+      <div className="p-3">
         {alertMessage && (
           <CAlert
             color="danger"
@@ -166,8 +160,8 @@ const ManualOverride = ({ data }) => {
             )
             .map(renderDeviceControl)}
         </CRow>
-      </CCardBody>
-    </CCard>
+      </div>
+    </div>
   );
 };
 

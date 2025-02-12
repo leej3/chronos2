@@ -55,7 +55,6 @@ describe('AppHeader Component', () => {
     expect(screen.getByText('Chronus Dashboard')).toBeInTheDocument();
     expect(screen.getByText('SYSTEM -')).toBeInTheDocument();
     expect(screen.getByText('ONLINE')).toBeInTheDocument();
-    expect(screen.getByText('8:00:00 PM CST')).toBeInTheDocument();
   });
 
   it('should show system status as OFFLINE with red indicator', () => {

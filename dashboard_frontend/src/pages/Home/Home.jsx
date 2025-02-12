@@ -8,6 +8,7 @@ import {
   CCard,
   CCardBody,
   CSpinner,
+  CCardHeader,
 } from '@coreui/react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
@@ -18,6 +19,12 @@ import TemperatureGraph from '../../components/TemperatureGraph/TemperatureGraph
 import { fetchData } from '../../features/chronos/chronosSlice';
 import { REFRESH_TIME, RETRY_TIME } from '../../utils/constant';
 import { formatDate } from '../../utils/tranform';
+import TypeMode from '../../components/TypeMode/TypeMode';
+import UserSettings from '../../components/UserSettings/UserSettings';
+import TableTemplate from '../../components/Sensor/TableTemplate';
+import SwitchTimeDisplay from '../../components/SwitchTimeDisplay/SwitchTimeDisplay';
+import Modbus from '../../components/Modebus/Modbus';
+import EfficiencyMetrics from '../../components/EfficiencyMetrics/EfficiencyMetrics';
 
 import './Home.css';
 
@@ -91,7 +98,7 @@ const Home = () => {
 
     return () => clearTimeout(timeoutRef.current);
   }, [recallAPITime, status]);
-
+  console.log(season);
   return (
     <>
       {isShowPopupReload && (
@@ -104,21 +111,52 @@ const Home = () => {
       )}
 
       <CContainer fluid>
-        <CRow>
-          <CCol lg={12}>
-            <CCard className="item mt-4">
+        <CRow className="mt-4 g-3">
+          <CCol lg={3}>
+            <TypeMode homedata={data} />
+            <div className="mt-3">
+              <TableTemplate homedata={data} />
+            </div>
+            <div className="mt-3">
+              {season === 1 ? (
+                <SwitchTimeDisplay data={null} />
+              ) : (
+                <CCard className="mb-3">
+                  <CCardBody className="p-0">
+                    <Modbus homedata={data} season={season} />
+                  </CCardBody>
+                </CCard>
+              )}
+            </div>
+          </CCol>
+
+          <CCol lg={6}>
+            <CCard className="mb-3">
               <CCardBody className="p-0">
                 <SystemMap homedata={data} season={season} />
               </CCardBody>
             </CCard>
 
-            <CCard className="item">
-              <CCardBody className="p-0">
-                <ManualOverride data={data} season={season} />
-              </CCardBody>
-            </CCard>
+            <div className="d-none d-lg-block">
+              <CCard>
+                <CCardBody className="p-0">
+                  <ManualOverride data={data} season={season} />
+                </CCardBody>
+              </CCard>
+            </div>
+          </CCol>
 
-            <CCard className="item mt-4">
+          <CCol lg={3}>
+            <UserSettings data={data} />
+            <div className="mt-3">
+              <EfficiencyMetrics data={data} />
+            </div>
+          </CCol>
+        </CRow>
+
+        <CRow>
+          <CCol lg={12}>
+            <CCard className="mt-3">
               <CCardBody className="p-0">
                 <TemperatureGraph />
               </CCardBody>

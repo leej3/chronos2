@@ -45,8 +45,8 @@ describe('SystemMap component', () => {
       </Provider>,
     );
 
-    expect(screen.getByText('50.0°F')).toBeInTheDocument();
-    expect(screen.getByText('40.0°F')).toBeInTheDocument();
+    expect(screen.getByText('Water Out: 50.0°F')).toBeInTheDocument();
+    expect(screen.getByText('Return: 40.0°F')).toBeInTheDocument();
 
     const boilerImage = screen.getByAltText('Boiler');
     expect(boilerImage).toHaveAttribute(
@@ -72,8 +72,8 @@ describe('SystemMap component', () => {
       );
     }
 
-    expect(screen.getByText('50.0°F')).toBeInTheDocument();
-    expect(screen.getByText('40.0°F')).toBeInTheDocument();
+    expect(screen.getByText('Water Out: 50.0°F')).toBeInTheDocument();
+    expect(screen.getByText('Return: 40.0°F')).toBeInTheDocument();
   });
 
   it('should handle manual override for boiler in winter mode', () => {
@@ -143,17 +143,18 @@ describe('SystemMap component', () => {
       </Provider>,
     );
 
-    expect(screen.getAllByText('N/A')).toHaveLength(2);
+    expect(screen.getByText('Water Out: N/A')).toBeInTheDocument();
+    expect(screen.getByText('Return: N/A')).toBeInTheDocument();
   });
 
   it('should handle missing homedata prop', () => {
     render(
       <Provider store={mockStore(defaultState)}>
-        <SystemMap season={0} />
+        <SystemMap />
       </Provider>,
     );
 
-    expect(screen.getByAltText('Boiler')).toBeInTheDocument();
-    expect(screen.getAllByText('N/A')).toHaveLength(2);
+    expect(screen.getByText('Water Out: N/A')).toBeInTheDocument();
+    expect(screen.getByText('Return: N/A')).toBeInTheDocument();
   });
 });
