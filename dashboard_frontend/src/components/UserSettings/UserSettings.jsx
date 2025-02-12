@@ -1,7 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { format, parseISO } from 'date-fns';
-import { BsArrowRight, BsArrowLeft } from 'react-icons/bs';
-
 import {
   CForm,
   CFormInput,
@@ -10,16 +7,11 @@ import {
   CCol,
   CCardBody,
   CCard,
-  CTooltip,
 } from '@coreui/react';
-import { useSelector, useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
 
 import { getTemperatureLimits } from '../../api/updateBoilerSetpoint';
 import { updateSettings } from '../../api/updateSetting';
-import { setSeason } from '../../features/state/seasonSlice';
-import { switchSeason } from '../../api/switchSeason';
-
 import './UserSettings.css';
 
 const UserSettings = ({ data }) => {
@@ -142,7 +134,6 @@ const UserSettings = ({ data }) => {
       toast.error(errorMessage);
     }
   };
-
 
   if (isLoading) {
     return (

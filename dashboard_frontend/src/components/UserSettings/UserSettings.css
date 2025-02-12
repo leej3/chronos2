@@ -8,26 +8,39 @@
 .show-settings-btn {
   margin-bottom: 5px !important;
 }
+
 .show-settings-form {
-  display: block;
+  display: none;
+  width: 100%;
+  margin-top: 1rem;
 }
 
-@media (max-width: 768px) {
-  .show-settings-form {
-    display: none;
-  }
-  .show-settings-form.show {
-    display: block;
-  }
-}
-
-.show-settings-btn {
+.show-settings-form.show {
   display: block;
 }
 
 @media (min-width: 768px) {
+  .show-settings-form {
+    display: block;
+  }
+
   .show-settings-btn {
     display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .show-settings-form {
+    display: none;
+  }
+
+  .show-settings-form.show {
+    display: block;
+  }
+
+  .show-settings-btn {
+    display: block;
+    margin: 20px 0;
   }
 }
 
@@ -70,196 +83,37 @@
   }
 }
 
-.season-toggle {
+.loading-container {
   display: flex;
-  gap: 1rem;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  padding: 0.3rem;
-  align-items: center;
-  position: relative;
-  max-width: 100%;
-  margin: 0 auto;
+  height: 200px;
 }
 
-.season-arrow {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.3rem;
-  min-width: 60px;
-  padding: 0 5px;
+.spinner {
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-left-color: #09f;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
 }
 
-.arrow-icon {
-  color: #495057;
-  opacity: 0.5;
-  transition: all 0.3s ease;
-}
-
-.arrow-icon.switching {
-  color: #fff;
-  opacity: 1;
-  animation: pulse 1.5s infinite;
-}
-
-.switch-status {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  font-size: 0.8rem;
-  color: #fff;
-}
-
-.switch-status .countdown {
-  font-weight: bold;
-  background: rgba(0, 0, 0, 0.2);
-  padding: 2px 8px;
-  border-radius: 4px;
-  margin-top: 4px;
-}
-
-@keyframes pulse {
+@keyframes spin {
   0% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.2);
-    opacity: 0.7;
+    transform: rotate(0deg);
   }
   100% {
-    transform: scale(1);
-    opacity: 1;
+    transform: rotate(360deg);
   }
 }
 
-.season-icon {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  background: transparent;
-  border: none;
-  opacity: 0.5;
-  width: 80px;
-  padding: 5px;
-}
-
-.season-icon:hover {
-  opacity: 0.4;
-}
-
-.season-icon.active {
-  opacity: 1;
-}
-
-.season-emoji {
-  font-size: 2rem;
-  margin-bottom: 0.3rem;
-  transition: all 0.3s ease;
-}
-
-.season-icon span:not(.season-emoji) {
-  font-size: 1.1rem;
-  font-weight: 500;
-  color: #495057;
-}
-
-.season-icon.active span {
-  color: #fff;
-}
-.season-icon:nth-child(1) .season-emoji {
-  filter: drop-shadow(0 0 2px rgba(135, 206, 235, 0.5));
-}
-
-.season-icon:nth-child(2) .season-emoji {
-  filter: drop-shadow(0 0 2px rgba(255, 165, 0, 0.5));
-}
-
-.season-icon.active:nth-child(1) .season-emoji {
-  filter: drop-shadow(0 0 4px rgba(135, 206, 235, 0.8));
-}
-
-.season-icon.active:nth-child(2) .season-emoji {
-  filter: drop-shadow(0 0 4px rgba(255, 165, 0, 0.8));
-}
-
-.season-icon.locked {
-  opacity: 0.5 !important;
-  cursor: not-allowed;
-  filter: grayscale(50%);
-}
-
-@media screen and (max-width: 1024px) {
-  .season-toggle {
-    gap: 0.5rem;
-  }
-
-  .season-icon {
-    width: 70px;
-  }
-
-  .season-emoji {
-    font-size: 1.8rem;
-  }
-
-  .season-icon span:not(.season-emoji) {
-    font-size: 0.8rem;
-  }
-
-  .season-arrow {
-    min-width: 50px;
-  }
-
-  .arrow-icon {
-    font-size: 1rem;
-  }
-
-  .switch-status {
-    font-size: 0.7rem;
-  }
-}
-
-@media screen and (max-width: 768px) {
-  .season-toggle {
-    gap: 0.3rem;
-  }
-
-  .season-icon {
-    width: 60px;
-  }
-
-  .season-emoji {
-    font-size: 1.5rem;
-  }
-
-  .season-arrow {
-    min-width: 40px;
-  }
+.update-btn {
+  margin-top: 20px;
 }
 
 @media screen and (max-width: 480px) {
-  .season-toggle {
-    gap: 0.2rem;
-  }
-
-  .season-icon {
-    width: 50px;
-  }
-
-  .season-emoji {
-    font-size: 2.1rem;
-  }
-
-  .season-icon span:not(.season-emoji) {
-    font-size: 0.9rem;
-  }
-
-  .season-arrow {
-    min-width: 30px;
-  }
   label,
   input,
   button {
