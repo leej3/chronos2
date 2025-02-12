@@ -7,8 +7,10 @@ const initialState = {
   status: 'idle',
   error: null,
   season: 0,
-  mock_devices: true,
+  mockDevices: true,
   lastUpdated: null,
+  systemStatus: 'OFFLINE',
+  lockoutInfo: null,
 };
 
 export const fetchData = createAsyncThunk('chronos/fetchData', async () => {
@@ -30,13 +32,32 @@ export const chronosSlice = createSlice({
         const data = action.payload;
         state.data = data;
         state.season = data.results.mode;
-        state.mock_devices = data.mock_devices;
+        state.mockDevices = data.mock_devices;
         state.lastUpdated = new Date().toISOString();
         state.status = 'succeeded';
+        state.systemStatus = data.status ? 'ONLINE' : 'OFFLINE';
         state.error = null;
+
+        if (data.results?.lockout_info) {
+          const unlockTime = new Date(data.results.lockout_info.unlock_time);
+          const now = new Date();
+          if (unlockTime > now) {
+            state.lockoutInfo = {
+              modeSwitchTimestamp:
+                data.results.lockout_info.mode_switch_timestamp,
+              lockoutTime: data.results.lockout_info.mode_switch_lockout_time,
+              unlockTime: data.results.lockout_info.unlock_time,
+            };
+          } else {
+            state.lockoutInfo = null;
+          }
+        } else {
+          state.lockoutInfo = null;
+        }
       })
       .addCase(fetchData.rejected, (state, action) => {
         state.status = 'failed';
+        state.systemStatus = 'OFFLINE';
         state.error = action.error.message;
         state.isFirstLoad = false;
       });

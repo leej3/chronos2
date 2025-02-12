@@ -10,10 +10,25 @@ import './SeasonSwitch.css';
 
 const SeasonSwitch = () => {
   const dispatch = useDispatch();
-  const season = useSelector((state) => state.season.season);
+  const season = useSelector((state) => state.chronos.season);
+  const reduxLockoutInfo = useSelector((state) => state.chronos.lockoutInfo);
   const [lockoutInfo, setLockoutInfo] = useState(null);
   const [countdown, setCountdown] = useState(null);
   const [switchDirection, setSwitchDirection] = useState(null);
+
+  useEffect(() => {
+    if (reduxLockoutInfo) {
+      const unlockTime = new Date(reduxLockoutInfo.unlockTime);
+      const now = new Date();
+      if (unlockTime > now) {
+        setLockoutInfo({
+          lockoutTime: reduxLockoutInfo.lockoutTime,
+          unlockTime: unlockTime,
+        });
+        setSwitchDirection(season === 0 ? 'toSummer' : 'toWinter');
+      }
+    }
+  }, [reduxLockoutInfo, season]);
 
   useEffect(() => {
     let timer;
@@ -53,10 +68,11 @@ const SeasonSwitch = () => {
         toast.success(response.data.message);
 
         const unlockTime = parseISO(response.data.unlock_time);
-        setLockoutInfo({
+        const newLockoutInfo = {
           lockoutTime: response.data.mode_switch_lockout_time,
           unlockTime: unlockTime,
-        });
+        };
+        setLockoutInfo(newLockoutInfo);
       }
     } catch (error) {
       dispatch(setSystemStatus('OFFLINE'));

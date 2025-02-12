@@ -21,8 +21,8 @@ const AppHeader = () => {
   //   'coreui-free-react-admin-template-theme'
   // );
 
-  const mockDevices = useSelector((state) => state.season.mockDevices);
-  const systemStatus = useSelector((state) => state.season.systemStatus);
+  const mockDevices = useSelector((state) => state.chronos.mockDevices);
+  const systemStatus = useSelector((state) => state.chronos.systemStatus);
 
   useEffect(() => {
     document.addEventListener('scroll', () => {
