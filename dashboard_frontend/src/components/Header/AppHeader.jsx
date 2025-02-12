@@ -44,17 +44,6 @@ const AppHeader = () => {
     return '/images/Icons/WinterSummer/WOn.png';
   };
 
-  useEffect(() => {
-    const updateTime = () => {
-      setCurrentTime(getFormattedChicagoTime());
-    };
-
-    updateTime();
-    const timer = setInterval(updateTime, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
   return (
     <CHeader position="sticky" ref={headerRef}>
       <CContainer fluid className="p-2 px-sm-3 header-container">

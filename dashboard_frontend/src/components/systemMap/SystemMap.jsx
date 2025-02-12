@@ -109,12 +109,12 @@ const SystemMap = memo(({ homedata, season, boiler }) => {
                 </div>
               </CCol>
             </CRow>
-            <CRow className="d-flex justify-content-end ">
+            <CRow className="d-flex justify-content-end d-lg-none">
               <CCol xs="auto" className="px-1 mt-2">
                 <CButton
                   color="primary"
                   className="mb-2"
-                  onClick={() => handleButtonClick('manual')}
+                  onClick={openModal}
                   block="true"
                 >
                   Manual Override

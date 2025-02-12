@@ -221,8 +221,8 @@ const ManualOverride = ({ data }) => {
             )
             .map(renderDeviceControl)}
         </CRow>
-      </CCardBody>
-    </CCard>
+      </div>
+    </div>
   );
 };
 
