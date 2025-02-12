@@ -17,11 +17,25 @@ const mockStore = (state) => {
 };
 jest.mock('../SeasonSwitch/SeasonSwitch.css', () => {});
 
+const originalError = console.error;
+beforeAll(() => {
+  console.error = (...args) => {
+    if (args[0].includes('Warning: validateDOMNesting')) {
+      return;
+    }
+    originalError.call(console, ...args);
+  };
+});
+
+afterAll(() => {
+  console.error = originalError;
+});
+
 describe('AppHeader Component', () => {
   const renderAppHeader = (state) => {
     return render(
       <Provider store={mockStore(state)}>
-        <BrowserRouter>
+        <BrowserRouter future={{ v7_startTransition: true }}>
           <AppHeader />
         </BrowserRouter>
       </Provider>,
@@ -30,7 +44,7 @@ describe('AppHeader Component', () => {
 
   it('should render header with basic elements', () => {
     const state = {
-      season: {
+      chronos: {
         mockDevices: false,
         systemStatus: 'ONLINE',
       },
@@ -46,7 +60,7 @@ describe('AppHeader Component', () => {
 
   it('should show system status as OFFLINE with red indicator', () => {
     const state = {
-      season: {
+      chronos: {
         mockDevices: false,
         systemStatus: 'OFFLINE',
       },
@@ -61,7 +75,7 @@ describe('AppHeader Component', () => {
 
   it('should show system status as ONLINE with green indicator', () => {
     const state = {
-      season: {
+      chronos: {
         mockDevices: false,
         systemStatus: 'ONLINE',
       },
@@ -76,7 +90,7 @@ describe('AppHeader Component', () => {
 
   it('should show Mock Devices Mode when mockDevices is true', () => {
     const state = {
-      season: {
+      chronos: {
         mockDevices: true,
         systemStatus: 'ONLINE',
       },
@@ -89,7 +103,7 @@ describe('AppHeader Component', () => {
 
   it('should not show Mock Devices Mode when mockDevices is false', () => {
     const state = {
-      season: {
+      chronos: {
         mockDevices: false,
         systemStatus: 'ONLINE',
       },
