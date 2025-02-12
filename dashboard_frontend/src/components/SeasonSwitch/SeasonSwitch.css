@@ -9,26 +9,31 @@
 .season-icon {
   display: flex;
   align-items: center;
-  padding: 0.25rem 0.5rem;
-  padding-left: 0;
-  border-radius: 4px;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 20px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 0.9rem;
-  color: #fff;
-}
-
-.season-icon:hover:not(.locked) {
+  transition: all 0.3s ease;
   background: rgba(255, 255, 255, 0.1);
 }
 
-.season-icon.active {
-  background: rgba(255, 255, 255, 0.15);
+.season-icon:hover:not(.locked):not(.active) {
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
 }
 
-.season-icon.locked {
-  opacity: 0.7;
-  cursor: not-allowed;
+.season-icon.active {
+  background: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+}
+
+.season-icon:not(.active) {
+  opacity: 0.6;
+}
+
+.season-icon:not(.active):hover {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 .season-emoji {
@@ -93,4 +98,8 @@
   100% {
     opacity: 0.5;
   }
+}
+
+.season-icon.disabled {
+  cursor: not-allowed;
 }

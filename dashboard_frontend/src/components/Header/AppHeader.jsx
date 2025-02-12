@@ -52,7 +52,7 @@ const AppHeader = () => {
                 className="d-flex align-items-center mt-0 mt-sm-1"
                 style={{ fontSize: '0.8rem' }}
               >
-                <span className="text-white-50 me-1 me-sm-2">SYSTEM - </span>
+                <span className="text-white-50 me-1 me-sm-2">SYSTEM</span>
                 <span
                   className={`${systemStatus === 'ONLINE' ? 'text-success' : 'text-danger'
                     } d-flex align-items-center`}
