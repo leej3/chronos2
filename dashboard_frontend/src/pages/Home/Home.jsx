@@ -8,7 +8,6 @@ import {
   CCard,
   CCardBody,
   CSpinner,
-  CCardHeader,
 } from '@coreui/react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';

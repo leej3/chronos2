@@ -112,7 +112,7 @@ const SystemMap = ({ homedata, season, boiler }) => {
               <CCol xs="auto" className="px-1 mt-2">
                 <CButton
                   color="primary"
-                  className="mb-2"
+                  className="mb-2 mt-2"
                   onClick={openModal}
                   block="true"
                 >
