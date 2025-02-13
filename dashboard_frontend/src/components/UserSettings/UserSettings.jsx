@@ -13,6 +13,7 @@ import { toast } from 'react-toastify';
 import { getTemperatureLimits } from '../../api/updateBoilerSetpoint';
 import { updateSettings } from '../../api/updateSetting';
 import './UserSettings.css';
+import SeasonSwitch from '../SeasonSwitch/SeasonSwitch';
 
 const UserSettings = ({ data }) => {
   const [formData, setFormData] = useState({

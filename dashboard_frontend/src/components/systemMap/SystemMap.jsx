@@ -94,7 +94,7 @@ const SystemMap = memo(({ homedata, season }) => {
     <CRow>
       <CCol xs={12}>
         <CCard>
-          <CCardBody className="p-0">
+          <CCardBody className="p-0 overflow-hidden">
             <CRow className="mb-2 mt-2">
               <CCol className="d-flex justify-content-center">
                 <img

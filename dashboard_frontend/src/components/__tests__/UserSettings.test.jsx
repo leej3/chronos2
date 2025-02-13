@@ -18,6 +18,7 @@ jest.mock('../../utils/constant', () => ({
 }));
 
 jest.mock('../UserSettings/UserSettings.css', () => {});
+jest.mock('../SeasonSwitch/SeasonSwitch.css', () => {});
 
 const mockStore = (state) => {
   return createStore(() => state);
@@ -37,6 +38,10 @@ describe('UserSettings Component', () => {
           mode_switch_lockout_time: 30,
           cascade_time: 15,
         },
+      },
+      chronos: {
+        season: 1,
+        lockoutInfo: null,
       },
     };
 
@@ -63,7 +68,12 @@ describe('UserSettings Component', () => {
   });
 
   it('should render user settings loading state when data is not fetched', () => {
-    const state = {};
+    const state = {
+      chronos: {
+        season: 1,
+        lockoutInfo: null,
+      },
+    };
 
     render(
       <Provider store={mockStore(state)}>

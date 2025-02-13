@@ -11,9 +11,11 @@ import {
   CNavLink,
   CNavItem,
   CHeaderBrand,
+  CRow,
+  CCol,
 } from '@coreui/react';
 import { useSelector } from 'react-redux';
-import SeasonSwitch from '../SeasonSwitch/SeasonSwitch';
+import './AppHeader.css';
 
 const AppHeader = () => {
   const headerRef = useRef();
@@ -26,6 +28,8 @@ const AppHeader = () => {
   const mockDevices = useSelector((state) => state.chronos.mock_devices);
   const readOnlyMode = useSelector((state) => state.chronos.read_only_mode);
 
+  const outdoorTemp = data?.results?.outside_temp || 'N/A';
+  const avgTemp = data?.efficiency?.average_temperature_difference || 'N/A';
   useEffect(() => {
     document.addEventListener('scroll', () => {
       headerRef.current?.classList.toggle(
@@ -34,16 +38,22 @@ const AppHeader = () => {
       );
     });
   }, []);
+  const getSeasonIcon = () => {
+    if (season === 1) {
+      return '/images/Icons/WinterSummer/SOn.png';
+    }
+    return '/images/Icons/WinterSummer/WOn.png';
+  };
 
   return (
     <CHeader position="sticky" ref={headerRef}>
-      <CContainer fluid className="px-2 px-sm-3">
-        <div className="d-flex flex-wrap align-items-center justify-content-between w-100 gap-1 gap-sm-2">
+      <CContainer fluid className="p-2 px-sm-3 header-container">
+        <div className="d-flex flex-wrap align-items-center justify-content-between w-100 gap-1 gap-sm-2 d-none d-lg-flex">
           <CHeaderBrand className="me-0">
             <div className="d-flex flex-column">
               <NavLink
                 to="/"
-                className="text-decoration-none text-white mb-0"
+                className="text-decoration-none text-white mb-0 "
                 style={{ fontSize: '1.1rem' }}
               >
                 Chronus Dashboard

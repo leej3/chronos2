@@ -110,17 +110,44 @@ const Home = () => {
       )}
 
       <CContainer fluid>
-        <CRow className="d-block d-lg-none mt-4">
-          <CCol lg={12}>
+        <CRow className="d-block d-lg-none mt-4 g-3">
+          <CCol xs={12}>
             <CCard>
               <CCardBody className="p-0">
                 <TemperatureGraph />
               </CCardBody>
             </CCard>
           </CCol>
+
+          <CCol xs={12} className="mt-3">
+            <CCard>
+              <CCardBody className="p-0">
+                <SystemMap homedata={data} season={season} />
+              </CCardBody>
+            </CCard>
+          </CCol>
+
+          <CCol xs={12} className="mt-3">
+            {season === 1 && <SwitchTimeDisplay data={null} />}
+          </CCol>
+
+          <CCol xs={12} className="mt-3">
+            <UserSettings data={data} />
+            <div className="mt-3">
+              <EfficiencyMetrics data={data} />
+            </div>
+          </CCol>
+
+          <CCol xs={12} className="mt-3">
+            <CCard>
+              <CCardBody className="p-0">
+                <ManualOverride data={data} season={season} />
+              </CCardBody>
+            </CCard>
+          </CCol>
         </CRow>
 
-        <CRow className="mt-4 g-3">
+        <CRow className="d-none d-lg-flex mt-4 g-3">
           <CCol lg={3}>
             <TypeMode homedata={data} />
             <div className="mt-3">
@@ -146,13 +173,11 @@ const Home = () => {
               </CCardBody>
             </CCard>
 
-            <div className="d-none d-lg-block">
-              <CCard>
-                <CCardBody className="p-0">
-                  <ManualOverride data={data} season={season} />
-                </CCardBody>
-              </CCard>
-            </div>
+            <CCard>
+              <CCardBody className="p-0">
+                <ManualOverride data={data} season={season} />
+              </CCardBody>
+            </CCard>
           </CCol>
 
           <CCol lg={3}>
@@ -161,9 +186,7 @@ const Home = () => {
               <EfficiencyMetrics data={data} />
             </div>
           </CCol>
-        </CRow>
 
-        <CRow className="d-none d-lg-block">
           <CCol lg={12}>
             <CCard className="mt-3">
               <CCardBody className="p-0">

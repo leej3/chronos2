@@ -1,5 +1,6 @@
 .manual-override {
   width: 100%;
+  overflow-x: hidden;
 }
 
 .device-column {
@@ -7,6 +8,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  min-width: 150px;
 }
 
 .device-name {
@@ -14,6 +16,9 @@
   font-size: 1.25rem;
   font-weight: 500;
   text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .device-control {
