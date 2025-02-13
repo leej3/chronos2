@@ -97,10 +97,65 @@ def test_send_command_exception(mock_serial, device_serial, caplog):
 @pytest.fixture
 def mock_modbus_device():
     """Create a mock ModbusDevice with mocked client."""
-    with patch("chronos.devices.ModbusSerialClient") as mock_client:
+    with patch("chronos.devices.ModbusSerialClient") as mock_client, patch(
+        "chronos.devices.cfg"
+    ) as mock_cfg:
         # Mock successful connection
         mock_client.return_value.connect.return_value = True
         mock_client.return_value.is_socket_open.return_value = True
+
+        # Create struct-like objects for registers
+        class Registers:
+            def __init__(self):
+                self.holding = type(
+                    "Holding",
+                    (),
+                    {
+                        "operating_mode": 0x40000,
+                        "cascade_mode": 0x40001,
+                        "setpoint": 0x40002,
+                        "min_setpoint": 0x40003,
+                        "max_setpoint": 0x40004,
+                        "system_supply_temp": 0x40006,
+                    },
+                )()
+                self.input = type(
+                    "Input",
+                    (),
+                    {
+                        "alarm": 0x30003,
+                        "pump": 0x30004,
+                        "flame": 0x30005,
+                        "cascade_current_power": 0x30006,
+                        "outlet_temp": 0x30008,
+                        "inlet_temp": 0x30009,
+                        "flue_temp": 0x30010,
+                        "lead_firing_rate": 0x30011,
+                    },
+                )()
+
+        # Mock the config
+        mock_cfg.modbus.registers = Registers()
+        mock_cfg.modbus.operating_modes = {
+            "0": "Initialization",
+            "1": "Standby",
+            "2": "CH",
+            "3": "DHW",
+            "4": "Manual",
+        }
+        mock_cfg.modbus.cascade_modes = {
+            "0": "Single Boiler",
+            "1": "Leader",
+            "2": "Member",
+        }
+        mock_cfg.modbus.error_codes = {
+            "0": "No Error",
+            "1": "Ignition Failure",
+            "2": "Flame Failure",
+            "3": "Low Water",
+        }
+        mock_cfg.modbus.model_ids = {"1": "NeoTherm", "2": "FTX", "3": "XFyre"}
+
         device = ModbusDevice()
         yield device
 
@@ -214,20 +269,12 @@ def test_read_boiler_data_retry_success(mock_modbus_device):
     mock_modbus_device.client.read_holding_registers.side_effect = [
         ModbusIOException("First attempt fails"),
         MagicMock(registers=[1, 2, 150, 120, 180, 0, 220], isError=lambda: False),
+        MagicMock(
+            registers=[1, 2, 150, 120, 180, 0, 220], isError=lambda: False
+        ),  # Add extra for potential retries
     ]
-    mock_modbus_device.client.read_input_registers.return_value.registers = [
-        1,
-        1,
-        1,
-        86,
-        0,
-        180,
-        160,
-        200,
-        66,
-    ]
-    mock_modbus_device.client.read_input_registers.return_value.isError.return_value = (
-        False
+    mock_modbus_device.client.read_input_registers.return_value = MagicMock(
+        registers=[1, 1, 1, 86, 0, 180, 160, 200, 66], isError=lambda: False
     )
 
     result = mock_modbus_device.read_boiler_data()
