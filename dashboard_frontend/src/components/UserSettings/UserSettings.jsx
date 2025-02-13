@@ -28,6 +28,7 @@ const UserSettings = ({ data }) => {
   };
 
   const [isLoading, setIsLoading] = useState(true);
+  const [formData, setFormData] = useState(initialFormData);
   const [showForm, setShowForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const season = useSelector((state) => state.season.season);
