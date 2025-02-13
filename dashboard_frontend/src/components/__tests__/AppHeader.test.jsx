@@ -31,15 +31,7 @@ afterAll(() => {
   console.error = originalError;
 });
 
-const originalError = console.error;
-beforeAll(() => {
-  console.error = (...args) => {
-    if (args[0].includes('Warning: validateDOMNesting')) {
-      return;
-    }
-    originalError.call(console, ...args);
-  };
-});
+
 
 afterAll(() => {
   console.error = originalError;
