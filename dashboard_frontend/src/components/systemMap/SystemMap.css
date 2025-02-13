@@ -154,10 +154,6 @@ button {
   border-bottom: 1px solid #eee;
 }
 
-.temp-item:last-child {
-  border-bottom: none;
-}
-
 .temp-label {
   font-weight: 500;
   color: #666;

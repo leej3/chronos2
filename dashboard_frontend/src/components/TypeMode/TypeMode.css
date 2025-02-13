@@ -14,21 +14,6 @@
   box-sizing: border-box;
 }
 
-.temp-value {
-  font-size: 1.1rem;
-  font-weight: bold;
-  color: #17a2b8;
-  margin-top: 4px;
-}
-
-.temp-label {
-  margin-top: 8px;
-  font-size: 16px;
-  color: #f0f0f0;
-  flex-shrink: 0;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
-}
-
 .temp-circle svg {
   margin-bottom: 4px;
 }
@@ -46,12 +31,6 @@
     width: 80px;
     height: 80px;
     padding: 4px;
-  }
-  .temp-value {
-    font-size: 0.9rem;
-  }
-  .temp-label {
-    font-size: 12px;
   }
 }
 

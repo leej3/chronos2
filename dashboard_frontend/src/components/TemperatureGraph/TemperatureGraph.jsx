@@ -122,20 +122,37 @@ const TemperatureGraph = () => {
             backgroundColor: '#333645',
             padding: '8px 12px',
             borderRadius: '5px',
-            fontSize: '12px',
+            fontSize: window.innerWidth < 768 ? '14px' : '12px',
             maxWidth: '200px',
             color: '#fff',
           }}
         >
-          <p style={{ fontSize: '12px', margin: '5px 0' }}>
+          <p
+            style={{
+              fontSize: window.innerWidth < 768 ? '14px' : '12px',
+              margin: '5px 0',
+            }}
+          >
             <strong>Time: </strong>
             {label}
           </p>
-          <p style={{ fontSize: '12px', margin: '5px 0', color: '#ffca28' }}>
+          <p
+            style={{
+              fontSize: window.innerWidth < 768 ? '14px' : '12px',
+              margin: '5px 0',
+              color: '#ffca28',
+            }}
+          >
             <strong>Inlet: </strong>
             {payload[0].value}°F
           </p>
-          <p style={{ fontSize: '12px', margin: '5px 0', color: '#ff7043' }}>
+          <p
+            style={{
+              fontSize: window.innerWidth < 768 ? '14px' : '12px',
+              margin: '5px 0',
+              color: '#ff7043',
+            }}
+          >
             <strong>Outlet: </strong>
             {payload[1].value}°F
           </p>
@@ -168,7 +185,7 @@ const TemperatureGraph = () => {
   };
 
   const getResponsiveFontSize = () => {
-    return window.innerWidth < 768 ? 10 : 12;
+    return window.innerWidth < 768 ? 12 : 12;
   };
 
   const getFilteredData = (data) => {
@@ -181,9 +198,8 @@ const TemperatureGraph = () => {
   return (
     <div className="graph-container p-0">
       <div className="graphbody">
-        <h3 style={{ fontSize: window.innerWidth < 768 ? '1.2rem' : '1.5rem' }}>
-          Inlet/Outlet Temperature History
-        </h3>
+        <h2 className="chronous-title">Inlet/Outlet Temperature History</h2>
+
         {isLoading && (
           <div className="loading-state">
             <div className="spinner"></div>
@@ -246,7 +262,8 @@ const TemperatureGraph = () => {
                       fill="#dddddd"
                       style={{
                         textAnchor: 'middle',
-                        fontSize: window.innerWidth < 768 ? 14 : 16,
+                        fontSize: window.innerWidth < 768 ? 18 : 18,
+                        fontWeight: 'bold',
                         dy: -20,
                       }}
                     />

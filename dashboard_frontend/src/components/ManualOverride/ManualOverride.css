@@ -8,7 +8,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-width: 150px;
+  min-width: 100px;
 }
 
 .device-name {

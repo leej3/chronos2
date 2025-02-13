@@ -275,6 +275,8 @@ class DashboardService:
                 raise ValueError(f"Invalid season value: {season_value}")
 
             # TODO Update Edge Server mode
+            # raise Exception("Test error for season mode switch")
+            # self.edge_server.set_mode(season_value)
 
             current_time = datetime.now()
             self.setting_repository._update_property("mode", season_value)

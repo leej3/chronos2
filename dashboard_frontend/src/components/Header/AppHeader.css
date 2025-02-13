@@ -12,8 +12,8 @@
 }
 
 .status-dot {
-  width: 6px;
-  height: 6px;
+  width: 0.375rem;
+  height: 0.375rem;
   border-radius: 50%;
   display: inline-block;
   margin-right: 0.25rem;
@@ -28,8 +28,8 @@
 }
 
 .season-icon {
-  width: 24px;
-  height: 24px;
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
 .mock-devices-alert {
@@ -43,23 +43,64 @@
 }
 
 .temperature-label {
-  color: #8a93a2;
-  font-weight: 500;
+  font-weight: 800;
+  font-size: 1rem;
+  color: #f0f0f0;
+  flex-shrink: 0;
+  text-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.8);
 }
 
 .temperature-value {
-  color: white;
+  color: #17a2b8;
   font-size: 1rem;
   font-weight: 600;
   margin-left: 4px;
 }
 
 .temperature-container {
-  margin-right: 1rem;
+  margin-right: 12px;
 }
 
 @media (max-width: 768px) {
   .temperature-container {
     margin-right: 0;
   }
+}
+
+@media (max-width: 576px) {
+  .header-title {
+    font-size: 1.5rem;
+  }
+
+  .system-status-text {
+    font-size: 1rem;
+  }
+
+  .mock-devices-alert {
+    font-size: 1rem;
+  }
+
+  .temperature-label {
+    font-size: 1rem;
+    margin-right: 6px;
+  }
+
+  .temperature-value {
+    font-size: 1.125rem;
+    font-weight: 800;
+  }
+
+  .status-indicator {
+    font-size: 1rem;
+  }
+
+  .status-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+  }
+}
+
+/* Adjust spacing for better mobile readability */
+.mock-devices-alert {
+  margin-bottom: 10px;
 }

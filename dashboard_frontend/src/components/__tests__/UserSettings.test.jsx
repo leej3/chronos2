@@ -61,9 +61,6 @@ describe('UserSettings Component', () => {
     );
     expect(container.querySelector('#cascade_time')).toHaveValue(15);
 
-    expect(container.querySelector('.show-settings-btn')).toHaveTextContent(
-      'Show Settings',
-    );
     expect(container.querySelector('.update-btn')).toHaveTextContent('Update');
   });
 

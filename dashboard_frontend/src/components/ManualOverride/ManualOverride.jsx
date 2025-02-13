@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { CAlert, CFormSwitch, CRow, CCol, CTooltip } from '@coreui/react';
+import {
+  CAlert,
+  CFormSwitch,
+  CRow,
+  CCol,
+  CTooltip,
+  CCard,
+  CCardBody,
+} from '@coreui/react';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateDeviceState } from '../../api/updateState';
 import {
@@ -93,9 +101,9 @@ const ManualOverride = ({ data }) => {
         className="device-column"
       >
         <CTooltip content={tooltipContent} placement="top">
-          <p className={`device-name ${isDisabled ? 'text-muted' : ''}`}>
+          <span className={`temp-label ${isDisabled ? 'text-muted' : ''}`}>
             {deviceName}
-          </p>
+          </span>
         </CTooltip>
         <CTooltip
           content={

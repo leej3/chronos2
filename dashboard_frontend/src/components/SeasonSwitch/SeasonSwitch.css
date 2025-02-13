@@ -102,6 +102,9 @@
 .season-icon.active .season-icon-img {
   filter: brightness(1.2);
 }
+.season-icon.active span {
+  font-weight: 700;
+}
 
 .season-icon.locked .season-icon-img {
   opacity: 0.5;

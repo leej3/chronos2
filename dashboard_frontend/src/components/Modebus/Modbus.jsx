@@ -50,19 +50,6 @@ const Modbus = ({ boiler }) => {
     },
   ];
 
-  const renderTabContent = (items) => (
-    <CRow className="tab-content-container">
-      {items.map((item, index) => (
-        <TabContent
-          key={index}
-          label={item.label}
-          value={item.value}
-          unit={item.unit || ''}
-        />
-      ))}
-    </CRow>
-  );
-
   return (
     <CRow>
       <CCol>
