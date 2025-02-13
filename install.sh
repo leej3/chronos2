@@ -19,6 +19,13 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
+# Check for rsync
+if ! command -v rsync &> /dev/null; then
+    echo "Error: rsync is not installed"
+    echo "Please install rsync first"
+    exit 1
+fi
+
 # Verify .env.docker files exist and are configured
 if ! find . -name "*.env.docker" | grep -q .; then
     echo "Error: .env.docker files not found"
@@ -31,7 +38,7 @@ fi
 # Create or update installation directory
 echo "Setting up installation directory..."
 mkdir -p "$INSTALL_DIR"
-cp -r . "$INSTALL_DIR/"
+rsync -av --delete . "$INSTALL_DIR/"
 
 # Create deployment environment file if it doesn't exist
 if [ ! -f "$INSTALL_DIR/.env" ]; then
