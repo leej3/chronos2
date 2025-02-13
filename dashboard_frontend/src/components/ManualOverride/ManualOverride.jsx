@@ -21,8 +21,13 @@ import { getDeviceId } from '../../utils/constant';
 const ManualOverride = ({ data, season }) => {
   const dispatch = useDispatch();
   const state = useSelector((state) => state.manualOverride);
+  const readOnlyMode = useSelector((state) => state.chronos.read_only_mode);
   const [alertMessage, setAlertMessage] = useState('');
+  const [alertColor, setAlertColor] = useState('danger');
   // const [socket, setSocket] = useState(null);
+
+  console.log('Read only mode state:', readOnlyMode);
+
   useEffect(() => {
     if (data?.devices) {
       const devices = data.devices;
@@ -38,6 +43,15 @@ const ManualOverride = ({ data, season }) => {
   }, [data, dispatch]);
 
   const handleRadioChange = async (device, state) => {
+    console.log('Attempting state change in read-only mode:', readOnlyMode);
+    
+    if (readOnlyMode) {
+      setAlertColor('warning');
+      setAlertMessage('You are in read only mode');
+      return;
+    }
+
+    setAlertColor('danger');
     console.log(device, state);
     dispatch(setOverride({ name: device, value: state }));
 
@@ -65,11 +79,18 @@ const ManualOverride = ({ data, season }) => {
       <CCardBody className="p-0">
         {alertMessage && (
           <CAlert
-            color="danger"
+            color={alertColor}
             dismissible
-            onClose={() => setAlertMessage('')}
+            onClose={() => {
+              setAlertMessage('');
+              setAlertColor('danger');
+            }}
           >
-            <strong>Error!</strong> {alertMessage}
+            {alertColor === 'warning' ? (
+              alertMessage
+            ) : (
+              <><strong>Error!</strong> {alertMessage}</>
+            )}
           </CAlert>
         )}
         <CRow className="g-3">

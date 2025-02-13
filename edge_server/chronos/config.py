@@ -63,5 +63,6 @@ config_dict = {
     },
     "efficiency": {"hours": 12},
     "MOCK_DEVICES": os.getenv("MOCK_DEVICES", "false").lower() == "true",
+    "READ_ONLY_MODE": os.getenv("READ_ONLY_MODE", "false").lower() == "true",
 }
 cfg = Struct(config_dict)

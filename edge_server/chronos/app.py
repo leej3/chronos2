@@ -126,6 +126,21 @@ def with_rate_limit(func: Callable):
     return wrapper
 
 
+def check_read_only(func: Callable):
+    """Decorator to prevent write operations in read-only mode."""
+
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        if cfg.READ_ONLY_MODE:
+            raise HTTPException(
+                status_code=403,
+                detail="Operation not permitted: system is in read-only mode",
+            )
+        return await func(*args, **kwargs)
+
+    return wrapper
+
+
 DeviceTuple = namedtuple(
     "DeviceTuple", ["boiler", "chiller1", "chiller2", "chiller3", "chiller4"]
 )
@@ -175,10 +190,17 @@ async def get_data():
                 devices=devices,
                 status=status,
                 mock_devices=MOCK_DEVICES,
+                read_only_mode=cfg.READ_ONLY_MODE,
             )
         except Exception as e:
             logger.error(f"Error reading data: {e}")
-            return SystemStatus(sensors={}, devices={}, status=False, mock_devices=True)
+            return SystemStatus(
+                sensors={},
+                devices={},
+                status=False,
+                mock_devices=True,
+                read_only_mode=cfg.READ_ONLY_MODE,
+            )
 
     try:
         sensors = {
@@ -188,11 +210,21 @@ async def get_data():
         status = get_chronos_status()
         devices = {i: DEVICES[i].state for i in range(len(DEVICES))}
         return SystemStatus(
-            sensors=sensors, devices=devices, status=status, mock_devices=False
+            sensors=sensors,
+            devices=devices,
+            status=status,
+            mock_devices=MOCK_DEVICES,
+            read_only_mode=cfg.READ_ONLY_MODE,
         )
     except Exception as e:
         logger.error(f"Error reading data: {e}")
-        return SystemStatus(sensors={}, devices={}, status=False, mock_devices=False)
+        return SystemStatus(
+            sensors={},
+            devices={},
+            status=False,
+            mock_devices=False,
+            read_only_mode=cfg.READ_ONLY_MODE,
+        )
 
 
 @app.get("/device_state", response_model=DeviceModel)
@@ -209,6 +241,7 @@ async def get_device_state(
 @app.post("/device_state")
 @with_circuit_breaker
 @with_rate_limit
+@check_read_only
 async def update_device_state(data: DeviceModel):
     if MOCK_DEVICES:
         return DeviceModel(id=data.id, state=data.state)
@@ -273,6 +306,7 @@ async def get_boiler_status():
 @app.post("/boiler_set_setpoint")
 @with_circuit_breaker
 @with_rate_limit
+@check_read_only
 async def set_setpoint(data: SetpointUpdate):
     if MOCK_DEVICES:
         try:
