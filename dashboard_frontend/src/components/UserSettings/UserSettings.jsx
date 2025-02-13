@@ -69,7 +69,7 @@ const UserSettings = ({ data }) => {
       const response = await updateSettings(JSON.stringify(formData));
       toast.success(response?.data?.message);
     } catch (error) {
-      toast.error(error?.response?.data?.message || 'Đã có lỗi xảy ra');
+      toast.error(error?.response?.data?.message || 'An error occurred');
     }
   };
 
@@ -114,7 +114,7 @@ const UserSettings = ({ data }) => {
               </div>
             </CRow>
 
-            {/* Nút Show Settings chỉ hiển thị trên màn hình nhỏ */}
+            {/* Show Settings button only visible on small screens */}
             <CCol xs="12" className="text-center">
               <CButton
                 color="primary"
@@ -125,7 +125,7 @@ const UserSettings = ({ data }) => {
               </CButton>
             </CCol>
 
-            {/* Form nhập liệu chỉ hiển thị khi bấm nút Show Settings */}
+            {/* Input form only shows when Show Settings button is clicked */}
             <div className={`show-settings-form ${showForm ? 'show' : ''}`}>
               <CRow>
                 {[
