@@ -61,7 +61,7 @@ const UserSettings = ({ data }) => {
       toast.success(response?.data?.message);
       setIsEditing(false);
     } catch (error) {
-      toast.error(error?.response?.data?.message || 'Something went wrong');
+      toast.error(error?.response?.data?.message || 'An error occurred');
     }
   };
 
