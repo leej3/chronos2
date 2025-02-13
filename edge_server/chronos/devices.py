@@ -116,18 +116,13 @@ class ModbusDevice:
         Read various temperature and status data from the boiler.
 
         Available registers on this boiler model:
-        - Input registers (with +1 offset):
-            - alarm, pump, flame status (30003-30005)
-            - cascade power, water flow (30006-30007)
+        - Input registers:
+            - cascade power (30006)
             - outlet, inlet, flue temps (30008-30010)
             - firing rate (30011)
 
-        - Holding registers (no offset):
+        - Holding registers:
             - system supply temp (40006)
-
-        Unavailable registers on this model (attempted but not working):
-            - DHW temp (40007)
-            - min/max modulation rates (40014-40015)
 
         Args:
             max_retries (int): Maximum number of retry attempts
@@ -143,70 +138,39 @@ class ModbusDevice:
         for attempt in range(max_retries):
             try:
                 # Read input registers for status and performance (in chunks)
-                # Note: Input registers are 30001-based, so we add 1 to the config values
                 i_result1 = self._read_input_register(
-                    self.registers.input.alarm + 1, count=6
-                )  # First chunk: alarm through water_flow
-                i_result2 = self._read_input_register(
-                    self.registers.input.outlet_temp + 1, count=4
-                )  # Second chunk: temps and firing rate
+                    self.registers.input.cascade_power, count=6
+                )  # First chunk: cascade_power through firing_rate
 
                 # Try reading supply temp holding register (known to work)
                 try:
                     h_result1 = self._read_holding_register(
                         self.registers.holding.supply_temp, count=1
                     )
-                    system_supply_temp = c_to_f(h_result1[0] / 10.0)
+                    # Convert from C to F (divide by 10 first)
+                    celsius = h_result1[0] / 10.0
+                    system_supply_temp = round(c_to_f(celsius), 1)
                 except Exception as e:
                     logger.warning(f"Failed to read supply temp: {e}")
                     system_supply_temp = None
 
-                # The following registers were attempted but are not available on this model:
-                """
-                # DHW temp holding register
-                h_result2 = self._read_holding_register(self.registers.holding.dhw_temp, count=1)
-                dhw_temp = c_to_f(h_result2[0] / 10.0)
-
-                # Min/max modulation rates
-                h_result3 = self._read_holding_register(self.registers.holding.min_modulation, count=1)
-                min_modulation = float(h_result3[0])
-                h_result4 = self._read_holding_register(self.registers.holding.max_modulation, count=1)
-                max_modulation = float(h_result4[0])
-                """
-
                 boiler_stats = {
-                    # Temperatures
-                    "system_supply_temp": system_supply_temp,  # From holding register (available)
-                    "outlet_temp": c_to_f(
-                        i_result2[0] / 10.0
-                    ),  # From input register (available)
-                    "inlet_temp": c_to_f(
-                        i_result2[1] / 10.0
-                    ),  # From input register (available)
-                    "flue_temp": c_to_f(
-                        i_result2[2] / 10.0
-                    ),  # From input register (available)
-                    # Performance
+                    # Temperatures - all need C to F conversion
+                    "system_supply_temp": system_supply_temp,
+                    "outlet_temp": round(
+                        c_to_f(i_result1[2] / 10.0), 1
+                    ),  # index 2 = outlet
+                    "inlet_temp": round(
+                        c_to_f(i_result1[3] / 10.0), 1
+                    ),  # index 3 = inlet
+                    "flue_temp": round(
+                        c_to_f(i_result1[4] / 10.0), 1
+                    ),  # index 4 = flue
+                    # Performance - direct percentages
                     "cascade_current_power": float(
-                        i_result1[3]
-                    ),  # From input register (available)
-                    "lead_firing_rate": float(
-                        i_result2[3]
-                    ),  # From input register (available)
-                    "water_flow_rate": float(
-                        i_result1[4] / 10.0
-                    ),  # From input register (available)
-                    # Status
-                    "pump_status": bool(
-                        i_result1[1]
-                    ),  # From input register (available)
-                    "flame_status": bool(
-                        i_result1[2]
-                    ),  # From input register (available)
-                    # The following values were attempted but are not available:
-                    # "dhw_temp": None,  # From holding register (not available)
-                    # "min_modulation_rate": None,  # From holding register (not available)
-                    # "max_modulation_rate": None  # From holding register (not available)
+                        i_result1[0]
+                    ),  # index 0 = cascade_power
+                    "lead_firing_rate": float(i_result1[5]),  # index 5 = firing_rate
                 }
 
                 logger.info(f"Successfully read boiler data (attempt {attempt + 1})")
