@@ -8,6 +8,7 @@ class SystemStatus(BaseModel):
     devices: dict
     status: bool
     mock_devices: bool = False
+    read_only_mode: bool = False
 
 
 class DeviceModel(BaseModel):

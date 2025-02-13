@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
 
-import { cilFactorySlash } from '@coreui/icons';
+import { cilFactorySlash, cilLockLocked } from '@coreui/icons';
 import CIcon from '@coreui/icons-react';
 import {
   CContainer,
@@ -20,6 +20,7 @@ const AppHeader = () => {
 
   // Get mockDevices state from Redux store
   const mockDevices = useSelector((state) => state.chronos.mock_devices);
+  const readOnlyMode = useSelector((state) => state.chronos.read_only_mode);
 
   // Add shadow effect on scroll
   useEffect(() => {
@@ -51,6 +52,17 @@ const AppHeader = () => {
               >
                 <CIcon icon={cilFactorySlash} className="mr-2" />
                 <span className="font-weight-bold m-2">Mock Devices Mode</span>
+              </CNavLink>
+            </CNavItem>
+          )}
+          {readOnlyMode && (
+            <CNavItem>
+              <CNavLink
+                href="#"
+                className="d-flex align-items-center text-warning m-1"
+              >
+                <CIcon icon={cilLockLocked} className="mr-2" />
+                <span className="font-weight-bold m-2">Read Only Mode</span>
               </CNavLink>
             </CNavItem>
           )}
