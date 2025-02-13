@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, validator
 
 
 class UpdateDeviceState(BaseModel):
@@ -22,10 +22,19 @@ class UpdateSettings(BaseModel):
 
     # device: int
     tolerance: Optional[float]
-    setpoint_min: Optional[float]
-    setpoint_max: Optional[float]
+    setpoint_min: Optional[float] = Field(None, ge=120.0, le=180.0)
+    setpoint_max: Optional[float] = Field(None, ge=120.0, le=180.0)
     setpoint_offset_summer: Optional[float]
     setpoint_offset_winter: Optional[float]
     mode_change_delta_temp: Optional[float]
     mode_switch_lockout_time: Optional[int]
     cascade_time: Optional[int]
+
+    @validator("setpoint_max")
+    def max_greater_than_min(cls, v, values):
+        if v is not None and values.get("setpoint_min") is not None:
+            if v < values["setpoint_min"]:
+                raise ValueError(
+                    "Maximum setpoint must be greater than minimum setpoint"
+                )
+        return v

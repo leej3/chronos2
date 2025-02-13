@@ -66,10 +66,34 @@ const UserSettings = ({ data }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await updateSettings(JSON.stringify(formData));
+      // Convert string values to numbers where needed
+      const processedData = Object.entries(formData).reduce((acc, [key, value]) => {
+        acc[key] = value === null ? null : Number(value);
+        return acc;
+      }, {});
+
+      // Validate setpoint min/max
+      if (processedData.setpoint_min !== null || processedData.setpoint_max !== null) {
+        if (processedData.setpoint_min !== null && (processedData.setpoint_min < 120 || processedData.setpoint_min > 180)) {
+          toast.error('Minimum setpoint must be between 120°F and 180°F');
+          return;
+        }
+        if (processedData.setpoint_max !== null && (processedData.setpoint_max < 120 || processedData.setpoint_max > 180)) {
+          toast.error('Maximum setpoint must be between 120°F and 180°F');
+          return;
+        }
+        if (processedData.setpoint_min !== null && processedData.setpoint_max !== null && 
+            processedData.setpoint_min > processedData.setpoint_max) {
+          toast.error('Maximum setpoint must be greater than minimum setpoint');
+          return;
+        }
+      }
+      
+      const response = await updateSettings(processedData);
       toast.success(response?.data?.message);
     } catch (error) {
-      toast.error(error?.response?.data?.message || 'An error occurred');
+      const errorMessage = error?.response?.data?.message;
+      toast.error(errorMessage || 'Failed to update settings');
     }
   };
 

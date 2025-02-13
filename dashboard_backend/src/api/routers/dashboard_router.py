@@ -1,3 +1,4 @@
+import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Request, Security
@@ -8,6 +9,8 @@ from src.core.services.chronos import Chronos
 from src.core.services.edge_server import EdgeServer
 from src.features.auth.jwt_handler import UserToken
 from src.features.dashboard.dashboard_service import DashboardService
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["Dashboard"])
 dashboard_service = DashboardService()
@@ -55,15 +58,55 @@ async def update_settings(
     data: UpdateSettings,
     current_user: Annotated[UserToken, Security(get_current_user)],
 ):
-    # Update for winter
     try:
-        reponse = edge_server.boiler_set_setpoint(data.setpoint_offset_winter)
+        logger.info(f"Received settings update request: {data.dict()}")
+
+        # Handle winter setpoint offset if provided
+        if data.setpoint_offset_winter is not None:
+            logger.info(
+                f"Processing winter setpoint offset: {data.setpoint_offset_winter}"
+            )
+
+            # Get current boiler status to get base setpoint
+            boiler_status = edge_server.get_boiler_status()
+            current_setpoint = boiler_status.get(
+                "current_setpoint", 150.0
+            )  # Default to 150°F if not found
+
+            # Calculate new setpoint with offset
+            new_setpoint = current_setpoint + data.setpoint_offset_winter
+
+            # First ensure within user-configured range if provided
+            if data.setpoint_min is not None:
+                new_setpoint = max(data.setpoint_min, new_setpoint)
+            if data.setpoint_max is not None:
+                new_setpoint = min(data.setpoint_max, new_setpoint)
+
+            # Validate against hardware limits before proceeding
+            if new_setpoint < 120.0 or new_setpoint > 180.0:
+                error_msg = f"Calculated setpoint {new_setpoint}°F is outside valid range (120°F-180°F). Please adjust your settings."
+                logger.error(error_msg)
+                return JSONResponse(content={"message": error_msg}, status_code=400)
+
+            logger.info(
+                f"Calculated new setpoint: {new_setpoint}°F (base: {current_setpoint}°F + offset: {data.setpoint_offset_winter}°F, "
+                f"user limits: {data.setpoint_min}°F - {data.setpoint_max}°F)"
+            )
+
+            # Update boiler setpoint
+            response = edge_server.boiler_set_setpoint(new_setpoint)
+            logger.info(f"Edge server response: {response}")
+
+        # Update other settings
         for key, value in data.dict().items():
             if value is not None:
                 setattr(chronos, key, value)
-        return JSONResponse(content=reponse, status_code=200)
 
+        return JSONResponse(
+            content={"message": "Settings updated successfully"}, status_code=200
+        )
     except Exception as e:
+        logger.error(f"Error updating settings: {str(e)}", exc_info=True)
         return JSONResponse(
             content={"message": f"Error updating settings: {str(e)}"}, status_code=400
         )

@@ -1,8 +1,8 @@
 SETTING_DATA = [
     {
         "id": 1,
-        "setpoint_min": 70,
-        "setpoint_max": 102,
+        "setpoint_min": 120,
+        "setpoint_max": 180,
         "setpoint_offset_summer": 0,
         "setpoint_offset_winter": -10,
         "tolerance": 0,
