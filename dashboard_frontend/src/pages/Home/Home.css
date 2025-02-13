@@ -4,10 +4,10 @@
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
   text-align: center;
   border: 2px solid #6c7a96;
-  padding: 16px; /* Thêm px để tránh lỗi */
+  padding: 16px; /* Add px to avoid errors */
 }
 
-/* Mặc định cho màn hình lớn */
+/* Default for large screens */
 .item {
   border: 0;
   padding: 0;
