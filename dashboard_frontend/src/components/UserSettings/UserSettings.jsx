@@ -25,7 +25,7 @@ const UserSettings = ({ data }) => {
     mode_change_delta_temp: null,
     mode_switch_lockout_time: null,
     cascade_time: null,
-  });
+  };
 
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);

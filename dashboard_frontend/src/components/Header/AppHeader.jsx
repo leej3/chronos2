@@ -29,6 +29,8 @@ const AppHeader = () => {
   const mockDevices = useSelector((state) => state.chronos.mock_devices);
   const readOnlyMode = useSelector((state) => state.chronos.read_only_mode);
 
+  const outdoorTemp = data?.results?.outside_temp || 'N/A';
+  const avgTemp = data?.efficiency?.average_temperature_difference || 'N/A';
   useEffect(() => {
     document.addEventListener('scroll', () => {
       headerRef.current?.classList.toggle(

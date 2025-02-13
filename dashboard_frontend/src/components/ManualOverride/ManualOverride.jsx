@@ -212,7 +212,7 @@ const ManualOverride = ({ data }) => {
             )}
           </CAlert>
         )}
-        <CRow className="g-3">
+        <CRow className="g-3 mx-0">
           {Object.keys(state)
             .filter(
               (device, index) =>

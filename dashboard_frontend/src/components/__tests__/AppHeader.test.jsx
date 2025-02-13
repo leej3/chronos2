@@ -59,6 +59,11 @@ describe('AppHeader Component', () => {
     renderAppHeader(state);
 
     expect(screen.getByText('Chronus Dashboard')).toBeInTheDocument();   
+    expect(screen.getByText('Chronus Dashboard')).toBeInTheDocument();
+    expect(screen.getByText('SYSTEM')).toBeInTheDocument();
+    const onlineElements = screen.getAllByText('ONLINE');
+    expect(onlineElements.length).toBeGreaterThan(0);
+    expect(onlineElements[0]).toBeInTheDocument();
   });
 
   it('should show system status as OFFLINE with red indicator', () => {
