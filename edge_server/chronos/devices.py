@@ -112,17 +112,29 @@ class ModbusDevice:
         return result.registers
 
     def read_boiler_data(self, max_retries=3):
-        """
-        Read various temperature and status data from the boiler.
+        """Read various temperature and status data from the boiler.
 
-        Available registers on this boiler model:
-        - Input registers:
-            - cascade power (30006)
-            - outlet, inlet, flue temps (30008-30010)
-            - firing rate (30011)
+        This implementation has been verified against a working C implementation (bstat).
+        Register readings fall into these categories:
 
-        - Holding registers:
-            - system supply temp (40006)
+        Verified Working (matching bstat):
+        - Temperatures (all converted from C to F, divided by 10):
+            - System Supply Temp (40006)
+            - Outlet Temp (30008)
+            - Inlet Temp (30009)
+            - Flue Temp (30010)
+        - Performance:
+            - Cascade Current Power (30006) - direct percentage
+            - Lead Firing Rate (30011) - direct percentage
+        - Status:
+            - Operating Mode (40001) - with string mapping
+            - Cascade Mode (40002) - with string mapping
+            - Alarm/Pump/Flame Status (30003-30005) - boolean values
+
+        Unverified/Potentially Incorrect:
+        - Setpoints (40003-40005):
+            Note: The working implementation reads setpoint from a file rather than Modbus.
+            These values may not be accurate or may need different scaling.
 
         Args:
             max_retries (int): Maximum number of retry attempts
@@ -137,40 +149,42 @@ class ModbusDevice:
 
         for attempt in range(max_retries):
             try:
-                # Read input registers for status and performance (in chunks)
-                i_result1 = self._read_input_register(
-                    self.registers.input.cascade_power, count=6
-                )  # First chunk: cascade_power through firing_rate
+                # Read holding registers block (operating mode through supply temp)
+                h_result = self._read_holding_register(
+                    self.registers.holding.operating_mode, count=7
+                )
 
-                # Try reading supply temp holding register (known to work)
-                try:
-                    h_result1 = self._read_holding_register(
-                        self.registers.holding.supply_temp, count=1
-                    )
-                    # Convert from C to F (divide by 10 first)
-                    celsius = h_result1[0] / 10.0
-                    system_supply_temp = round(c_to_f(celsius), 1)
-                except Exception as e:
-                    logger.warning(f"Failed to read supply temp: {e}")
-                    system_supply_temp = None
+                # Read input registers block (status through firing rate)
+                i_result = self._read_input_register(
+                    self.registers.input.alarm, count=9
+                )
 
                 boiler_stats = {
-                    # Temperatures - all need C to F conversion
-                    "system_supply_temp": system_supply_temp,
-                    "outlet_temp": round(
-                        c_to_f(i_result1[2] / 10.0), 1
-                    ),  # index 2 = outlet
-                    "inlet_temp": round(
-                        c_to_f(i_result1[3] / 10.0), 1
-                    ),  # index 3 = inlet
-                    "flue_temp": round(
-                        c_to_f(i_result1[4] / 10.0), 1
-                    ),  # index 4 = flue
-                    # Performance - direct percentages
-                    "cascade_current_power": float(
-                        i_result1[0]
-                    ),  # index 0 = cascade_power
-                    "lead_firing_rate": float(i_result1[5]),  # index 5 = firing_rate
+                    # System Status - Verified working
+                    "operating_mode": h_result[0],
+                    "operating_mode_str": self.operating_modes.get(
+                        str(h_result[0]), f"Unknown ({h_result[0]})"
+                    ),
+                    "cascade_mode": h_result[1],
+                    "cascade_mode_str": self.cascade_modes.get(
+                        str(h_result[1]), f"Unknown ({h_result[1]})"
+                    ),
+                    # Setpoints - Unverified, may be incorrect
+                    "current_setpoint": round(c_to_f(h_result[2] / 10.0), 1),
+                    "min_setpoint": round(c_to_f(h_result[3] / 10.0), 1),
+                    "max_setpoint": round(c_to_f(h_result[4] / 10.0), 1),
+                    # Temperatures - Verified working
+                    "system_supply_temp": round(c_to_f(h_result[6] / 10.0), 1),
+                    "outlet_temp": round(c_to_f(i_result[5] / 10.0), 1),
+                    "inlet_temp": round(c_to_f(i_result[6] / 10.0), 1),
+                    "flue_temp": round(c_to_f(i_result[7] / 10.0), 1),
+                    # Status Flags - Verified working
+                    "alarm_status": bool(i_result[0]),
+                    "pump_status": bool(i_result[1]),
+                    "flame_status": bool(i_result[2]),
+                    # Performance - Verified working
+                    "cascade_current_power": float(i_result[3]),
+                    "lead_firing_rate": float(i_result[8]),
                 }
 
                 logger.info(f"Successfully read boiler data (attempt {attempt + 1})")

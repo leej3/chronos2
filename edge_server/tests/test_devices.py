@@ -1,5 +1,9 @@
 from unittest.mock import MagicMock, patch
 
+import pytest
+from chronos.devices import ModbusDevice, ModbusException
+from pymodbus.exceptions import ModbusIOException
+
 
 def test_initial_state_is_none_before_reading(device_serial):
     # Check internal state is initially None
@@ -88,3 +92,155 @@ def test_send_command_exception(mock_serial, device_serial, caplog):
     assert any(
         "Returning mock response for debugging" in msg for msg in warning_messages
     )
+
+
+@pytest.fixture
+def mock_modbus_device():
+    """Create a mock ModbusDevice with mocked client."""
+    with patch("chronos.devices.ModbusSerialClient") as mock_client:
+        # Mock successful connection
+        mock_client.return_value.connect.return_value = True
+        mock_client.return_value.is_socket_open.return_value = True
+        device = ModbusDevice()
+        yield device
+
+
+def test_modbus_device_connection(mock_modbus_device):
+    """Test basic connection functionality."""
+    assert mock_modbus_device.is_connected() is True
+
+
+@pytest.mark.parametrize(
+    "registers,expected",
+    [
+        # Test case 1: Normal operation
+        (
+            {
+                "holding": [
+                    1,
+                    2,
+                    150,
+                    120,
+                    180,
+                    0,
+                    220,
+                ],  # Mode, Cascade, Setpoints, Supply
+                "input": [
+                    1,
+                    1,
+                    1,
+                    86,
+                    0,
+                    180,
+                    160,
+                    200,
+                    66,
+                ],  # Status, Power, Temps, Rate
+            },
+            {
+                "operating_mode": 1,
+                "operating_mode_str": "Standby",
+                "cascade_mode": 2,
+                "cascade_mode_str": "Member",
+                "system_supply_temp": round((9.0 / 5.0) * (220 / 10.0) + 32.0, 1),
+                "outlet_temp": round((9.0 / 5.0) * (180 / 10.0) + 32.0, 1),
+                "inlet_temp": round((9.0 / 5.0) * (160 / 10.0) + 32.0, 1),
+                "flue_temp": round((9.0 / 5.0) * (200 / 10.0) + 32.0, 1),
+                "alarm_status": True,
+                "pump_status": True,
+                "flame_status": True,
+                "cascade_current_power": 86.0,
+                "lead_firing_rate": 66.0,
+            },
+        ),
+        # Test case 2: All zeros/off
+        (
+            {"holding": [0, 0, 0, 0, 0, 0, 0], "input": [0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {
+                "operating_mode": 0,
+                "operating_mode_str": "Initialization",
+                "cascade_mode": 0,
+                "cascade_mode_str": "Single Boiler",
+                "system_supply_temp": 32.0,
+                "outlet_temp": 32.0,
+                "inlet_temp": 32.0,
+                "flue_temp": 32.0,
+                "alarm_status": False,
+                "pump_status": False,
+                "flame_status": False,
+                "cascade_current_power": 0.0,
+                "lead_firing_rate": 0.0,
+            },
+        ),
+    ],
+)
+def test_read_boiler_data(mock_modbus_device, registers, expected):
+    """Test reading boiler data with different register values."""
+    # Mock the register read responses
+    mock_modbus_device.client.read_holding_registers.return_value.registers = registers[
+        "holding"
+    ]
+    mock_modbus_device.client.read_holding_registers.return_value.isError.return_value = (
+        False
+    )
+
+    mock_modbus_device.client.read_input_registers.return_value.registers = registers[
+        "input"
+    ]
+    mock_modbus_device.client.read_input_registers.return_value.isError.return_value = (
+        False
+    )
+
+    # Read data
+    result = mock_modbus_device.read_boiler_data()
+
+    # Verify all expected values
+    for key, value in expected.items():
+        assert (
+            result[key] == value
+        ), f"Mismatch for {key}: expected {value}, got {result[key]}"
+
+
+def test_read_boiler_data_disconnected(mock_modbus_device):
+    """Test reading when device is disconnected."""
+    mock_modbus_device.client.is_socket_open.return_value = False
+    with pytest.raises(ModbusException, match="Device not connected"):
+        mock_modbus_device.read_boiler_data()
+
+
+def test_read_boiler_data_retry_success(mock_modbus_device):
+    """Test successful retry after initial failure."""
+    # First call fails, second succeeds
+    mock_modbus_device.client.read_holding_registers.side_effect = [
+        ModbusIOException("First attempt fails"),
+        MagicMock(registers=[1, 2, 150, 120, 180, 0, 220], isError=lambda: False),
+    ]
+    mock_modbus_device.client.read_input_registers.return_value.registers = [
+        1,
+        1,
+        1,
+        86,
+        0,
+        180,
+        160,
+        200,
+        66,
+    ]
+    mock_modbus_device.client.read_input_registers.return_value.isError.return_value = (
+        False
+    )
+
+    result = mock_modbus_device.read_boiler_data()
+    assert result is not None
+    assert result["operating_mode"] == 1
+    assert result["cascade_current_power"] == 86.0
+
+
+def test_read_boiler_data_all_retries_fail(mock_modbus_device):
+    """Test when all retry attempts fail."""
+    mock_modbus_device.client.read_holding_registers.side_effect = ModbusIOException(
+        "Communication failed"
+    )
+
+    result = mock_modbus_device.read_boiler_data(max_retries=3)
+    assert result is None

@@ -26,33 +26,54 @@ def test_device_initialization(mock_modbus_client):
 
 
 def test_read_boiler_data_success(device, mock_modbus_client):
-    """Test successful reading of boiler data."""
-    # Mock input register responses
-    mock_modbus_client.return_value.read_input_registers.side_effect = [
-        # First chunk (alarm through water_flow)
-        MagicMock(isError=lambda: False, registers=[1, 1, 1, 50, 100, 0]),
-        # Second chunk (temps and firing rate)
-        MagicMock(isError=lambda: False, registers=[700, 650, 800, 75]),
-    ]
-
-    # Mock holding register response for supply temp
+    """Test successful reading of boiler data with verified values."""
+    # Mock holding register responses (mode through supply temp)
     mock_modbus_client.return_value.read_holding_registers.return_value = MagicMock(
         isError=lambda: False,
-        registers=[680],  # 68.0°C
+        registers=[
+            2,
+            1,
+            150,
+            120,
+            180,
+            0,
+            220,
+        ],  # Mode=CH Demand, Cascade=Manager, Setpoints, Supply=22.0°C
     )
 
-    # stats = device.read_boiler_data()  # No device available for testing
+    # Mock input register responses (status through firing rate)
+    mock_modbus_client.return_value.read_input_registers.return_value = MagicMock(
+        isError=lambda: False,
+        registers=[
+            1,
+            1,
+            1,
+            86,
+            0,
+            180,
+            160,
+            200,
+            66,
+        ],  # Status flags, Power=86%, Temps, Rate=66%
+    )
 
-    # assert stats is not None
-    # assert stats["system_supply_temp"] == 154.4  # 68.0°C -> 154.4°F
-    # assert stats["outlet_temp"] == 158.0  # 70.0°C -> 158.0°F
-    # assert stats["inlet_temp"] == 149.0  # 65.0°C -> 149.0°F
-    # assert stats["flue_temp"] == 176.0  # 80.0°C -> 176.0°F
-    # assert stats["cascade_current_power"] == 50.0
-    # assert stats["lead_firing_rate"] == 75.0
-    # assert stats["water_flow_rate"] == 10.0
-    # assert stats["pump_status"] is True
-    # assert stats["flame_status"] is True
+    stats = device.read_boiler_data()
+
+    assert stats is not None
+    # Verified working values
+    assert stats["operating_mode"] == 2
+    assert stats["operating_mode_str"] == "CH Demand"
+    assert stats["cascade_mode"] == 1
+    assert stats["cascade_mode_str"] == "Manager"
+    assert stats["system_supply_temp"] == round((9.0 / 5.0) * (220 / 10.0) + 32.0, 1)
+    assert stats["outlet_temp"] == round((9.0 / 5.0) * (180 / 10.0) + 32.0, 1)
+    assert stats["inlet_temp"] == round((9.0 / 5.0) * (160 / 10.0) + 32.0, 1)
+    assert stats["flue_temp"] == round((9.0 / 5.0) * (200 / 10.0) + 32.0, 1)
+    assert stats["cascade_current_power"] == 86.0
+    assert stats["lead_firing_rate"] == 66.0
+    assert stats["alarm_status"] is True
+    assert stats["pump_status"] is True
+    assert stats["flame_status"] is True
 
 
 def test_read_boiler_data_failure(device, mock_modbus_client):
@@ -96,19 +117,19 @@ def test_set_boiler_setpoint_failure(device, mock_modbus_client):
 
 def test_read_operating_status_success(device, mock_modbus_client):
     """Test successful reading of operating status."""
-    # Mock register responses
+    # Mock register responses with verified values
     mock_modbus_client.return_value.read_holding_registers.side_effect = [
         MagicMock(isError=lambda: False, registers=[2]),  # Operating mode (CH Demand)
-        MagicMock(isError=lambda: False, registers=[0]),  # Cascade mode (Single Boiler)
-        MagicMock(isError=lambda: False, registers=[700]),  # Setpoint
+        MagicMock(isError=lambda: False, registers=[1]),  # Cascade mode (Manager)
+        MagicMock(isError=lambda: False, registers=[150]),  # Setpoint (15.0°C)
     ]
 
-    # status = device.read_operating_status()  # No device available for testing
-    # assert status["operating_mode"] == 2
-    # assert "CH Demand" in status["operating_mode_str"]  # Mode 2 is "CH Demand" in config
-    # assert status["cascade_mode"] == 0
-    # assert "Single Boiler" in status["cascade_mode_str"]  # Mode 0 is "Single Boiler"
-    # assert status["current_setpoint"] == 158.0  # 70.0°C -> 158.0°F
+    status = device.read_operating_status()
+    assert status["operating_mode"] == 2
+    assert status["operating_mode_str"] == "CH Demand"
+    assert status["cascade_mode"] == 1
+    assert status["cascade_mode_str"] == "Manager"
+    assert status["current_setpoint"] == round((9.0 / 5.0) * (150 / 10.0) + 32.0, 1)
 
 
 def test_read_error_history_success(device, mock_modbus_client):
