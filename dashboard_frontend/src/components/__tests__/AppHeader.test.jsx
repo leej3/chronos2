@@ -15,7 +15,7 @@ jest.mock('../../utils/constant', () => ({
 const mockStore = (state) => {
   return createStore(() => state);
 };
-jest.mock('../SeasonSwitch/SeasonSwitch.css', () => {});
+jest.mock('../Header/AppHeader.css', () => {});
 
 const originalError = console.error;
 beforeAll(() => {
@@ -54,7 +54,9 @@ describe('AppHeader Component', () => {
 
     expect(screen.getByText('Chronus Dashboard')).toBeInTheDocument();
     expect(screen.getByText('SYSTEM')).toBeInTheDocument();
-    expect(screen.getByText('ONLINE')).toBeInTheDocument();
+    const onlineElements = screen.getAllByText('ONLINE');
+    expect(onlineElements.length).toBeGreaterThan(0);
+    expect(onlineElements[0]).toBeInTheDocument();
   });
 
   it('should show system status as OFFLINE with red indicator', () => {
@@ -67,7 +69,9 @@ describe('AppHeader Component', () => {
 
     const { container } = renderAppHeader(state);
 
-    expect(screen.getByText('OFFLINE')).toBeInTheDocument();
+    const offlineElements = screen.getAllByText('OFFLINE');
+    expect(offlineElements.length).toBeGreaterThan(0);
+    expect(offlineElements[0]).toBeInTheDocument();
     const statusIndicator = container.querySelector('.rounded-circle');
     expect(statusIndicator).toHaveStyle({ backgroundColor: '#dc3545' });
   });
@@ -82,7 +86,9 @@ describe('AppHeader Component', () => {
 
     const { container } = renderAppHeader(state);
 
-    expect(screen.getByText('ONLINE')).toBeInTheDocument();
+    const onlineElements = screen.getAllByText('ONLINE');
+    expect(onlineElements.length).toBeGreaterThan(0);
+    expect(onlineElements[0]).toBeInTheDocument();
     const statusIndicator = container.querySelector('.rounded-circle');
     expect(statusIndicator).toHaveStyle({ backgroundColor: '#198754' });
   });
@@ -97,7 +103,9 @@ describe('AppHeader Component', () => {
 
     renderAppHeader(state);
 
-    expect(screen.getByText('Mock Devices Mode')).toBeInTheDocument();
+    const mockDeviceElements = screen.getAllByText('Mock Devices Mode');
+    expect(mockDeviceElements.length).toBeGreaterThan(0);
+    expect(mockDeviceElements[0]).toBeInTheDocument();
   });
 
   it('should not show Mock Devices Mode when mockDevices is false', () => {

@@ -1,39 +1,25 @@
 .season-toggle-header {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.25rem;
-  padding-left: 0;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 0.5rem;
+  margin: 0 auto;
+  max-width: 400px;
 }
 
 .season-icon {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 24px;
   border-radius: 20px;
   cursor: pointer;
   transition: all 0.3s ease;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.season-icon:hover:not(.locked):not(.active) {
-  background: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
-}
-
-.season-icon.active {
-  background: rgba(255, 255, 255, 0.3);
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
-}
-
-.season-icon:not(.active) {
-  opacity: 0.6;
-}
-
-.season-icon:not(.active):hover {
-  opacity: 1;
-  background-color: rgba(255, 255, 255, 0.05);
+  min-width: 100px;
+  text-align: center;
 }
 
 .season-emoji {
@@ -43,8 +29,9 @@
 
 .arrow-icon {
   color: rgba(255, 255, 255, 0.5);
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
+  margin: 0 8px;
 }
 
 .season-switch-overlay {
@@ -102,4 +89,19 @@
 
 .season-icon.disabled {
   cursor: not-allowed;
+}
+
+.season-icon-img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  margin-bottom: 4px;
+}
+
+.season-icon.active .season-icon-img {
+  filter: brightness(1.2);
+}
+
+.season-icon.locked .season-icon-img {
+  opacity: 0.5;
 }

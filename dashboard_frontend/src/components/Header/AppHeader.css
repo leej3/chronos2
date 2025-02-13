@@ -1,0 +1,65 @@
+.app-header {
+  position: sticky;
+}
+
+.header-container {
+  max-width: 100%;
+  padding: 0.5rem;
+}
+
+.status-indicator {
+  font-weight: 600;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 0.25rem;
+}
+
+.status-dot-online {
+  background-color: #198754;
+}
+
+.status-dot-offline {
+  background-color: #dc3545;
+}
+
+.season-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.mock-devices-alert {
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+}
+
+.mock-devices-alert .icon {
+  margin-right: 0.25rem;
+}
+
+.temperature-label {
+  color: #8a93a2;
+  font-weight: 500;
+}
+
+.temperature-value {
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-left: 4px;
+}
+
+.temperature-container {
+  margin-right: 1rem;
+}
+
+@media (max-width: 768px) {
+  .temperature-container {
+    margin-right: 0;
+  }
+}

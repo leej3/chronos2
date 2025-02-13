@@ -102,7 +102,11 @@ const SeasonSwitch = () => {
               !lockoutInfo && season !== 0 && handleSeasonChange('Winter')
             }
           >
-            <span className="season-emoji">❄️</span>
+            <img
+              src={`/images/Icons/WinterSummer/WOff.png`}
+              alt="Winter"
+              className="season-icon-img"
+            />
             <span>Winter</span>
           </div>
         </CTooltip>
@@ -135,7 +139,13 @@ const SeasonSwitch = () => {
               !lockoutInfo && season !== 1 && handleSeasonChange('Summer')
             }
           >
-            <span className="season-emoji">☀️</span>
+            <img
+              src={`/images/Icons/WinterSummer/${
+                season === 1 ? 'SOn' : 'SOff'
+              }.png`}
+              alt="Summer"
+              className="season-icon-img"
+            />
             <span>Summer</span>
           </div>
         </CTooltip>

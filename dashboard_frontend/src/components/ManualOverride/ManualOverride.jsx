@@ -98,7 +98,7 @@ const ManualOverride = ({ data }) => {
 
     return (
       <CCol
-        xs={12}
+        xs={6}
         sm={6}
         md={4}
         lg={2.4}
@@ -138,7 +138,7 @@ const ManualOverride = ({ data }) => {
 
   return (
     <div className="manual-override">
-      <h2 className="section-title px-3 py-2 m-0">
+      <h2 className="section-title px-3 py-2 m-0 text-break">
         Manual Override - {season === 1 ? 'Summer' : 'Winter'} Mode
       </h2>
       <div className="p-3">
@@ -151,7 +151,7 @@ const ManualOverride = ({ data }) => {
             <strong>Error!</strong> {alertMessage}
           </CAlert>
         )}
-        <CRow className="g-3">
+        <CRow className="g-3 mx-0">
           {Object.keys(state)
             .filter(
               (device, index) =>

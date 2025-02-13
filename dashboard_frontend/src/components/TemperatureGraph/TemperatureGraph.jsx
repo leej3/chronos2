@@ -179,7 +179,7 @@ const TemperatureGraph = () => {
   };
 
   return (
-    <div className="graph-container">
+    <div className="graph-container p-0">
       <div className="graphbody">
         <h3 style={{ fontSize: window.innerWidth < 768 ? '1.2rem' : '1.5rem' }}>
           Inlet/Outlet Temperature History

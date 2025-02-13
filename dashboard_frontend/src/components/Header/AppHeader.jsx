@@ -10,15 +10,21 @@ import {
   CNavLink,
   CNavItem,
   CHeaderBrand,
+  CRow,
+  CCol,
 } from '@coreui/react';
 import { useSelector } from 'react-redux';
-import SeasonSwitch from '../SeasonSwitch/SeasonSwitch';
+import './AppHeader.css';
 
 const AppHeader = () => {
   const headerRef = useRef();
   const mockDevices = useSelector((state) => state.chronos.mockDevices);
   const systemStatus = useSelector((state) => state.chronos.systemStatus);
+  const season = useSelector((state) => state.chronos.season);
+  const data = useSelector((state) => state.chronos.data);
 
+  const outdoorTemp = data?.results?.outside_temp || 'N/A';
+  const avgTemp = data?.efficiency?.average_temperature_difference || 'N/A';
   useEffect(() => {
     document.addEventListener('scroll', () => {
       headerRef.current?.classList.toggle(
@@ -27,16 +33,22 @@ const AppHeader = () => {
       );
     });
   }, []);
+  const getSeasonIcon = () => {
+    if (season === 1) {
+      return '/images/Icons/WinterSummer/SOn.png';
+    }
+    return '/images/Icons/WinterSummer/WOn.png';
+  };
 
   return (
     <CHeader position="sticky" ref={headerRef}>
-      <CContainer fluid className="px-2 px-sm-3">
-        <div className="d-flex flex-wrap align-items-center justify-content-between w-100 gap-1 gap-sm-2">
+      <CContainer fluid className="p-2 px-sm-3 header-container">
+        <div className="d-flex flex-wrap align-items-center justify-content-between w-100 gap-1 gap-sm-2 d-none d-lg-flex">
           <CHeaderBrand className="me-0">
             <div className="d-flex flex-column">
               <NavLink
                 to="/"
-                className="text-decoration-none text-white mb-0"
+                className="text-decoration-none text-white mb-0 "
                 style={{ fontSize: '1.1rem' }}
               >
                 Chronus Dashboard
@@ -81,16 +93,69 @@ const AppHeader = () => {
                   <span className="text-nowrap" style={{ fontSize: '0.9rem' }}>
                     Mock Devices Mode
                   </span>
+                  <img
+                    className="me-1 me-sm-2 ms-2"
+                    src={getSeasonIcon()}
+                    alt={`${season === 1 ? 'Summer' : 'Winter'} mode`}
+                  />
                 </CNavLink>
               </CNavItem>
             )}
-            <CNavItem>
-              <CNavLink href="#" className="d-flex align-items-center p-0">
-                <SeasonSwitch />
-              </CNavLink>
-            </CNavItem>
           </CHeaderNav>
         </div>
+        <CRow className="g-0 w-100  d-lg-none">
+          <CCol xs={6} md={6} className="mb-2 mb-md-0">
+            <div className="d-flex align-items-center mb-1">
+              <img
+                src={getSeasonIcon()}
+                alt={`${season === 1 ? 'Summer' : 'Winter'} mode`}
+              />
+              <div className="d-flex align-items-center">
+                <span
+                  className={`ms-1 ${
+                    systemStatus === 'ONLINE' ? 'text-success' : 'text-danger'
+                  } status-indicator`}
+                >
+                  <span
+                    className={`status-dot ${
+                      systemStatus === 'ONLINE'
+                        ? 'status-dot-online'
+                        : 'status-dot-offline'
+                    }`}
+                  />
+                  {systemStatus}
+                </span>
+              </div>
+            </div>
+          </CCol>
+
+          <CCol xs={6} md={6}>
+            <div className="d-flex flex-column flex-md-row justify-content-md-end h-100">
+              {mockDevices && (
+                <div className="mock-devices-alert me-md-3 text-danger">
+                  <CIcon
+                    icon={cilFactorySlash}
+                    className="me-1 me-sm-2"
+                    style={{ width: '0.9rem' }}
+                  />
+                  <span className="text-nowrap" style={{ fontSize: '0.9rem' }}>
+                    Mock Devices Mode
+                  </span>
+                </div>
+              )}
+              <div className="d-flex flex-column flex-md-row">
+                <div className="temperature-container d-flex align-items-center">
+                  <span className="temperature-label">Avg (96hrs):</span>
+                  <span className="temperature-value">{avgTemp}°F</span>
+                </div>
+                <div className="d-flex align-items-center">
+                  <span className="temperature-label">Outdoor:</span>
+                  <span className="temperature-value">{outdoorTemp}°F</span>
+                </div>
+              </div>
+            </div>
+          </CCol>
+        </CRow>
       </CContainer>
     </CHeader>
   );

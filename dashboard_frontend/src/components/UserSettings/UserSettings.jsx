@@ -11,6 +11,7 @@ import {
 import { toast } from 'react-toastify';
 import { updateSettings } from '../../api/updateSetting';
 import './UserSettings.css';
+import SeasonSwitch from '../SeasonSwitch/SeasonSwitch';
 
 const UserSettings = ({ data }) => {
   const initialFormData = {
@@ -79,8 +80,16 @@ const UserSettings = ({ data }) => {
       <CCol>
         <CCard className="text-start">
           <CCardBody>
+            <h2 className="chronous-title text-center pb-2">User Settings</h2>
+
             <CForm onSubmit={handleSubmit}>
               <CRow>
+                <CRow className="position-relative mb-4">
+                  <CCol xs="12" className="d-flex align-items-center">
+                    <SeasonSwitch />
+                  </CCol>
+                </CRow>
+
                 <CRow className="position-relative mb-2">
                   {[
                     {
