@@ -1,0 +1,11 @@
+[common]
+serverPort = {{FRP_SERVER_PORT}}
+serverAddr = "{{FRP_SERVER_ADDR}}"
+auth.method = "token"
+auth.token = "{{FRP_AUTH_TOKEN}}"
+
+[chronos-edge]
+localPort = {{CHRONOS_EDGE_PORT}}
+remotePort = {{CHRONOS_EDGE_PORT}}
+type = "tcp"
+localIP = "127.0.0.1"
