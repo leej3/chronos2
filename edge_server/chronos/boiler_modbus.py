@@ -6,33 +6,34 @@ MODBUS = {
         "timeout": 1,
         "registers": {
             "holding": {
-                "operating_mode": 0,  # 40001
-                "cascade_mode": 1,  # 40002
-                "setpoint": 2,  # 40003
-                "min_setpoint": 3,  # 40004 Minimum allowed setpoint
-                "max_setpoint": 4,  # 40005 Maximum allowed setpoint
-                "supply_temp": 6,  # 40006
-                "dhw_temp": 7,  # 40007 Domestic Hot Water temperature
-                "last_lockout": 9,  # 40010 Last lockout code
-                "last_blockout": 10,  # 40011 Last blockout code
-                "anti_cond_temp": 11,  # 40012 Anti-condensation temperature
-                "anti_cond_time": 12,  # 40013 Anti-condensation time
-                "min_modulation": 13,  # 40014 Minimum modulation rate
-                "max_modulation": 14,  # 40015 Maximum modulation rate
-                "model_id": 20,  # 40021 Model identification number
-                "firmware_ver": 21,  # 40022 Firmware version
-                "hardware_ver": 22,  # 40023 Hardware version
+                # Supported registers
+                "operating_mode": 0,  # 40001 - Operating mode
+                "cascade_mode": 1,  # 40002 - Cascade mode
+                "setpoint": 2,  # 40003 - Temperature setpoint
+                "min_setpoint": 3,  # 40004 - Minimum allowed setpoint
+                "max_setpoint": 4,  # 40005 - Maximum allowed setpoint
+                "supply_temp": 6,  # 40006 - System supply temperature
+                # Known unsupported registers on this model (do not attempt to read)
+                # "dhw_temp": 7,      # 40007 - Domestic Hot Water temperature
+                # "last_lockout": 9,   # 40010 - Last lockout code
+                # "last_blockout": 10, # 40011 - Last blockout code
+                # "min_modulation": 13, # 40014 - Minimum modulation rate
+                # "max_modulation": 14, # 40015 - Maximum modulation rate
+                # "model_id": 20,      # 40021 - Model identification number
+                # "firmware_ver": 21,   # 40022 - Firmware version
+                # "hardware_ver": 22,   # 40023 - Hardware version
             },
             "input": {
-                "alarm": 3,  # 30003
-                "pump": 4,  # 30004
-                "flame": 5,  # 30005
-                "cascade_power": 6,  # 30006
-                "water_flow": 7,  # 30007
-                "outlet_temp": 8,  # 30008
-                "inlet_temp": 9,  # 30009
-                "flue_temp": 10,  # 30010
-                "firing_rate": 11,  # 30011
+                # All input registers below are supported
+                "alarm": 3,  # 30003 - Alarm status
+                "pump": 4,  # 30004 - Pump status
+                "flame": 5,  # 30005 - Flame status
+                "cascade_power": 6,  # 30006 - Cascade power
+                "water_flow": 7,  # 30007 - Water flow rate
+                "outlet_temp": 8,  # 30008 - Outlet temperature
+                "inlet_temp": 9,  # 30009 - Inlet temperature
+                "flue_temp": 10,  # 30010 - Flue temperature
+                "firing_rate": 11,  # 30011 - Firing rate
                 "runtime": 12,  # 30012
                 "ignition_count": 13,  # 30013 Number of successful ignitions
                 "fault_count": 14,  # 30014 Number of faults

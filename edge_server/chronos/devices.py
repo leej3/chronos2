@@ -115,7 +115,7 @@ class ModbusDevice:
         """
         Read various temperature and status data from the boiler.
 
-        Available registers on this boiler model:
+        Supported registers on this model:
         - Input registers (with +1 offset):
             - alarm, pump, flame status (30003-30005)
             - cascade power, water flow (30006-30007)
@@ -125,9 +125,11 @@ class ModbusDevice:
         - Holding registers (no offset):
             - system supply temp (40006)
 
-        Unavailable registers on this model (attempted but not working):
+        Known unsupported registers on this model:
             - DHW temp (40007)
+            - Last lockout/blockout (40010-40011)
             - min/max modulation rates (40014-40015)
+            - model/firmware/hardware info (40021-40023)
 
         Args:
             max_retries (int): Maximum number of retry attempts
@@ -287,15 +289,23 @@ class ModbusDevice:
             ]
             setpoint = self._read_holding_register(self.registers.holding.setpoint)[0]
 
+            # Convert mode to string and look up in operating_modes
+            mode_str = str(mode)
+            operating_mode_str = getattr(
+                self.operating_modes, mode_str, f"Unknown ({mode})"
+            )
+
+            # Convert cascade mode to string and look up in cascade_modes
+            cascade_str = str(cascade)
+            cascade_mode_str = getattr(
+                self.cascade_modes, cascade_str, f"Unknown ({cascade})"
+            )
+
             return {
                 "operating_mode": mode,
-                "operating_mode_str": self.operating_modes.get(
-                    str(mode), f"Unknown ({mode})"
-                ),
+                "operating_mode_str": operating_mode_str,
                 "cascade_mode": cascade,
-                "cascade_mode_str": self.cascade_modes.get(
-                    str(cascade), f"Unknown ({cascade})"
-                ),
+                "cascade_mode_str": cascade_mode_str,
                 "current_setpoint": c_to_f(setpoint / 10.0),
             }
         except ModbusException as e:
@@ -303,81 +313,28 @@ class ModbusDevice:
             return {}
 
     def read_error_history(self):
-        """Read error history including last lockout and blockout codes."""
-        try:
-            # Read last lockout and blockout codes
-            error_regs = self._read_holding_register(
-                self.registers.holding.last_lockout, count=2
-            )
-
-            error_history = {}
-
-            # Process lockout code
-            lockout_code = error_regs[0]
-            if 0 <= lockout_code < len(self.error_codes):
-                error_history.update(
-                    {
-                        "last_lockout_code": lockout_code,
-                        "last_lockout_str": self.error_codes.get(
-                            str(lockout_code), f"Unknown ({lockout_code})"
-                        ),
-                    }
-                )
-            else:
-                logger.warning(f"Invalid lockout code: {lockout_code}")
-
-            # Process blockout code
-            blockout_code = error_regs[1]
-            if 0 <= blockout_code < len(self.error_codes):
-                error_history.update(
-                    {
-                        "last_blockout_code": blockout_code,
-                        "last_blockout_str": self.error_codes.get(
-                            str(blockout_code), f"Unknown ({blockout_code})"
-                        ),
-                    }
-                )
-            else:
-                logger.warning(f"Invalid blockout code: {blockout_code}")
-
-            return error_history
-        except ModbusException as e:
-            logger.debug(f"Error history not available: {e}")
-            return {}
+        """
+        Return default error history values since these registers (40010-40011) are not supported on this model.
+        """
+        logger.debug("Error history registers not supported on this model")
+        return {
+            "last_lockout_code": None,
+            "last_lockout_str": "Not Available",
+            "last_blockout_code": None,
+            "last_blockout_str": "Not Available",
+        }
 
     def read_model_info(self):
-        """Read boiler model information and firmware versions."""
-        try:
-            # Read model ID and version information
-            info_regs = self._read_holding_register(
-                self.registers.holding.model_id, count=3
-            )
-
-            model_info = {}
-
-            # Process model ID
-            model_id = info_regs[0]
-            model_info["model_id"] = model_id
-            model_info["model_name"] = self.model_ids.get(
-                str(model_id), f"Unknown Model ({model_id})"
-            )
-
-            # Process firmware version
-            fw_ver = info_regs[1]
-            major = (fw_ver >> 8) & 0xFF
-            minor = fw_ver & 0xFF
-            model_info["firmware_version"] = f"{major}.{minor}"
-
-            # Process hardware version
-            hw_ver = info_regs[2]
-            major = (hw_ver >> 8) & 0xFF
-            minor = hw_ver & 0xFF
-            model_info["hardware_version"] = f"{major}.{minor}"
-
-            return model_info
-        except ModbusException as e:
-            logger.debug(f"Model information not available: {e}")
-            return {}
+        """
+        Return default model information since these registers (40021-40023) are not supported on this model.
+        """
+        logger.debug("Model info registers not supported on this model")
+        return {
+            "model_id": 0,
+            "model_name": "Unknown Model",
+            "firmware_version": "N/A",
+            "hardware_version": "N/A",
+        }
 
 
 class SerialDevice:
