@@ -1,7 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
-import { getFormattedChicagoTime } from '../../utils/dateUtils';
-import { cilFactorySlash, cilClock } from '@coreui/icons';
+import { cilFactorySlash, cilLockLocked } from '@coreui/icons';
 import CIcon from '@coreui/icons-react';
 import {
   CContainer,
@@ -18,13 +17,17 @@ import './AppHeader.css';
 
 const AppHeader = () => {
   const headerRef = useRef();
-  const mockDevices = useSelector((state) => state.chronos.mockDevices);
   const systemStatus = useSelector((state) => state.chronos.systemStatus);
   const season = useSelector((state) => state.chronos.season);
   const data = useSelector((state) => state.chronos.data);
 
   const outdoorTemp = data?.results?.outside_temp || 'N/A';
   const avgTemp = data?.efficiency?.average_temperature_difference || 'N/A';
+  // Get mockDevices state from Redux store
+  const mockDevices = useSelector((state) => state.chronos.mock_devices);
+  const readOnlyMode = useSelector((state) => state.chronos.read_only_mode);
+
+  // Add shadow effect on scroll
   useEffect(() => {
     document.addEventListener('scroll', () => {
       headerRef.current?.classList.toggle(
@@ -98,6 +101,17 @@ const AppHeader = () => {
                     src={getSeasonIcon()}
                     alt={`${season === 1 ? 'Summer' : 'Winter'} mode`}
                   />
+                </CNavLink>
+              </CNavItem>
+            )}
+            {readOnlyMode && (
+              <CNavItem>
+                <CNavLink
+                  href="#"
+                  className="d-flex align-items-center text-warning m-1"
+                >
+                  <CIcon icon={cilLockLocked} className="mr-2" />
+                  <span className="font-weight-bold m-2">Read Only Mode</span>
                 </CNavLink>
               </CNavItem>
             )}

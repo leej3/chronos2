@@ -24,6 +24,11 @@ const ManualOverride = ({ data }) => {
   const state = useSelector((state) => state.manualOverride);
   const season = useSelector((state) => state.chronos.season);
   const [alertMessage, setAlertMessage] = useState('');
+  const readOnlyMode = useSelector((state) => state.chronos.read_only_mode);
+  const [alertColor, setAlertColor] = useState('danger');
+  // const [socket, setSocket] = useState(null);
+
+  console.log('Read only mode state:', readOnlyMode);
 
   useEffect(() => {
     if (!data?.devices) return;
@@ -52,6 +57,18 @@ const ManualOverride = ({ data }) => {
 
   const handleDeviceStateChange = async (device, newState) => {
     if (isDeviceDisabled(device)) return;
+  const handleRadioChange = async (device, state) => {
+    console.log('Attempting state change in read-only mode:', readOnlyMode);
+    
+    if (readOnlyMode) {
+      setAlertColor('warning');
+      setAlertMessage('You are in read only mode');
+      return;
+    }
+
+    setAlertColor('danger');
+    console.log(device, state);
+    dispatch(setOverride({ name: device, value: state }));
 
     const deviceName = device.charAt(0).toUpperCase() + device.slice(1);
     const statusText = newState ? 'ON' : 'OFF';
@@ -174,6 +191,65 @@ const ManualOverride = ({ data }) => {
         </CCard>
       </CCol>
     </CRow>
+    <CCard className="bgr">
+      <h2 className="section-title">Manual Override</h2>
+      <CCardBody className="p-0">
+        {alertMessage && (
+          <CAlert
+            color={alertColor}
+            dismissible
+            onClose={() => {
+              setAlertMessage('');
+              setAlertColor('danger');
+            }}
+          >
+            {alertColor === 'warning' ? (
+              alertMessage
+            ) : (
+              <><strong>Error!</strong> {alertMessage}</>
+            )}
+          </CAlert>
+        )}
+        <CRow className="g-3">
+          {Object.keys(state)
+            .filter(
+              (device, index) =>
+                index <= 4 &&
+                (device === 'boiler' || device.startsWith('chiller')),
+            )
+            .map((device) => (
+              <CCol
+                xs={12}
+                sm={6}
+                md={4}
+                lg={2.4}
+                key={device}
+                className="d-flex flex-column align-items-center"
+              >
+                <p className="mb-3 h5 text-center">
+                  {device.charAt(0).toUpperCase() + device.slice(1)}
+                </p>
+                <div className="d-flex gap-2 align-items-center">
+                  <label>OFF</label>
+                  <CFormSwitch
+                    checked={state[device] === true}
+                    className="cursor-pointer"
+                    onChange={(e) =>
+                      handleRadioChange(device, e.target.checked)
+                    }
+                    size="xl"
+                    disabled={
+                      (season === 'Winter' && device.startsWith('chiller')) ||
+                      (season === 'Summer' && device === 'boiler')
+                    }
+                  />
+                  <label>ON</label>
+                </div>
+              </CCol>
+            ))}
+        </CRow>
+      </CCardBody>
+    </CCard>
   );
 };
 

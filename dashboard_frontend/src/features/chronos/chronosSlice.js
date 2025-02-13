@@ -7,7 +7,8 @@ const initialState = {
   status: 'idle',
   error: null,
   season: 0,
-  mockDevices: true,
+  mock_devices: true,
+  read_only_mode: false,
   lastUpdated: null,
   systemStatus: 'OFFLINE',
   lockoutInfo: null,
@@ -30,9 +31,12 @@ export const chronosSlice = createSlice({
       })
       .addCase(fetchData.fulfilled, (state, action) => {
         const data = action.payload;
+        console.log('Received data from backend:', data);
         state.data = data;
         state.season = data.results.mode;
-        state.mockDevices = data.mock_devices;
+        state.mock_devices = data.mock_devices;
+        state.read_only_mode = data.read_only_mode;
+        console.log('Updated read_only_mode state:', state.read_only_mode);
         state.lastUpdated = new Date().toISOString();
         state.status = 'succeeded';
         state.systemStatus = data.status ? 'ONLINE' : 'OFFLINE';
