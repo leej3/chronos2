@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Optional
 
 from chronos.config import cfg
+from chronos.data_models import OperatingStatus
 from chronos.logging import root_logger as logger
 from pymodbus.client import ModbusSerialClient
 from pymodbus.exceptions import ModbusException
@@ -86,8 +87,6 @@ class ModbusDevice:
         self.registers = cfg.modbus.registers
         self.operating_modes = cfg.modbus.operating_modes
         self.cascade_modes = cfg.modbus.cascade_modes
-        self.error_codes = cfg.modbus.error_codes
-        self.model_ids = cfg.modbus.model_ids
         self._connect()
 
     def _connect(self):
@@ -125,12 +124,6 @@ class ModbusDevice:
         - Holding registers (no offset):
             - system supply temp (40006)
 
-        Known unsupported registers on this model:
-            - DHW temp (40007)
-            - Last lockout/blockout (40010-40011)
-            - min/max modulation rates (40014-40015)
-            - model/firmware/hardware info (40021-40023)
-
         Args:
             max_retries (int): Maximum number of retry attempts
 
@@ -163,19 +156,6 @@ class ModbusDevice:
                     logger.warning(f"Failed to read supply temp: {e}")
                     system_supply_temp = None
 
-                # The following registers were attempted but are not available on this model:
-                """
-                # DHW temp holding register
-                h_result2 = self._read_holding_register(self.registers.holding.dhw_temp, count=1)
-                dhw_temp = c_to_f(h_result2[0] / 10.0)
-
-                # Min/max modulation rates
-                h_result3 = self._read_holding_register(self.registers.holding.min_modulation, count=1)
-                min_modulation = float(h_result3[0])
-                h_result4 = self._read_holding_register(self.registers.holding.max_modulation, count=1)
-                max_modulation = float(h_result4[0])
-                """
-
                 boiler_stats = {
                     # Temperatures
                     "system_supply_temp": system_supply_temp,  # From holding register (available)
@@ -205,10 +185,6 @@ class ModbusDevice:
                     "flame_status": bool(
                         i_result1[2]
                     ),  # From input register (available)
-                    # The following values were attempted but are not available:
-                    # "dhw_temp": None,  # From holding register (not available)
-                    # "min_modulation_rate": None,  # From holding register (not available)
-                    # "max_modulation_rate": None  # From holding register (not available)
                 }
 
                 logger.info(f"Successfully read boiler data (attempt {attempt + 1})")
@@ -280,61 +256,81 @@ class ModbusDevice:
         if self.client:
             self.client.close()
 
-    def read_operating_status(self):
-        """Read operating mode, cascade mode, and current setpoint."""
+    def read_operating_status(self) -> OperatingStatus:
+        """Read the current operating status of the boiler."""
         try:
-            mode = self._read_holding_register(self.registers.holding.operating_mode)[0]
-            cascade = self._read_holding_register(self.registers.holding.cascade_mode)[
-                0
-            ]
-            setpoint = self._read_holding_register(self.registers.holding.setpoint)[0]
+            # Read operating mode and cascade mode
+            operating_mode = self._read_holding_register(
+                self.registers.holding.operating_mode
+            )[0]
+            cascade_mode = self._read_holding_register(
+                self.registers.holding.cascade_mode
+            )[0]
 
-            # Convert mode to string and look up in operating_modes
-            mode_str = str(mode)
-            operating_mode_str = getattr(
-                self.operating_modes, mode_str, f"Unknown ({mode})"
+            # Read temperature values
+            current_setpoint = self._read_holding_register(
+                self.registers.holding.setpoint
+            )[0]
+            current_temp = self._read_holding_register(
+                self.registers.input.outlet_temp + 1, count=1
+            )[0]
+            setpoint_temp = self._read_holding_register(
+                self.registers.holding.setpoint, count=1
+            )[0]
+
+            # Read pressure from input register if available
+            try:
+                pressure = (
+                    float(
+                        self._read_input_register(
+                            self.registers.input.pressure + 1, count=1
+                        )[0]
+                    )
+                    / 10.0
+                )  # Convert to PSI
+            except Exception as e:
+                logger.warning(f"Failed to read pressure: {e}")
+                pressure = 0.0
+
+            # Read error code if available
+            try:
+                error_code = self._read_holding_register(
+                    self.registers.holding.error_code, count=1
+                )[0]
+            except Exception as e:
+                logger.warning(f"Failed to read error code: {e}")
+                error_code = 0
+
+            # Get string representations
+            operating_mode_str = self.operating_modes.get(operating_mode, "Unknown")
+            cascade_mode_str = self.cascade_modes.get(cascade_mode, "Unknown")
+
+            return OperatingStatus(
+                operating_mode=operating_mode,
+                operating_mode_str=operating_mode_str,
+                cascade_mode=cascade_mode,
+                cascade_mode_str=cascade_mode_str,
+                current_setpoint=c_to_f(current_setpoint / 10.0),
+                status=True,  # Boiler is responding, so status is True
+                setpoint_temperature=c_to_f(setpoint_temp / 10.0),
+                current_temperature=c_to_f(current_temp / 10.0),
+                pressure=pressure,
+                error_code=error_code,
             )
-
-            # Convert cascade mode to string and look up in cascade_modes
-            cascade_str = str(cascade)
-            cascade_mode_str = getattr(
-                self.cascade_modes, cascade_str, f"Unknown ({cascade})"
+        except Exception as e:
+            logger.error(f"Error reading operating status: {e}")
+            return OperatingStatus(
+                operating_mode=0,
+                operating_mode_str="Error",
+                cascade_mode=0,
+                cascade_mode_str="Error",
+                current_setpoint=0.0,
+                status=False,  # Error occurred, so status is False
+                setpoint_temperature=0.0,
+                current_temperature=0.0,
+                pressure=0.0,
+                error_code=0,
             )
-
-            return {
-                "operating_mode": mode,
-                "operating_mode_str": operating_mode_str,
-                "cascade_mode": cascade,
-                "cascade_mode_str": cascade_mode_str,
-                "current_setpoint": c_to_f(setpoint / 10.0),
-            }
-        except ModbusException as e:
-            logger.error(f"Failed to read operating status: {e}")
-            return {}
-
-    def read_error_history(self):
-        """
-        Return default error history values since these registers (40010-40011) are not supported on this model.
-        """
-        logger.debug("Error history registers not supported on this model")
-        return {
-            "last_lockout_code": None,
-            "last_lockout_str": "Not Available",
-            "last_blockout_code": None,
-            "last_blockout_str": "Not Available",
-        }
-
-    def read_model_info(self):
-        """
-        Return default model information since these registers (40021-40023) are not supported on this model.
-        """
-        logger.debug("Model info registers not supported on this model")
-        return {
-            "model_id": 0,
-            "model_name": "Unknown Model",
-            "firmware_version": "N/A",
-            "hardware_version": "N/A",
-        }
 
 
 class SerialDevice:

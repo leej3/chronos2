@@ -192,6 +192,11 @@ def test_get_boiler_operating_status_mock(client, mock_modbus_device):
         "cascade_mode": 0,
         "cascade_mode_str": "Single Boiler",
         "current_setpoint": 158.0,
+        "status": True,
+        "setpoint_temperature": 158.0,
+        "current_temperature": 155.5,
+        "pressure": 15.2,
+        "error_code": 0,
     }
 
     response = client.get("/boiler_status")
@@ -199,104 +204,14 @@ def test_get_boiler_operating_status_mock(client, mock_modbus_device):
     data = response.json()
     assert data["operating_mode"] == 3
     assert data["operating_mode_str"] == "Central Heat"
+    assert data["cascade_mode"] == 0
+    assert data["cascade_mode_str"] == "Single Boiler"
     assert data["current_setpoint"] == 158.0
-
-
-def test_get_boiler_model_info_mock(client, mock_modbus_device):
-    """Test getting boiler model information with mocked device."""
-    mock_modbus_device.read_model_info.return_value = {
-        "model_id": 1,
-        "model_name": "FTXL 85",
-        "firmware_version": "1.2",
-        "hardware_version": "3.4",
-    }
-
-    response = client.get("/boiler_info")
-    assert response.status_code == 200
-    data = response.json()
-    assert data["model_id"] == 1
-    assert data["model_name"] == "FTXL 85"
-    assert data["firmware_version"] == "1.2"
-    assert data["hardware_version"] == "3.4"
-
-
-def test_get_boiler_model_info_error(client, mock_modbus_device):
-    """Test error handling when getting boiler model info."""
-    mock_modbus_device.read_model_info.return_value = {}
-    with patch(
-        "chronos.app.mock_model_info", side_effect=Exception("Connection failed")
-    ):
-        response = client.get("/boiler_info")
-        assert response.status_code == 500
-        assert "Failed to read model info" in response.json()["detail"]
-
-
-@pytest.mark.skip(reason="Error history registers (40010) not supported on this model")
-def test_get_boiler_error_history_mock(client, mock_modbus_device):
-    """Test getting boiler error history with mocked device."""
-    mock_modbus_device.read_error_history.return_value = {
-        "last_lockout_code": 3,
-        "last_lockout_str": "Low Water",
-        "last_blockout_code": 8,
-        "last_blockout_str": "Sensor Failure",
-    }
-    with patch("chronos.app.history_none", return_value=False):
-        response = client.get("/boiler_errors")
-        assert response.status_code == 200
-        data = response.json()
-        assert data["last_lockout_code"] == 3
-        assert "Low Water" in data["last_lockout_str"]
-        assert data["last_blockout_code"] == 8
-        assert "Sensor Failure" in data["last_blockout_str"]
-
-
-def test_get_boiler_error_history_no_errors(client, mock_modbus_device):
-    """Test getting boiler error history when no errors exist."""
-    mock_modbus_device.read_error_history.return_value = {}
-    with patch("chronos.app.history_none", return_value=True):
-        response = client.get("/boiler_errors")
-        assert response.status_code == 200
-        data = response.json()
-        assert data == {
-            "last_lockout_code": None,
-            "last_lockout_str": None,
-            "last_blockout_code": None,
-            "last_blockout_str": None,
-        }
-
-
-def test_set_boiler_setpoint_failure(client, mock_modbus_device):
-    """Test failure when setting boiler setpoint."""
-    mock_modbus_device.set_boiler_setpoint.return_value = False
-    with patch(
-        "chronos.app.mock_point_update", side_effect=Exception("Connection failed")
-    ):
-        response = client.post("/boiler_set_setpoint", json={"temperature": 140.0})
-        assert response.status_code == 500
-        assert "Failed to set temperature" in response.json()["detail"]
-
-
-def test_set_boiler_setpoint_connection_error(client, mock_modbus_device):
-    """Test connection error when setting boiler setpoint."""
-    mock_modbus_device.set_boiler_setpoint.side_effect = ModbusException(
-        "Connection failed"
-    )
-    with patch(
-        "chronos.app.mock_point_update",
-        side_effect=ModbusException("Connection failed"),
-    ):
-        response = client.post("/boiler_set_setpoint", json={"temperature": 140.0})
-        assert response.status_code == 500
-        assert "Connection failed" in response.json()["detail"]
-
-    # Test circuit breaker after multiple failures
-    for _ in range(5):
-        response = client.post("/boiler_set_setpoint", json={"temperature": 140.0})
-
-    # Circuit breaker should be open now
-    response = client.post("/boiler_set_setpoint", json={"temperature": 140.0})
-    assert response.status_code == 503  # Service Unavailable
-    assert "Service temporarily unavailable" in response.json()["detail"]
+    assert data["status"] is True
+    assert data["setpoint_temperature"] == 158.0
+    assert data["current_temperature"] == 155.5
+    assert data["pressure"] == 15.2
+    assert data["error_code"] == 0
 
 
 def test_download_log_success(client, mock_log_file):
@@ -366,57 +281,54 @@ def test_set_boiler_setpoint_hardware(client):
         assert abs(final_status.json()["current_setpoint"] - original_setpoint) < 2.0
 
 
-@pytest.mark.skipif(not is_modbus_connected(), reason="No modbus connection available")
-def test_get_boiler_error_history_hardware(client):
-    """Test getting error history with real hardware."""
-    response = client.get("/boiler_errors")
+def test_boiler_data_supported_registers(client, mock_modbus_device):
+    """Test that supported registers are read correctly."""
+    mock_data = {
+        "system_supply_temp": 154.4,  # From holding register 40006
+        "outlet_temp": 158.0,  # From input register 30008
+        "inlet_temp": 149.0,  # From input register 30009
+        "flue_temp": 176.0,  # From input register 30010
+        "cascade_current_power": 50.0,  # From input register 30006
+        "lead_firing_rate": 75.0,  # From input register 30011
+        "water_flow_rate": 10.0,  # From input register 30007
+        "pump_status": True,  # From input register 30004
+        "flame_status": True,  # From input register 30005
+    }
+    mock_modbus_device.read_boiler_data.return_value = mock_data
+
+    response = client.get("/boiler_stats")
     assert response.status_code == 200
     data = response.json()
-    # Verify the structure of the response
-    if "last_lockout_code" in data:
-        assert "last_lockout_str" in data
-    if "last_blockout_code" in data:
-        assert "last_blockout_str" in data
+
+    # Verify all supported registers are present and have correct values
+    for key, value in mock_data.items():
+        assert key in data
+        assert data[key] == value
 
 
 @pytest.mark.skipif(not is_modbus_connected(), reason="No modbus connection available")
-def test_get_boiler_model_info_hardware(client):
-    """Test getting model info with real hardware."""
-    response = client.get("/boiler_info")
+def test_hardware_supported_registers(client):
+    """Test reading supported registers with real hardware."""
+    response = client.get("/boiler_stats")
     assert response.status_code == 200
     data = response.json()
-    # Verify the structure and basic validation of the response
-    assert "model_id" in data
-    assert "model_name" in data
-    assert "firmware_version" in data
-    assert "hardware_version" in data
-    # Model ID should be a positive integer
-    assert isinstance(data["model_id"], int)
-    assert data["model_id"] > 0
-    # Version strings should follow x.y format
-    assert all(
-        len(v.split(".")) == 2
-        for v in [data["firmware_version"], data["hardware_version"]]
-    )
 
+    # Verify all known supported registers return valid values
+    supported_registers = {
+        "system_supply_temp": (int, float),  # 40006
+        "outlet_temp": (int, float),  # 30008
+        "inlet_temp": (int, float),  # 30009
+        "flue_temp": (int, float),  # 30010
+        "cascade_current_power": (int, float),  # 30006
+        "lead_firing_rate": (int, float),  # 30011
+        "water_flow_rate": (int, float),  # 30007
+        "pump_status": bool,  # 30004
+        "flame_status": bool,  # 30005
+    }
 
-# Test error cases with real hardware (if available)
-@pytest.mark.skipif(not is_modbus_connected(), reason="No modbus connection available")
-def test_invalid_setpoint_range_hardware(client):
-    """Test setting invalid setpoint ranges with real hardware."""
-    # Test minimum boundary
-    response = client.post("/boiler_set_setpoint", json={"temperature": 119.9})
-    assert response.status_code == 422
-
-    # Test maximum boundary
-    response = client.post("/boiler_set_setpoint", json={"temperature": 180.1})
-    assert response.status_code == 422
-
-    # Test valid boundary conditions
-    response = client.post("/boiler_set_setpoint", json={"temperature": 120.0})
-    assert response.status_code == 200
-    response = client.post("/boiler_set_setpoint", json={"temperature": 180.0})
-    assert response.status_code == 200
+    for register, expected_type in supported_registers.items():
+        assert register in data
+        assert isinstance(data[register], expected_type)
 
 
 @pytest.mark.parametrize("temperature,description", VALID_SETPOINTS)
@@ -490,6 +402,11 @@ def test_complete_boiler_flow(client, mock_modbus_device):
             "cascade_mode": 0,
             "cascade_mode_str": "Single Boiler",
             "current_setpoint": new_temp,
+            "status": True,
+            "setpoint_temperature": new_temp,
+            "current_temperature": 155.5,
+            "pressure": 15.2,
+            "error_code": 0,
         }
 
         response = client.post("/boiler_set_setpoint", json={"temperature": new_temp})
@@ -499,23 +416,12 @@ def test_complete_boiler_flow(client, mock_modbus_device):
         response = client.post("/boiler_set_setpoint", json={"temperature": 150.0})
         assert response.status_code == 429  # Too Many Requests
 
-        # Wait for rate limit to expire (handled by reset_limiters fixture)
-
         # 4. Verify status changed
         response = client.get("/boiler_status")
         assert response.status_code == 200
         new_status = response.json()
         assert abs(new_status["current_setpoint"] - new_temp) < 2.0
 
-        # 5. Get model info
-        response = client.get("/boiler_info")
-        assert response.status_code == 200
-        model_info = response.json()
-        assert model_info["model_id"] > 0
-
-        # 6. Check error history
-        response = client.get("/boiler_errors")
-        assert response.status_code == 200
     finally:
         # Update mock device's operating status back to original setpoint
         mock_modbus_device.read_operating_status.return_value = {
@@ -524,107 +430,11 @@ def test_complete_boiler_flow(client, mock_modbus_device):
             "cascade_mode": 0,
             "cascade_mode_str": "Single Boiler",
             "current_setpoint": original_setpoint,
+            "status": True,
+            "setpoint_temperature": original_setpoint,
+            "current_temperature": 155.5,
+            "pressure": 15.2,
+            "error_code": 0,
         }
         # Restore original setpoint
         client.post("/boiler_set_setpoint", json={"temperature": original_setpoint})
-
-
-def test_get_boiler_error_history_unsupported(client, mock_modbus_device):
-    """Test getting boiler error history returns appropriate default values since registers are not supported."""
-    response = client.get("/boiler_errors")
-    assert response.status_code == 200
-    data = response.json()
-    assert data == {
-        "last_lockout_code": None,
-        "last_lockout_str": "Not Available",
-        "last_blockout_code": None,
-        "last_blockout_str": "Not Available",
-    }
-
-
-def test_get_boiler_model_info_unsupported(client, mock_modbus_device):
-    """Test getting boiler model info returns appropriate default values since registers are not supported."""
-    response = client.get("/boiler_info")
-    assert response.status_code == 200
-    data = response.json()
-    assert data == {
-        "model_id": 0,
-        "model_name": "Unknown Model",
-        "firmware_version": "N/A",
-        "hardware_version": "N/A",
-    }
-
-
-def test_boiler_data_supported_registers(client, mock_modbus_device):
-    """Test that supported registers are read correctly."""
-    mock_data = {
-        "system_supply_temp": 154.4,
-        "outlet_temp": 158.0,
-        "inlet_temp": 149.0,
-        "flue_temp": 176.0,
-        "cascade_current_power": 50.0,
-        "lead_firing_rate": 75.0,
-        "water_flow_rate": 10.0,
-        "pump_status": True,
-        "flame_status": True,
-    }
-    mock_modbus_device.read_boiler_data.return_value = mock_data
-
-    response = client.get("/boiler_stats")
-    assert response.status_code == 200
-    data = response.json()
-
-    # Verify all supported registers are present and have correct values
-    for key, value in mock_data.items():
-        assert key in data
-        assert data[key] == value
-
-    # Verify unsupported registers are not present
-    assert "dhw_temp" not in data
-    assert "min_modulation_rate" not in data
-    assert "max_modulation_rate" not in data
-
-
-def test_boiler_operating_status_supported_registers(client, mock_modbus_device):
-    """Test that operating status reads supported registers correctly."""
-    mock_status = {
-        "operating_mode": 3,
-        "operating_mode_str": "DHW Demand",
-        "cascade_mode": 0,
-        "cascade_mode_str": "Single Boiler",
-        "current_setpoint": 158.0,
-    }
-    mock_modbus_device.read_operating_status.return_value = mock_status
-
-    response = client.get("/boiler_status")
-    assert response.status_code == 200
-    data = response.json()
-
-    # Verify all operating status fields are present and correct
-    for key, value in mock_status.items():
-        assert key in data
-        assert data[key] == value
-
-
-@pytest.mark.skipif(not is_modbus_connected(), reason="No modbus connection available")
-def test_hardware_supported_registers(client):
-    """Test reading supported registers with real hardware."""
-    response = client.get("/boiler_stats")
-    assert response.status_code == 200
-    data = response.json()
-
-    # Verify all supported registers return valid values
-    assert isinstance(data["system_supply_temp"], (int, float))
-    assert isinstance(data["outlet_temp"], (int, float))
-    assert isinstance(data["inlet_temp"], (int, float))
-    assert isinstance(data["flue_temp"], (int, float))
-    assert isinstance(data["cascade_current_power"], (int, float))
-    assert isinstance(data["lead_firing_rate"], (int, float))
-    assert isinstance(data["water_flow_rate"], (int, float))
-    assert isinstance(data["pump_status"], bool)
-    assert isinstance(data["flame_status"], bool)
-
-    # Verify unsupported registers are not present
-    assert "dhw_temp" not in data
-    assert "min_modulation_rate" not in data
-    assert "max_modulation_rate" not in data

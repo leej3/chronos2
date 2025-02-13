@@ -158,6 +158,11 @@ def mock_modbus_device():
         "cascade_mode": 0,
         "cascade_mode_str": "Single Boiler",
         "current_setpoint": 158.0,
+        "status": True,
+        "setpoint_temperature": 158.0,
+        "current_temperature": 155.5,
+        "pressure": 15.2,
+        "error_code": 0,
     }
 
     mock_device.read_model_info.return_value = {

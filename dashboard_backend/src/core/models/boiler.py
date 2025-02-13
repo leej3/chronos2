@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import BOOLEAN, INTEGER, REAL, Column, DateTime
+from sqlalchemy import BOOLEAN, INTEGER, REAL, Column, DateTime, String
 
 from .base import Base
 
@@ -20,3 +20,12 @@ class Boiler(Base):
     flue_temp = Column(REAL, default=0, nullable=False)
     cascade_current_power = Column(REAL, default=0, nullable=False)
     lead_firing_rate = Column(REAL, default=0, nullable=False)
+    operating_mode = Column(INTEGER, default=0, nullable=False)
+    operating_mode_str = Column(String(50), default="Unknown", nullable=False)
+    cascade_mode = Column(INTEGER, default=0, nullable=False)
+    cascade_mode_str = Column(String(50), default="Unknown", nullable=False)
+    current_setpoint = Column(REAL, default=0, nullable=False)
+    setpoint_temperature = Column(REAL, default=0, nullable=False)
+    current_temperature = Column(REAL, default=0, nullable=False)
+    pressure = Column(REAL, default=0, nullable=False)
+    error_code = Column(INTEGER, default=0, nullable=False)

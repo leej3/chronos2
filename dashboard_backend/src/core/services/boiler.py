@@ -21,6 +21,42 @@ class Boiler:
     def lead_firing_rate(self):
         return self.history_repository._get_property_from_db("lead_firing_rate")
 
+    @property
+    def operating_mode(self):
+        return self.history_repository._get_property_from_db("operating_mode")
+
+    @property
+    def operating_mode_str(self):
+        return self.history_repository._get_property_from_db("operating_mode_str")
+
+    @property
+    def cascade_mode(self):
+        return self.history_repository._get_property_from_db("cascade_mode")
+
+    @property
+    def cascade_mode_str(self):
+        return self.history_repository._get_property_from_db("cascade_mode_str")
+
+    @property
+    def current_setpoint(self):
+        return self.history_repository._get_property_from_db("current_setpoint")
+
+    @property
+    def setpoint_temperature(self):
+        return self.history_repository._get_property_from_db("setpoint_temperature")
+
+    @property
+    def current_temperature(self):
+        return self.history_repository._get_property_from_db("current_temperature")
+
+    @property
+    def pressure(self):
+        return self.history_repository._get_property_from_db("pressure")
+
+    @property
+    def error_code(self):
+        return self.history_repository._get_property_from_db("error_code")
+
     def set_boiler_setpoint(self, effective_setpoint):
         pass
 

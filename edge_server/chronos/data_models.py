@@ -46,37 +46,20 @@ class OperatingStatus(BaseModel):
     current_setpoint: float = Field(
         ..., description="Current temperature setpoint in °F"
     )
-
-
-class ErrorHistory(BaseModel):
-    """Last known error codes from the boiler."""
-
-    last_lockout_code: Optional[int] = Field(
-        None, description="Last lockout error code"
+    status: bool = Field(default=True, description="Current boiler status")
+    setpoint_temperature: float = Field(
+        ..., description="Target temperature setpoint in °F"
     )
-    last_lockout_str: Optional[str] = Field(
-        None, description="Last lockout error description"
+    current_temperature: float = Field(
+        ..., description="Current measured temperature in °F"
     )
-    last_blockout_code: Optional[int] = Field(
-        None, description="Last blockout error code"
-    )
-    last_blockout_str: Optional[str] = Field(
-        None, description="Last blockout error description"
-    )
-
-
-class ModelInfo(BaseModel):
-    """Boiler model and version information."""
-
-    model_id: int = Field(..., description="Boiler model ID")
-    model_name: str = Field(..., description="Boiler model name")
-    firmware_version: str = Field(..., description="Firmware version")
-    hardware_version: str = Field(..., description="Hardware version")
+    pressure: float = Field(default=0.0, description="Current system pressure")
+    error_code: int = Field(default=0, description="Current error code, 0 if no error")
 
 
 class SetpointUpdate(BaseModel):
-    """Temperature setpoint update."""
+    """Temperature setpoint update request."""
 
     temperature: float = Field(
-        ..., description="Desired temperature setpoint in °F", ge=120, le=180
+        ..., description="Temperature setpoint in °F", ge=120, le=180
     )

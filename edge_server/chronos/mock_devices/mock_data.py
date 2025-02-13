@@ -34,49 +34,16 @@ def mock_boiler_stats():
 
 def mock_operating_status():
     return {
-        "status": random.choice(["running", "idle", "off"]),
-        "setpoint_temperature": random.uniform(180, 200),
-        "current_temperature": random.uniform(175, 190),
-        "pressure": random.uniform(1.5, 3.0),
-        "error_code": None
-        if random.choice([True, False])
-        else random.randint(1000, 9999),
         "operating_mode": 3,
         "operating_mode_str": "Central Heat",
         "cascade_mode": 0,
         "cascade_mode_str": "Single Boiler",
         "current_setpoint": 158.0,
-    }
-
-
-def mock_error_history():
-    return {
-        "last_lockout_code": 3,
-        "last_lockout_str": "Low Water",
-        "last_blockout_code": 8,
-        "last_blockout_str": "Sensor Failure",
-    }
-
-
-def mock_error_history_none():
-    return {
-        "last_lockout_code": None,
-        "last_lockout_str": None,
-        "last_blockout_code": None,
-        "last_blockout_str": None,
-    }
-
-
-def history_none():
-    return True
-
-
-def mock_model_info():
-    return {
-        "model_id": 1,
-        "model_name": "FTXL 85",
-        "firmware_version": "1.2",
-        "hardware_version": "3.4",
+        "status": True,
+        "setpoint_temperature": 158.0,
+        "current_temperature": 155.5,
+        "pressure": 15.2,
+        "error_code": 0,
     }
 
 
