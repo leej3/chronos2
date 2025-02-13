@@ -1,4 +1,5 @@
 import asyncio
+import math
 import time
 from contextlib import contextmanager
 from pathlib import Path
@@ -165,13 +166,11 @@ class ModbusDevice:
 
                 # Convert temperatures exactly as in C code
                 temps = {
-                    "system_supply_temp": c_to_f(h_result[6] / 10.0),
-                    "outlet_temp": c_to_f(i_result[5] / 10.0),
-                    "inlet_temp": c_to_f(i_result[6] / 10.0),
-                    "flue_temp": c_to_f(i_result[7] / 10.0),
+                    "system_supply_temp": round(c_to_f(h_result[6] / 10.0), 1),
+                    "outlet_temp": round(c_to_f(i_result[5] / 10.0), 1),
+                    "inlet_temp": round(c_to_f(i_result[6] / 10.0), 1),
+                    "flue_temp": round(c_to_f(i_result[7] / 10.0), 1),
                 }
-                # Round all temperatures to 1 decimal place after conversion
-                temps = {k: round(v, 1) for k, v in temps.items()}
 
                 boiler_stats = {
                     # System Status - Verified working
@@ -232,15 +231,15 @@ class ModbusDevice:
         if not self.is_connected():
             raise ModbusException("Device not connected")
 
-        # Convert temperature to percentage using the verified formula
-        setpoint = int(-101.4856 + 1.7363171 * effective_setpoint)
-
         # Validate range (70-110°F maps to 0-100%)
         if not (70 <= effective_setpoint <= 110):
             logger.error(
                 f"Setpoint {effective_setpoint}°F is out of valid range (70-110°F)"
             )
             return False
+
+        # Convert temperature to percentage using the verified formula from C code
+        setpoint = math.trunc(-101.4856 + 1.7363171 * effective_setpoint)
 
         for attempt in range(max_retries):
             try:
@@ -249,9 +248,9 @@ class ModbusDevice:
                     self.registers.holding.operating_mode, 4
                 )
                 if result1.isError():
-                    raise ModbusException("Failed to write mode")
+                    raise ModbusException("Failed to write operating mode")
 
-                # Write setpoint percentage to setpoint register
+                # Write setpoint percentage
                 result2 = self.client.write_register(
                     self.registers.holding.setpoint, setpoint
                 )
@@ -259,47 +258,46 @@ class ModbusDevice:
                     raise ModbusException("Failed to write setpoint")
 
                 logger.info(
-                    f"Successfully set boiler setpoint to {effective_setpoint}°F ({setpoint}%) (attempt {attempt + 1})"
+                    f"Successfully set boiler setpoint to {effective_setpoint}°F ({setpoint}%)"
                 )
                 return True
 
             except (ModbusException, OSError) as e:
                 logger.error(
-                    f"Failed to set boiler setpoint (attempt {attempt + 1}): {str(e)}"
+                    f"Failed to set setpoint (attempt {attempt + 1}): {str(e)}"
                 )
                 if attempt < max_retries - 1:
-                    time.sleep(0.5)
+                    time.sleep(1)
 
+        logger.error(f"Failed to set setpoint after {max_retries} attempts")
         return False
 
     def close(self):
-        """Close the Modbus connection and cleanup resources."""
-        if self.client:
-            self.client.close()
+        """Close the Modbus connection."""
+        self.client.close()
 
     def read_operating_status(self):
         """Read operating mode, cascade mode, and current setpoint."""
         try:
-            mode = self._read_holding_register(self.registers.holding.operating_mode)[0]
-            cascade = self._read_holding_register(self.registers.holding.cascade_mode)[
-                0
-            ]
-            setpoint = self._read_holding_register(self.registers.holding.setpoint)[0]
+            # Read operating mode, cascade mode, and setpoint
+            result = self._read_holding_register(
+                self.registers.holding.operating_mode, count=3
+            )
 
             return {
-                "operating_mode": mode,
+                "operating_mode": result[0],
                 "operating_mode_str": self.operating_modes.get(
-                    str(mode), f"Unknown ({mode})"
+                    str(result[0]), f"Unknown ({result[0]})"
                 ),
-                "cascade_mode": cascade,
+                "cascade_mode": result[1],
                 "cascade_mode_str": self.cascade_modes.get(
-                    str(cascade), f"Unknown ({cascade})"
+                    str(result[1]), f"Unknown ({result[1]})"
                 ),
-                "current_setpoint": c_to_f(setpoint / 10.0),
+                "current_setpoint": round(c_to_f(result[2] / 10.0), 1),
             }
-        except ModbusException as e:
-            logger.error(f"Failed to read operating status: {e}")
-            return {}
+        except (ModbusException, OSError, AttributeError, IndexError) as e:
+            logger.error(f"Failed to read operating status: {str(e)}")
+            return None
 
     def read_error_history(self):
         """Read error history including last lockout and blockout codes."""
@@ -313,36 +311,22 @@ class ModbusDevice:
 
             # Process lockout code
             lockout_code = error_regs[0]
-            if 0 <= lockout_code < len(self.error_codes):
-                error_history.update(
-                    {
-                        "last_lockout_code": lockout_code,
-                        "last_lockout_str": self.error_codes.get(
-                            str(lockout_code), f"Unknown ({lockout_code})"
-                        ),
-                    }
-                )
-            else:
-                logger.warning(f"Invalid lockout code: {lockout_code}")
+            error_history["last_lockout_code"] = lockout_code
+            error_history["last_lockout_str"] = self.error_codes.get(
+                str(lockout_code), f"Unknown ({lockout_code})"
+            )
 
             # Process blockout code
             blockout_code = error_regs[1]
-            if 0 <= blockout_code < len(self.error_codes):
-                error_history.update(
-                    {
-                        "last_blockout_code": blockout_code,
-                        "last_blockout_str": self.error_codes.get(
-                            str(blockout_code), f"Unknown ({blockout_code})"
-                        ),
-                    }
-                )
-            else:
-                logger.warning(f"Invalid blockout code: {blockout_code}")
+            error_history["last_blockout_code"] = blockout_code
+            error_history["last_blockout_str"] = self.error_codes.get(
+                str(blockout_code), f"Unknown ({blockout_code})"
+            )
 
             return error_history
-        except ModbusException as e:
-            logger.debug(f"Error history not available: {e}")
-            return {}
+        except (ModbusException, OSError, AttributeError, IndexError) as e:
+            logger.error(f"Failed to read error history: {str(e)}")
+            return None
 
     def read_model_info(self):
         """Read boiler model information and firmware versions."""
@@ -361,22 +345,16 @@ class ModbusDevice:
                 str(model_id), f"Unknown Model ({model_id})"
             )
 
-            # Process firmware version
-            fw_ver = info_regs[1]
-            major = (fw_ver >> 8) & 0xFF
-            minor = fw_ver & 0xFF
-            model_info["firmware_version"] = f"{major}.{minor}"
-
-            # Process hardware version
-            hw_ver = info_regs[2]
-            major = (hw_ver >> 8) & 0xFF
-            minor = hw_ver & 0xFF
-            model_info["hardware_version"] = f"{major}.{minor}"
+            # Process firmware and hardware versions
+            fw_version = info_regs[1]
+            hw_version = info_regs[2]
+            model_info["firmware_version"] = f"{fw_version >> 8}.{fw_version & 0xFF}"
+            model_info["hardware_version"] = f"{hw_version >> 8}.{hw_version & 0xFF}"
 
             return model_info
-        except ModbusException as e:
-            logger.debug(f"Model information not available: {e}")
-            return {}
+        except (ModbusException, OSError, AttributeError, IndexError) as e:
+            logger.error(f"Failed to read model info: {str(e)}")
+            return None
 
 
 class SerialDevice:
