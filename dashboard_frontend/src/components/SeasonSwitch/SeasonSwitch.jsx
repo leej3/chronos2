@@ -103,7 +103,9 @@ const SeasonSwitch = () => {
             }
           >
             <img
-              src={`/images/Icons/WinterSummer/WOff.png`}
+              src={`/images/Icons/WinterSummer/${
+                season === 0 ? 'WOn' : 'WOff'
+              }.png`}
               alt="Winter"
               className="season-icon-img"
             />

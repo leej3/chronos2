@@ -9,7 +9,7 @@ import {
   CCard,
 } from '@coreui/react';
 import { toast } from 'react-toastify';
-
+import { useSelector } from 'react-redux';
 import { getTemperatureLimits } from '../../api/updateBoilerSetpoint';
 import { updateSettings } from '../../api/updateSetting';
 import './UserSettings.css';
