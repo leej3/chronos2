@@ -97,7 +97,6 @@ const Home = () => {
 
     return () => clearTimeout(timeoutRef.current);
   }, [recallAPITime, status]);
-  console.log(season);
   return (
     <>
       {isShowPopupReload && (
@@ -122,7 +121,11 @@ const Home = () => {
           <CCol xs={12} className="mt-3">
             <CCard>
               <CCardBody className="p-0">
-                <SystemMap homedata={data} season={season} />
+                <SystemMap
+                  homedata={data}
+                  season={season}
+                  boiler={data?.boiler}
+                />
               </CCardBody>
             </CCard>
           </CCol>
@@ -169,7 +172,11 @@ const Home = () => {
           <CCol lg={6}>
             <CCard className="mb-3">
               <CCardBody className="p-0">
-                <SystemMap homedata={data} season={season} />
+                <SystemMap
+                  homedata={data}
+                  season={season}
+                  boiler={data?.boiler}
+                />
               </CCardBody>
             </CCard>
 

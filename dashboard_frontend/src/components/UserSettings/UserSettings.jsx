@@ -26,7 +26,6 @@ const UserSettings = ({ data }) => {
   };
 
   const [formData, setFormData] = useState(initialFormData);
-  const [showForm, setShowForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -80,17 +79,12 @@ const UserSettings = ({ data }) => {
       <CCol>
         <CCard className="text-start">
           <CCardBody>
-            <h2 className="chronous-title text-center pb-2">User Settings</h2>
+            <h2 className="chronous-title text-center mb-4">User Settings</h2>
+            <SeasonSwitch />
 
             <CForm onSubmit={handleSubmit}>
               <CRow>
-                <CRow className="position-relative mb-4">
-                  <CCol xs="12" className="d-flex align-items-center">
-                    <SeasonSwitch />
-                  </CCol>
-                </CRow>
-
-                <CRow className="position-relative mb-2">
+                <CRow className=" mb-2">
                   {[
                     {
                       label: 'Baseline Setpoint',
@@ -120,81 +114,67 @@ const UserSettings = ({ data }) => {
                   ))}
                 </CRow>
 
-                <CCol xs="12" className="text-center">
-                  <CButton
-                    color="primary"
-                    onClick={() => setShowForm(!showForm)}
-                    className="show-settings-btn"
-                  >
-                    {showForm ? 'Hide Settings' : 'Show Settings'}
-                  </CButton>
-                </CCol>
-
-                <div className={`show-settings-form ${showForm ? 'show' : ''}`}>
-                  <CRow>
-                    {[
-                      { label: 'Tolerance', key: 'tolerance' },
-                      { label: 'Min. Setpoint', key: 'setpoint_min' },
-                      { label: 'Max. Setpoint', key: 'setpoint_max' },
-                      {
-                        label: 'Setpoint Offset (Summer)',
-                        key: 'setpoint_offset_summer',
-                      },
-                      {
-                        label: 'Setpoint Offset (Winter)',
-                        key: 'setpoint_offset_winter',
-                      },
-                      {
-                        label: 'Mode Change Delta Temp',
-                        key: 'mode_change_delta_temp',
-                      },
-                      {
-                        label: 'Mode Switch Lockout Time (Minutes)',
-                        key: 'mode_switch_lockout_time',
-                        unit: 'min.',
-                      },
-                      {
-                        label: 'Cascade Time',
-                        key: 'cascade_time',
-                        unit: 'min.',
-                      },
-                    ].map(({ label, key, unit = '' }) => (
-                      <CCol xs="12" key={key}>
-                        <div style={{ marginBottom: '10px' }}>
-                          <label
-                            htmlFor={key}
-                            style={{
-                              fontWeight: 'bold',
-                              display: 'block',
-                              marginBottom: '5px',
-                            }}
-                          >
-                            {label}:
-                          </label>
-                          <CFormInput
-                            type="number"
-                            name={key}
-                            id={key}
-                            value={formData[key] ?? ''}
-                            onChange={handleInputChange}
-                            placeholder={`${
-                              data.results[key] ?? '0.0'
-                            } ${unit}`}
-                          />
-                        </div>
-                      </CCol>
-                    ))}
-                    <CCol xs="12" className="text-end">
-                      <CButton
-                        type="submit"
-                        color="primary"
-                        className="update-btn m-2"
-                      >
-                        Update
-                      </CButton>
+                <CRow>
+                  {[
+                    { label: 'Tolerance', key: 'tolerance' },
+                    { label: 'Min. Setpoint', key: 'setpoint_min' },
+                    { label: 'Max. Setpoint', key: 'setpoint_max' },
+                    {
+                      label: 'Setpoint Offset (Summer)',
+                      key: 'setpoint_offset_summer',
+                    },
+                    {
+                      label: 'Setpoint Offset (Winter)',
+                      key: 'setpoint_offset_winter',
+                    },
+                    {
+                      label: 'Mode Change Delta Temp',
+                      key: 'mode_change_delta_temp',
+                    },
+                    {
+                      label: 'Mode Switch Lockout Time (Minutes)',
+                      key: 'mode_switch_lockout_time',
+                      unit: 'min.',
+                    },
+                    {
+                      label: 'Cascade Time',
+                      key: 'cascade_time',
+                      unit: 'min.',
+                    },
+                  ].map(({ label, key, unit = '' }) => (
+                    <CCol xs="12" key={key}>
+                      <div style={{ marginBottom: '10px' }}>
+                        <label
+                          htmlFor={key}
+                          style={{
+                            fontWeight: 'bold',
+                            display: 'block',
+                            marginBottom: '5px',
+                          }}
+                        >
+                          {label}:
+                        </label>
+                        <CFormInput
+                          type="number"
+                          name={key}
+                          id={key}
+                          value={formData[key] ?? ''}
+                          onChange={handleInputChange}
+                          placeholder={`${data.results[key] ?? '0.0'} ${unit}`}
+                        />
+                      </div>
                     </CCol>
-                  </CRow>
-                </div>
+                  ))}
+                  <CCol xs="12" className="text-end">
+                    <CButton
+                      type="submit"
+                      color="primary"
+                      className="update-btn m-2"
+                    >
+                      Update
+                    </CButton>
+                  </CCol>
+                </CRow>
               </CRow>
             </CForm>
           </CCardBody>

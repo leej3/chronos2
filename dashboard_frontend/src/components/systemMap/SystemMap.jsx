@@ -1,29 +1,20 @@
-import React, { useState, memo } from 'react';
-import {
-  CButton,
-  CModal,
-  CModalBody,
-  CModalFooter,
-  CRow,
-  CCol,
-  CCard,
-  CCardBody,
-  CModalHeader,
-  CModalTitle,
-} from '@coreui/react';
+import React, { memo } from 'react';
+import { CRow, CCol, CCard, CCardBody } from '@coreui/react';
 import { useSelector } from 'react-redux';
 
 import { formatTemperature } from '../../utils/tranform';
-import ManualOverride from '../ManualOverride/ManualOverride';
 import './SystemMap.css';
 
-const SystemMap = memo(({ homedata, season }) => {
+const SystemMap = memo(({ homedata, season, boiler }) => {
   const { sensors } = homedata || {};
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const {
+    cascade_current_power,
+    lead_firing_rate,
+    outlet_temp,
+    inlet_temp,
+    system_supply_temp,
+  } = boiler?.stats || {};
   const manualOverride = useSelector((state) => state.manualOverride);
-
-  const closeModal = () => setIsModalOpen(false);
-  const openModal = () => setIsModalOpen(true);
 
   const renderWinterView = () => (
     <CRow>
@@ -35,53 +26,86 @@ const SystemMap = memo(({ homedata, season }) => {
               <CCol
                 xs={12}
                 md={6}
-                className="d-flex justify-content-md-end align-items-center mb-4 justify-content-center "
+                className="d-flex justify-content-md-end align-items-center mb-4 justify-content-center"
               >
-                <img
-                  src={
-                    manualOverride.boiler
-                      ? 'images/Icons/Boiler/Boiler-ON.png'
-                      : 'images/Icons/Boiler/Boiler-OFF.png'
-                  }
-                  alt="Boiler"
-                  className="responsive-image"
-                />
+                <div className="position-relative">
+                  <img
+                    src={
+                      manualOverride.boiler
+                        ? 'images/Icons/Boiler/Boiler-ON.png'
+                        : 'images/Icons/Boiler/Boiler-OFF.png'
+                    }
+                    alt="Boiler"
+                    className="responsive-image"
+                  />
+
+                  <div className="boiler-levels d-flex flex-column align-items-center gap-2 mt-2">
+                    <span className="level-name">Cascade Fire</span>
+                    <span className="level-percentage">
+                      {cascade_current_power}%{' '}
+                    </span>
+                    <span className="level-name">Lead Fire</span>
+                    <span className="level-percentage">
+                      {lead_firing_rate}%{' '}
+                    </span>
+                  </div>
+                </div>
               </CCol>
+
               <CCol
-                xs={12}
                 md={6}
-                className="d-flex flex-column justify-content-md-center justify-content-center align-items-center align-items-md-start"
+                className="d-none d-md-flex flex-column justify-content-md-center justify-content-center align-items-center align-items-md-start temp-value"
               >
                 <div className="d-flex flex-column">
+                  <div className="d-flex justify-content-between">
+                    <span className="text-start">
+                      {formatTemperature(outlet_temp)}
+                    </span>
+                    <span className="text-end">
+                      {formatTemperature(system_supply_temp)}
+                    </span>
+                  </div>
+
                   <img
                     src="/images/Icons/Boiler/arrow4.png"
                     alt="Arrow"
-                    className="mb-2 responsive-arrow"
+                    className="responsive-arrow"
                   />
-                  <span className="h4 text-center">
-                    Water Out: {formatTemperature(sensors?.water_out_temp)}
+                  <span className="text-center">
+                    {formatTemperature(sensors?.return_temp)}
                   </span>
+
+                  <span className="text-start">
+                    {formatTemperature(inlet_temp)}
+                  </span>
+
                   <img
                     src="/images/Icons/Boiler/arrow3.png"
                     alt="Arrow"
-                    className="mb-2 responsive-arrow"
+                    className="responsive-arrow"
                   />
-                  <span className="h4 text-center">
-                    Return: {formatTemperature(sensors?.return_temp)}
+                  <span className="text-center ">
+                    {formatTemperature(sensors?.water_out_temp)}
                   </span>
                 </div>
               </CCol>
-            </CRow>
-            <CRow className="d-flex justify-content-end d-lg-none">
-              <CCol xs="auto" className="px-1 mt-2">
-                <CButton
-                  color="primary"
-                  className="mb-2 mt-2"
-                  onClick={openModal}
-                  block="true"
-                >
-                  Manual Override
-                </CButton>
+
+              <CCol xs={12} md={6} className="d-md-none">
+                <div className="mobile-temps">
+                  <div className="temp-item">
+                    <span className="temp-label">Return Temperature:</span>
+                    <span className="temp-value">
+                      {formatTemperature(sensors?.return_temp)}
+                    </span>
+                  </div>
+
+                  <div className="temp-item">
+                    <span className="temp-label">Water Out Temperature:</span>
+                    <span className="temp-value">
+                      {formatTemperature(sensors?.water_out_temp)}
+                    </span>
+                  </div>
+                </div>
               </CCol>
             </CRow>
           </CCardBody>
@@ -96,7 +120,7 @@ const SystemMap = memo(({ homedata, season }) => {
         <CCard>
           <CCardBody className="p-0 overflow-hidden">
             <CRow className="mb-2 mt-2">
-              <CCol className="d-flex justify-content-center">
+              <CCol className="d-flex justify-content-center d-none d-md-flex">
                 <img
                   src="/images/Icons/Boiler/arrow4.png"
                   alt="Arrow Down"
@@ -164,7 +188,7 @@ const SystemMap = memo(({ homedata, season }) => {
             </CRow>
 
             <CRow>
-              <CCol className="d-flex justify-content-center">
+              <CCol className="d-flex justify-content-center d-none d-md-flex">
                 <img
                   src="/images/Icons/Boiler/arrow3.png"
                   alt="Arrow Up"
@@ -174,7 +198,7 @@ const SystemMap = memo(({ homedata, season }) => {
             </CRow>
 
             <CRow>
-              <CCol className="d-flex justify-content-center align-items-center mb-4">
+              <CCol className="d-flex justify-content-center align-items-center mb-4 d-none d-md-flex">
                 <div className="d-flex align-items-center gap-2">
                   <span className="h4 mb-0">
                     Water Out: {formatTemperature(sensors?.water_out_temp)}
@@ -185,45 +209,31 @@ const SystemMap = memo(({ homedata, season }) => {
                   </span>
                 </div>
               </CCol>
+              <CCol xs={12} md={6} className="d-md-none">
+                <div className="mobile-temps p-2">
+                  <div className="temp-item">
+                    <span className="temp-label">Return Temperature:</span>
+                    <span className="temp-value">
+                      {formatTemperature(sensors?.return_temp)}
+                    </span>
+                  </div>
+
+                  <div className="temp-item">
+                    <span className="temp-label">Water Out Temperature:</span>
+                    <span className="temp-value">
+                      {formatTemperature(sensors?.water_out_temp)}
+                    </span>
+                  </div>
+                </div>
+              </CCol>
             </CRow>
           </CCardBody>
-          <CRow className="d-flex justify-content-end d-lg-none m-2">
-            <CCol xs="auto">
-              <CButton color="primary" onClick={openModal} block="true">
-                Manual Override
-              </CButton>
-            </CCol>
-          </CRow>
         </CCard>
       </CCol>
     </CRow>
   );
 
-  return (
-    <>
-      {season === 0 ? renderWinterView() : renderSummerView()}
-
-      <CModal
-        alignment="center"
-        visible={isModalOpen}
-        onClose={closeModal}
-        aria-labelledby="ManualOverrideModal"
-        className="modal-lg"
-      >
-        <CModalHeader>
-          <CModalTitle>Manual Override</CModalTitle>
-        </CModalHeader>
-        <CModalBody>
-          <ManualOverride data={homedata} season={season} />
-        </CModalBody>
-        <CModalFooter>
-          <CButton color="secondary" onClick={closeModal}>
-            Close
-          </CButton>
-        </CModalFooter>
-      </CModal>
-    </>
-  );
+  return <>{season === 0 ? renderWinterView() : renderSummerView()}</>;
 });
 
 export default SystemMap;
