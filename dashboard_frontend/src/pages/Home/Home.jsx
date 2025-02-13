@@ -131,14 +131,19 @@ const Home = () => {
           </CCol>
 
           <CCol xs={12} className="mt-3">
-            {season === 1 && <SwitchTimeDisplay data={null} />}
+            {season === 1 ? (
+              <SwitchTimeDisplay data={null} />
+            ) : (
+              <CCard>
+                <CCardBody className="p-0">
+                  <Modbus boiler={data?.boiler} />
+                </CCardBody>
+              </CCard>
+            )}
           </CCol>
 
           <CCol xs={12} className="mt-3">
             <UserSettings data={data} />
-            <div className="mt-3">
-              <EfficiencyMetrics data={data} />
-            </div>
           </CCol>
 
           <CCol xs={12} className="mt-3">
@@ -162,7 +167,7 @@ const Home = () => {
               ) : (
                 <CCard className="mb-3">
                   <CCardBody className="p-0">
-                    <Modbus homedata={data} season={season} />
+                    <Modbus boiler={data?.boiler} />
                   </CCardBody>
                 </CCard>
               )}
@@ -189,9 +194,6 @@ const Home = () => {
 
           <CCol lg={3}>
             <UserSettings data={data} />
-            <div className="mt-3">
-              <EfficiencyMetrics data={data} />
-            </div>
           </CCol>
 
           <CCol lg={12}>

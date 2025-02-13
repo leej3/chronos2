@@ -25,7 +25,6 @@ const SeasonSwitch = () => {
           lockoutTime: reduxLockoutInfo.lockoutTime,
           unlockTime: unlockTime,
         });
-        setSwitchDirection(season === 0 ? 'toSummer' : 'toWinter');
       }
     }
   }, [reduxLockoutInfo, season]);
@@ -77,7 +76,7 @@ const SeasonSwitch = () => {
     } catch (error) {
       dispatch(setSystemStatus('OFFLINE'));
       setSwitchDirection(null);
-      toast.error(error?.response?.data?.message || 'Failed to switch season');
+      toast.error(error?.message || 'Failed to switch season');
     }
   };
 
@@ -157,8 +156,7 @@ const SeasonSwitch = () => {
         <div className="season-switch-overlay">
           <div className="switch-message">
             <h3>
-              Switching to{' '}
-              {switchDirection === 'toWinter' ? 'Winter' : 'Summer'} Mode
+              Switching to {season === 'toWinter' ? 'Winter' : 'Summer'} Mode
             </h3>
             <p>Time remaining: {countdown}</p>
             <div className="lock-icon">🔒</div>

@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { CAlert, CFormSwitch, CRow, CCol, CTooltip } from '@coreui/react';
+import {
+  CAlert,
+  CFormSwitch,
+  CRow,
+  CCol,
+  CTooltip,
+  CCard,
+  CCardBody,
+} from '@coreui/react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { updateDeviceState } from '../../api/updateState';
@@ -106,9 +114,9 @@ const ManualOverride = ({ data }) => {
         className="device-column"
       >
         <CTooltip content={tooltipContent} placement="top">
-          <p className={`device-name ${isDisabled ? 'text-muted' : ''}`}>
+          <span className={`temp-label ${isDisabled ? 'text-muted' : ''}`}>
             {deviceName}
-          </p>
+          </span>
         </CTooltip>
         <CTooltip
           content={
@@ -119,17 +127,17 @@ const ManualOverride = ({ data }) => {
           placement="top"
         >
           <div className={`device-control ${isDisabled ? 'disabled' : ''}`}>
-            <label>OFF</label>
+            <span className="temp-label">OFF</span>
             <CFormSwitch
               checked={state[device] === true}
-              className="device-switch"
+              className="temp-label"
               onChange={(e) =>
                 handleDeviceStateChange(device, e.target.checked)
               }
               size="xl"
               disabled={isDisabled}
             />
-            <label>ON</label>
+            <span className="temp-label">ON</span>
           </div>
         </CTooltip>
       </CCol>
@@ -137,31 +145,35 @@ const ManualOverride = ({ data }) => {
   };
 
   return (
-    <div className="manual-override">
-      <h2 className="section-title px-3 py-2 m-0 text-break">
-        Manual Override - {season === 1 ? 'Summer' : 'Winter'} Mode
-      </h2>
-      <div className="p-3">
-        {alertMessage && (
-          <CAlert
-            color="danger"
-            dismissible
-            onClose={() => setAlertMessage('')}
-          >
-            <strong>Error!</strong> {alertMessage}
-          </CAlert>
-        )}
-        <CRow className="g-3 mx-0">
-          {Object.keys(state)
-            .filter(
-              (device, index) =>
-                index <= 4 &&
-                (device === 'boiler' || device.startsWith('chiller')),
-            )
-            .map(renderDeviceControl)}
-        </CRow>
-      </div>
-    </div>
+    <CRow>
+      <CCol>
+        <CCard className="modbus-card">
+          <CCardBody>
+            <h2 className="chronous-title m-0">Manual Override</h2>
+            <div className="p-3">
+              {alertMessage && (
+                <CAlert
+                  color="danger"
+                  dismissible
+                  onClose={() => setAlertMessage('')}
+                >
+                  <strong>Error!</strong> {alertMessage}
+                </CAlert>
+              )}
+              <CRow className="g-3 mx-0">
+                {Object.keys(state)
+                  .filter(
+                    (device, index) =>
+                      index <= 4 &&
+                      (device === 'boiler' || device.startsWith('chiller')),
+                  )
+                  .map(renderDeviceControl)}
+              </CRow>
+            </div>
+          </CCardBody>
+        </CCard>
+      </CCol>
+    </CRow>
   );
 };
 

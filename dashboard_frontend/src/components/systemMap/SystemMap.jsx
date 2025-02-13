@@ -90,8 +90,8 @@ const SystemMap = memo(({ homedata, season, boiler }) => {
                 </div>
               </CCol>
 
-              <CCol xs={12} md={6} className="d-md-none">
-                <div className="mobile-temps">
+              <CCol sm={12} md={6} className="d-md-none">
+                <div className="content-container-mobile">
                   <div className="temp-item">
                     <span className="temp-label">Return Temperature:</span>
                     <span className="temp-value">
@@ -209,8 +209,8 @@ const SystemMap = memo(({ homedata, season, boiler }) => {
                   </span>
                 </div>
               </CCol>
-              <CCol xs={12} md={6} className="d-md-none">
-                <div className="mobile-temps p-2">
+              <CCol sm={12} md={6} className="d-md-none">
+                <div className="content-container-mobile  px-4 ">
                   <div className="temp-item">
                     <span className="temp-label">Return Temperature:</span>
                     <span className="temp-value">

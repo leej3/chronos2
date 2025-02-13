@@ -105,26 +105,24 @@ const AppHeader = () => {
         </div>
         <CRow className="g-0 w-100  d-lg-none">
           <CCol xs={6} md={6} className="mb-2 mb-md-0">
-            <div className="d-flex align-items-center mb-1">
+            <div className="d-flex align-items-center mb-1 ">
               <img
                 src={getSeasonIcon()}
                 alt={`${season === 1 ? 'Summer' : 'Winter'} mode`}
               />
-              <div className="d-flex align-items-center">
+              <div
+                className={`ms-1 d-flex align-items-center ${
+                  systemStatus === 'ONLINE' ? 'text-success' : 'text-danger'
+                } status-indicator`}
+              >
                 <span
-                  className={`ms-1 ${
-                    systemStatus === 'ONLINE' ? 'text-success' : 'text-danger'
-                  } status-indicator`}
-                >
-                  <span
-                    className={`status-dot ${
-                      systemStatus === 'ONLINE'
-                        ? 'status-dot-online'
-                        : 'status-dot-offline'
-                    }`}
-                  />
-                  {systemStatus}
-                </span>
+                  className={`status-dot ${
+                    systemStatus === 'ONLINE'
+                      ? 'status-dot-online'
+                      : 'status-dot-offline'
+                  }`}
+                />
+                <span>{systemStatus}</span>
               </div>
             </div>
           </CCol>

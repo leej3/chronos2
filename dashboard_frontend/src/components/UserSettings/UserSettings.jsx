@@ -83,38 +83,35 @@ const UserSettings = ({ data }) => {
             <SeasonSwitch />
 
             <CForm onSubmit={handleSubmit}>
-              <CRow>
-                <CRow className=" mb-2">
+              <div className="content-container-mobile">
+                <CRow className="tab-content-container">
                   {[
                     {
-                      label: 'Baseline Setpoint',
+                      label: 'Baseline ',
                       key: 'baseline_setpoint',
                     },
-                    { label: 'THA Setpoint', key: 'tha_setpoint' },
+                    { label: 'THA ', key: 'tha_setpoint' },
                     {
-                      label: 'Effective Setpoint',
+                      label: 'Effective',
                       key: 'effective_setpoint',
                     },
                   ].map(({ label, key }) => (
-                    <CCol xs="12" key={key} className="mt-2">
-                      <label
-                        className="font-weight-bold"
-                        htmlFor={key}
-                        style={{ fontSize: '18px', fontWeight: 'bold' }}
-                      >
-                        {label}:
-                      </label>
-                      <span
-                        className="font-italic"
-                        style={{ fontSize: '16px', marginLeft: '10px' }}
-                      >
-                        {data.results[key] ?? '0.0'} <span>°F</span>
-                      </span>
+                    <CCol sm="12" key={key}>
+                      <div className="temp-item">
+                        <span className=" temp-label" htmlFor={key}>
+                          {label}:
+                        </span>
+                        <span className="temp-value">
+                          {data.results[key] ?? '0.0'} <span>°F</span>
+                        </span>
+                      </div>
                     </CCol>
                   ))}
                 </CRow>
-
-                <CRow>
+              </div>
+              <h2 className="chronous-title text-center mb-0">Configuration</h2>
+              <div className="content-container-mobile">
+                <CRow className="tab-content-container">
                   {[
                     { label: 'Tolerance', key: 'tolerance' },
                     { label: 'Min. Setpoint', key: 'setpoint_min' },
@@ -144,16 +141,9 @@ const UserSettings = ({ data }) => {
                   ].map(({ label, key, unit = '' }) => (
                     <CCol xs="12" key={key}>
                       <div style={{ marginBottom: '10px' }}>
-                        <label
-                          htmlFor={key}
-                          style={{
-                            fontWeight: 'bold',
-                            display: 'block',
-                            marginBottom: '5px',
-                          }}
-                        >
+                        <span htmlFor={key} className="temp-label ">
                           {label}:
-                        </label>
+                        </span>
                         <CFormInput
                           type="number"
                           name={key}
@@ -165,17 +155,17 @@ const UserSettings = ({ data }) => {
                       </div>
                     </CCol>
                   ))}
-                  <CCol xs="12" className="text-end">
-                    <CButton
-                      type="submit"
-                      color="primary"
-                      className="update-btn m-2"
-                    >
-                      Update
-                    </CButton>
-                  </CCol>
                 </CRow>
-              </CRow>
+              </div>
+              <CCol xs="12" className="text-end">
+                <CButton
+                  type="submit"
+                  color="primary"
+                  className="update-btn m-2"
+                >
+                  Update
+                </CButton>
+              </CCol>
             </CForm>
           </CCardBody>
         </CCard>
