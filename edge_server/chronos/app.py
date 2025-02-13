@@ -308,25 +308,24 @@ async def get_boiler_status():
 @with_rate_limit
 @check_read_only
 async def set_setpoint(data: SetpointUpdate):
-    if MOCK_DEVICES:
-        try:
-            mock_point_update()
-            return {"message": f"Temperature setpoint set to {data.temperature}°F"}
-        except ModbusException as e:
-            raise HTTPException(status_code=500, detail=str(e))
-        except Exception as e:
-            raise HTTPException(
-                status_code=500, detail=f"Failed to set temperature: {str(e)}"
-            )
     """Update boiler temperature setpoint."""
     try:
-        with create_modbus_connection() as device:
-            success = device.set_boiler_setpoint(data.temperature)
-            if not success:
-                raise HTTPException(status_code=500, detail="Failed to set temperature")
-            return {"message": f"Temperature setpoint set to {data.temperature}°F"}
+        if MOCK_DEVICES:
+            success = mock_point_update(data.temperature)
+        else:
+            with create_modbus_connection() as device:
+                success = device.set_boiler_setpoint(data.temperature)
+
+        if not success:
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to set temperature: Device reported failure",
+            )
+        return {"message": f"Temperature setpoint set to {data.temperature}°F"}
     except ModbusException as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=500, detail=f"Communication error with boiler: {str(e)}"
+        )
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Failed to set temperature: {str(e)}"

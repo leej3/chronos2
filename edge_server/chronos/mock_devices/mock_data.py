@@ -1,5 +1,19 @@
 import random
 
+# Mock state storage
+_mock_state = {
+    "current_setpoint": 158.0,
+    "operating_status": {
+        "operating_mode": 3,
+        "operating_mode_str": "Central Heat",
+        "cascade_mode": 0,
+        "cascade_mode_str": "Single Boiler",
+        "status": True,
+        "pressure": 15.2,
+        "error_code": 0,
+    },
+}
+
 
 def mock_sensors():
     return_temp = random.uniform(10, 80)
@@ -19,11 +33,12 @@ def mock_devices_data():
 
 
 def mock_boiler_stats():
+    current_setpoint = _mock_state["current_setpoint"]
     return {
-        "system_supply_temp": 154.4,
-        "outlet_temp": 158.0,
-        "inlet_temp": 149.0,
-        "flue_temp": 176.0,
+        "system_supply_temp": round(current_setpoint - random.uniform(2, 4), 1),
+        "outlet_temp": round(current_setpoint + random.uniform(-1, 1), 1),
+        "inlet_temp": round(current_setpoint - random.uniform(8, 10), 1),
+        "flue_temp": round(current_setpoint + random.uniform(15, 20), 1),
         "cascade_current_power": 50.0,
         "lead_firing_rate": 75.0,
         "water_flow_rate": 10.0,
@@ -33,19 +48,17 @@ def mock_boiler_stats():
 
 
 def mock_operating_status():
-    return {
-        "operating_mode": 3,
-        "operating_mode_str": "Central Heat",
-        "cascade_mode": 0,
-        "cascade_mode_str": "Single Boiler",
-        "current_setpoint": 158.0,
-        "status": True,
-        "setpoint_temperature": 158.0,
-        "current_temperature": 155.5,
-        "pressure": 15.2,
-        "error_code": 0,
-    }
+    status = _mock_state["operating_status"].copy()
+    status["current_setpoint"] = _mock_state["current_setpoint"]
+    status["setpoint_temperature"] = _mock_state["current_setpoint"]
+    status["current_temperature"] = round(
+        _mock_state["current_setpoint"] - random.uniform(0, 3), 1
+    )
+    return status
 
 
-def mock_point_update():
+def mock_point_update(temperature=None):
+    """Update mock boiler setpoint and return success."""
+    if temperature is not None:
+        _mock_state["current_setpoint"] = temperature
     return True
