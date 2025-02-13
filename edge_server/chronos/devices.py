@@ -12,8 +12,12 @@ from serial import Serial
 
 
 def c_to_f(celsius):
-    """Convert Celsius to Fahrenheit."""
-    return round(((9.0 / 5.0) * celsius + 32.0), 1)
+    """Convert Celsius to Fahrenheit.
+
+    This matches the C implementation exactly:
+    return ((9.0f/5.0f)*c + 32.0f);
+    """
+    return (9.0 / 5.0) * celsius + 32.0
 
 
 def _ensure_event_loop():
@@ -159,6 +163,16 @@ class ModbusDevice:
                     self.registers.input.alarm, count=9
                 )
 
+                # Convert temperatures exactly as in C code
+                temps = {
+                    "system_supply_temp": c_to_f(h_result[6] / 10.0),
+                    "outlet_temp": c_to_f(i_result[5] / 10.0),
+                    "inlet_temp": c_to_f(i_result[6] / 10.0),
+                    "flue_temp": c_to_f(i_result[7] / 10.0),
+                }
+                # Round all temperatures to 1 decimal place after conversion
+                temps = {k: round(v, 1) for k, v in temps.items()}
+
                 boiler_stats = {
                     # System Status - Verified working
                     "operating_mode": h_result[0],
@@ -169,22 +183,19 @@ class ModbusDevice:
                     "cascade_mode_str": self.cascade_modes.get(
                         str(h_result[1]), f"Unknown ({h_result[1]})"
                     ),
-                    # Setpoints - Unverified, may be incorrect
+                    # Setpoints - Unverified, read from file in C implementation
                     "current_setpoint": round(c_to_f(h_result[2] / 10.0), 1),
                     "min_setpoint": round(c_to_f(h_result[3] / 10.0), 1),
                     "max_setpoint": round(c_to_f(h_result[4] / 10.0), 1),
-                    # Temperatures - Verified working
-                    "system_supply_temp": round(c_to_f(h_result[6] / 10.0), 1),
-                    "outlet_temp": round(c_to_f(i_result[5] / 10.0), 1),
-                    "inlet_temp": round(c_to_f(i_result[6] / 10.0), 1),
-                    "flue_temp": round(c_to_f(i_result[7] / 10.0), 1),
-                    # Status Flags - Verified working
+                    # Status Flags - Verified working (direct boolean conversion)
                     "alarm_status": bool(i_result[0]),
                     "pump_status": bool(i_result[1]),
                     "flame_status": bool(i_result[2]),
-                    # Performance - Verified working
+                    # Performance - Verified working (direct percentage values)
                     "cascade_current_power": float(i_result[3]),
                     "lead_firing_rate": float(i_result[8]),
+                    # Add verified temperatures
+                    **temps,
                 }
 
                 logger.info(f"Successfully read boiler data (attempt {attempt + 1})")
@@ -202,34 +213,45 @@ class ModbusDevice:
         return None
 
     def set_boiler_setpoint(self, effective_setpoint, max_retries=3):
-        """Set the boiler's temperature setpoint."""
+        """Set the boiler's temperature setpoint.
+
+        The C implementation uses a specific formula for converting temperature to percentage:
+        sp = trunc(-101.4856 + 1.7363171 * temp)
+
+        This maps to the boiler's BMS configuration:
+        - 2V (0%) -> 70°F
+        - 9V (100%) -> 110°F
+
+        Args:
+            effective_setpoint (float): Desired temperature in Fahrenheit
+            max_retries (int): Maximum number of retry attempts
+
+        Returns:
+            bool: True if successful, False otherwise
+        """
         if not self.is_connected():
             raise ModbusException("Device not connected")
 
-        # Convert Fahrenheit setpoint to a percentage (0-100)
-        # Typical range: 120-180°F maps to 0-100%
-        min_temp = 120.0
-        max_temp = 180.0
-        setpoint = int(
-            ((float(effective_setpoint) - min_temp) / (max_temp - min_temp)) * 100
-        )
+        # Convert temperature to percentage using the verified formula
+        setpoint = int(-101.4856 + 1.7363171 * effective_setpoint)
 
-        if not (0 <= setpoint <= 100):
+        # Validate range (70-110°F maps to 0-100%)
+        if not (70 <= effective_setpoint <= 110):
             logger.error(
-                f"Calculated setpoint {setpoint}% is out of valid range (0-100)"
+                f"Setpoint {effective_setpoint}°F is out of valid range (70-110°F)"
             )
             return False
 
         for attempt in range(max_retries):
             try:
-                # Write mode (4) to operating mode register
+                # Write mode (4) to operating mode register (verified from C code)
                 result1 = self.client.write_register(
                     self.registers.holding.operating_mode, 4
                 )
                 if result1.isError():
                     raise ModbusException("Failed to write mode")
 
-                # Write setpoint to setpoint register
+                # Write setpoint percentage to setpoint register
                 result2 = self.client.write_register(
                     self.registers.holding.setpoint, setpoint
                 )
@@ -248,7 +270,6 @@ class ModbusDevice:
                 if attempt < max_retries - 1:
                     time.sleep(0.5)
 
-        logger.error(f"Failed to set boiler setpoint after {max_retries} attempts")
         return False
 
     def close(self):
