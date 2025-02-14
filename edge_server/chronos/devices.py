@@ -87,12 +87,84 @@ class ModbusDevice:
         self.client = ModbusSerialClient(
             port=port, baudrate=baudrate, parity=parity, timeout=timeout
         )
-        # Load register maps and mappings from config
-        self.registers = cfg.modbus.registers
-        self.operating_modes = cfg.modbus.operating_modes
-        self.cascade_modes = cfg.modbus.cascade_modes
-        self.error_codes = cfg.modbus.error_codes
-        self.model_ids = cfg.modbus.model_ids
+
+        # Create register mappings (using correct base addresses)
+        class Registers:
+            def __init__(self):
+                self.holding = type(
+                    "Holding",
+                    (),
+                    {
+                        "operating_mode": 0,  # Base address for holding registers
+                        "cascade_mode": 1,
+                        "setpoint": 2,
+                        "min_setpoint": 3,
+                        "max_setpoint": 4,
+                        "last_lockout": 5,
+                        "system_supply_temp": 6,
+                    },
+                )()
+                self.input = type(
+                    "Input",
+                    (),
+                    {
+                        "alarm": 3,  # Base address for input registers
+                        "pump": 4,
+                        "flame": 5,
+                        "cascade_current_power": 6,
+                        "outlet_temp": 8,
+                        "inlet_temp": 9,
+                        "flue_temp": 10,
+                        "lead_firing_rate": 11,
+                    },
+                )()
+
+        self.registers = Registers()
+
+        # Updated operating modes to match working implementation
+        self.operating_modes = {
+            "0": "Initialization",
+            "1": "Standby",
+            "2": "CH Demand",
+            "3": "DHW Demand",
+            "4": "CH & DHW Demand",
+            "5": "Manual Operation",
+            "6": "Shutdown",
+            "7": "Error",
+            "8": "Manual Operation 2",
+            "9": "Freeze Protection",
+            "10": "Sensor Test",
+        }
+
+        # Updated cascade modes
+        self.cascade_modes = {"0": "Single Boiler", "1": "Manager", "2": "Member"}
+
+        # Updated error codes
+        self.error_codes = {
+            "0": "No Error",
+            "1": "Ignition Failure",
+            "2": "Safety Circuit Open",
+            "3": "Low Water",
+            "4": "Gas Pressure Error",
+            "5": "High Limit",
+            "6": "Flame Circuit Error",
+            "7": "Sensor Failure",
+            "8": "Fan Speed Error",
+        }
+
+        # Updated model IDs
+        self.model_ids = {
+            "1": "FTXL 85",
+            "2": "FTXL 105",
+            "3": "FTXL 125",
+            "4": "FTXL 150",
+            "5": "FTXL 185",
+            "6": "FTXL 220",
+            "7": "FTXL 260",
+            "8": "FTXL 300",
+            "9": "FTXL 399",
+        }
+
         self._connect()
 
     def _connect(self):
@@ -104,17 +176,25 @@ class ModbusDevice:
 
     def _read_holding_register(self, address, count=1):
         """Read a holding register and handle errors."""
-        result = self.client.read_holding_registers(address, count=count)
-        if result.isError():
-            raise ModbusException(f"Failed to read holding register {address}")
-        return result.registers
+        try:
+            result = self.client.read_holding_registers(address=address, count=count)
+            if result.isError():
+                raise ModbusException(f"Failed to read holding register {address}")
+            return result.registers
+        except Exception as e:
+            logger.error(f"Failed to read holding register {address}: {e}")
+            raise
 
     def _read_input_register(self, address, count=1):
         """Read an input register and handle errors."""
-        result = self.client.read_input_registers(address, count=count)
-        if result.isError():
-            raise ModbusException(f"Failed to read input register {address}")
-        return result.registers
+        try:
+            result = self.client.read_input_registers(address=address, count=count)
+            if result.isError():
+                raise ModbusException(f"Failed to read input register {address}")
+            return result.registers
+        except Exception as e:
+            logger.error(f"Failed to read input register {address}: {e}")
+            raise
 
     def read_boiler_data(self, max_retries=3):
         """Read various temperature and status data from the boiler.
@@ -135,11 +215,6 @@ class ModbusDevice:
             - Operating Mode (40001) - with string mapping
             - Cascade Mode (40002) - with string mapping
             - Alarm/Pump/Flame Status (30003-30005) - boolean values
-
-        Unverified/Potentially Incorrect:
-        - Setpoints (40003-40005):
-            Note: The working implementation reads setpoint from a file rather than Modbus.
-            These values may not be accurate or may need different scaling.
 
         Args:
             max_retries (int): Maximum number of retry attempts
@@ -166,33 +241,33 @@ class ModbusDevice:
 
                 # Convert temperatures exactly as in C code
                 temps = {
-                    "system_supply_temp": round(c_to_f(h_result[6] / 10.0), 1),
-                    "outlet_temp": round(c_to_f(i_result[5] / 10.0), 1),
-                    "inlet_temp": round(c_to_f(i_result[6] / 10.0), 1),
-                    "flue_temp": round(c_to_f(i_result[7] / 10.0), 1),
+                    "System Supply Temp": round(c_to_f(h_result[6] / 10.0), 1),
+                    "Outlet Temp": round(c_to_f(i_result[5] / 10.0), 1),
+                    "Inlet Temp": round(c_to_f(i_result[6] / 10.0), 1),
+                    "Flue Temp": round(c_to_f(i_result[7] / 10.0), 1),
                 }
 
                 boiler_stats = {
                     # System Status - Verified working
-                    "operating_mode": h_result[0],
-                    "operating_mode_str": self.operating_modes.get(
+                    "Operating Mode": h_result[0],
+                    "Operating Mode String": self.operating_modes.get(
                         str(h_result[0]), f"Unknown ({h_result[0]})"
                     ),
-                    "cascade_mode": h_result[1],
-                    "cascade_mode_str": self.cascade_modes.get(
+                    "Cascade Mode": h_result[1],
+                    "Cascade Mode String": self.cascade_modes.get(
                         str(h_result[1]), f"Unknown ({h_result[1]})"
                     ),
                     # Setpoints - Unverified, read from file in C implementation
-                    "current_setpoint": round(c_to_f(h_result[2] / 10.0), 1),
-                    "min_setpoint": round(c_to_f(h_result[3] / 10.0), 1),
-                    "max_setpoint": round(c_to_f(h_result[4] / 10.0), 1),
+                    "Current Setpoint": round(c_to_f(h_result[2] / 10.0), 1),
+                    "Min Setpoint": round(c_to_f(h_result[3] / 10.0), 1),
+                    "Max Setpoint": round(c_to_f(h_result[4] / 10.0), 1),
                     # Status Flags - Verified working (direct boolean conversion)
-                    "alarm_status": bool(i_result[0]),
-                    "pump_status": bool(i_result[1]),
-                    "flame_status": bool(i_result[2]),
+                    "Alarm Status": bool(i_result[0]),
+                    "Pump Status": bool(i_result[1]),
+                    "Flame Status": bool(i_result[2]),
                     # Performance - Verified working (direct percentage values)
-                    "cascade_current_power": float(i_result[3]),
-                    "lead_firing_rate": float(i_result[8]),
+                    "Cascade Current Power": float(i_result[3]),
+                    "Lead Firing Rate": float(i_result[8]),
                     # Add verified temperatures
                     **temps,
                 }

@@ -333,3 +333,114 @@ def test_read_boiler_data_status_combinations(device, mock_modbus_client):
         assert stats["alarm_status"] is exp_alarm
         assert stats["pump_status"] is exp_pump
         assert stats["flame_status"] is exp_flame
+
+
+@pytest.mark.parametrize(
+    "registers,expected",
+    [
+        # Test case 1: Normal operation
+        (
+            {
+                "holding": [
+                    1,
+                    2,
+                    150,
+                    120,
+                    180,
+                    0,
+                    220,
+                ],  # Mode, Cascade, Setpoints, Supply
+                "input": [
+                    1,
+                    1,
+                    1,
+                    86,
+                    0,
+                    180,
+                    160,
+                    200,
+                    66,
+                ],  # Status, Power, Temps, Rate
+            },
+            {
+                "Operating Mode": 1,
+                "Operating Mode String": "Standby",
+                "Cascade Mode": 2,
+                "Cascade Mode String": "Member",
+                "System Supply Temp": round((9.0 / 5.0) * (220 / 10.0) + 32.0, 1),
+                "Outlet Temp": round((9.0 / 5.0) * (180 / 10.0) + 32.0, 1),
+                "Inlet Temp": round((9.0 / 5.0) * (160 / 10.0) + 32.0, 1),
+                "Flue Temp": round((9.0 / 5.0) * (200 / 10.0) + 32.0, 1),
+                "Alarm Status": True,
+                "Pump Status": True,
+                "Flame Status": True,
+                "Cascade Current Power": 86.0,
+                "Lead Firing Rate": 66.0,
+            },
+        ),
+        # Test case 2: All zeros/off
+        (
+            {"holding": [0, 0, 0, 0, 0, 0, 0], "input": [0, 0, 0, 0, 0, 0, 0, 0, 0]},
+            {
+                "Operating Mode": 0,
+                "Operating Mode String": "Initialization",
+                "Cascade Mode": 0,
+                "Cascade Mode String": "Single Boiler",
+                "System Supply Temp": 32.0,
+                "Outlet Temp": 32.0,
+                "Inlet Temp": 32.0,
+                "Flue Temp": 32.0,
+                "Alarm Status": False,
+                "Pump Status": False,
+                "Flame Status": False,
+                "Cascade Current Power": 0.0,
+                "Lead Firing Rate": 0.0,
+            },
+        ),
+    ],
+)
+def test_read_boiler_data(mock_modbus_device, registers, expected):
+    """Test reading boiler data with different register values."""
+    # Mock the register read responses
+    mock_modbus_device.client.read_holding_registers.return_value.registers = registers[
+        "holding"
+    ]
+    mock_modbus_device.client.read_holding_registers.return_value.isError.return_value = (
+        False
+    )
+
+    mock_modbus_device.client.read_input_registers.return_value.registers = registers[
+        "input"
+    ]
+    mock_modbus_device.client.read_input_registers.return_value.isError.return_value = (
+        False
+    )
+
+    # Read data
+    result = mock_modbus_device.read_boiler_data()
+
+    # Verify all expected values
+    for key, value in expected.items():
+        assert (
+            result[key] == value
+        ), f"Mismatch for {key}: expected {value}, got {result[key]}"
+
+
+def test_read_boiler_data_retry_success(mock_modbus_device):
+    """Test successful retry after initial failure."""
+    # First call fails, second succeeds
+    mock_modbus_device.client.read_holding_registers.side_effect = [
+        ModbusIOException("First attempt fails"),
+        MagicMock(registers=[1, 2, 150, 120, 180, 0, 220], isError=lambda: False),
+        MagicMock(
+            registers=[1, 2, 150, 120, 180, 0, 220], isError=lambda: False
+        ),  # Add extra for potential retries
+    ]
+    mock_modbus_device.client.read_input_registers.return_value = MagicMock(
+        registers=[1, 1, 1, 86, 0, 180, 160, 200, 66], isError=lambda: False
+    )
+
+    result = mock_modbus_device.read_boiler_data()
+    assert result is not None
+    assert result["Operating Mode"] == 1
+    assert result["Cascade Current Power"] == 86.0
