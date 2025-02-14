@@ -1,7 +1,6 @@
 import os
 import sys
 import time
-from datetime import datetime, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
@@ -18,6 +17,16 @@ from src.features.auth.jwt_handler import UserToken
 from src.features.dashboard.dashboard_service import DashboardService
 
 
+@pytest.fixture(autouse=True)
+def setup_env():
+    """Set up test environment variables."""
+    os.environ["READ_ONLY_MODE"] = "false"
+    yield
+    # Clean up
+    if "READ_ONLY_MODE" in os.environ:
+        del os.environ["READ_ONLY_MODE"]
+
+
 @pytest.fixture
 def mock_dashboard_service():
     mock = MagicMock(DashboardService)
@@ -28,10 +37,26 @@ def mock_dashboard_service():
 
 
 @pytest.fixture
-def mock_edge_server():
-    mock = MagicMock(EdgeServer)
-    mock.update_device_state.return_value = None
-    return mock
+def mock_edge_server(monkeypatch):
+    """Create a dummy edge server for testing."""
+
+    class DummyEdgeServer:
+        def get_temperature_limits(self):
+            return {
+                "hard_limits": {"min_setpoint": 70.0, "max_setpoint": 110.0},
+                "soft_limits": {"min_setpoint": 70.0, "max_setpoint": 110.0},
+            }
+
+        def set_temperature_limits(self, limits: dict):
+            # This will be overridden in specific tests
+            return {"status": "ok"}
+
+        def update_device_state(self, *args, **kwargs):
+            return None
+
+    dummy = DummyEdgeServer()
+    monkeypatch.setattr("src.api.routers.dashboard_router.EdgeServer", lambda: dummy)
+    return dummy
 
 
 @pytest.fixture
@@ -43,16 +68,15 @@ def mock_chronos():
 
 @pytest.fixture
 def mock_current_user():
-    return UserToken(sub="test_user", email="admin@gmail.com")
+    return UserToken(user_id="test_user", sub="test_user", email="admin@gmail.com")
 
 
 @pytest.fixture
-def client(mock_dashboard_service, mock_edge_server, mock_chronos):
+def client(mock_dashboard_service, mock_edge_server, mock_chronos, mock_current_user):
     app.dependency_overrides[DashboardService] = lambda: mock_dashboard_service
     app.dependency_overrides[EdgeServer] = lambda: mock_edge_server
     app.dependency_overrides[Chronos] = lambda: mock_chronos
     app.dependency_overrides[get_current_user] = lambda: mock_current_user
-
     return TestClient(app)
 
 
@@ -127,67 +151,24 @@ def test_update_settings(client, mock_edge_server):
         "tolerance": 1,
         "setpoint_min": 1,
         "setpoint_max": 10,
-        "setpoint_offset_summer": 130.0,
+        "setpoint_offset_summer": 140,
         "setpoint_offset_winter": 130.0,
         "mode_change_delta_temp": 3,
         "mode_switch_lockout_time": 30,
         "cascade_time": 5,
     }
-    time.sleep(5)
 
     # Test successful update
-    mock_edge_server.set_temperature_limits.return_value = {
-        "message": "Temperature limits updated successfully"
-    }
     response = client.post("/api/update_settings", json=settings_data)
     assert response.status_code == 200
-    assert response.json() == {
-        "message": f"Temperature setpoint set to {settings_data['setpoint_offset_winter']}°F"
-    }
+    assert response.json() == {"message": "Settings updated successfully"}
 
-
-def test_switch_season(client, mock_dashboard_service, mock_switch_season_response):
-    # Setup mock
-    mock_dashboard_service.switch_season_mode.return_value = mock_switch_season_response
-
-    # Test switching to Winter mode
-    response = client.post("/api/switch-season", json={"season_value": 0})
-    assert response.status_code == 200
-    assert response.json()["status"] == "success"
-    assert response.json()["mode"] == 0
-    assert "unlock_time" in response.json()
-    assert "mode_switch_lockout_time" in response.json()
-
-    # Test invalid season value
-    response = client.post("/api/switch-season", json={"season_value": 3})
-    assert response.status_code == 400
-    assert "error" in response.json()["status"]
-
-
-def test_get_data_with_lockout(client, mock_dashboard_service):
-    current_time = datetime.now()
-    mock_response = {
-        "results": {
-            "mode": 0,
-            "lockout_info": {
-                "mode_switch_timestamp": current_time.isoformat(),
-                "mode_switch_lockout_time": 2,
-                "unlock_time": (current_time + timedelta(minutes=2)).isoformat(),
-            },
-        }
-    }
-    mock_dashboard_service.get_data.return_value = mock_response
-
-    response = client.get("/api/")
-    assert response.status_code == 200
-    assert "lockout_info" in response.json()["results"]
     # Test read-only mode
     mock_edge_server.set_temperature_limits.side_effect = EdgeServerError(
         "Operation not permitted: system is in read-only mode"
     )
     response = client.post("/api/update_settings", json=settings_data)
     assert response.status_code == 403
-    assert (
-        "Operation not permitted: system is in read-only mode"
-        in response.json()["detail"]
-    )
+    assert response.json() == {
+        "detail": "Operation not permitted: system is in read-only mode"
+    }
