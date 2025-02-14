@@ -35,17 +35,17 @@ def mock_boiler_stats():
 def mock_operating_status():
     return {
         "status": random.choice(["running", "idle", "off"]),
-        "setpoint_temperature": random.uniform(180, 200),
-        "current_temperature": random.uniform(175, 190),
+        "setpoint_temperature": random.uniform(70, 110),
+        "current_temperature": random.uniform(70, 110),
         "pressure": random.uniform(1.5, 3.0),
-        "error_code": None
-        if random.choice([True, False])
-        else random.randint(1000, 9999),
+        "error_code": (
+            None if random.choice([True, False]) else random.randint(1000, 9999)
+        ),
         "operating_mode": 3,
         "operating_mode_str": "Central Heat",
         "cascade_mode": 0,
         "cascade_mode_str": "Single Boiler",
-        "current_setpoint": 158.0,
+        "current_setpoint": 90.0,
     }
 
 

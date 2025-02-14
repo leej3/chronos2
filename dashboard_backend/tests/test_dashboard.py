@@ -10,6 +10,7 @@ from unittest.mock import MagicMock
 
 from main import app
 from src.api.dependencies import get_current_user
+from src.core.common.exceptions import EdgeServerError
 from src.core.services.chronos import Chronos
 from src.core.services.edge_server import EdgeServer
 from src.features.auth.jwt_handler import UserToken
@@ -106,7 +107,7 @@ def test_chart_data(client):
     )
 
 
-def test_update_settings(client):
+def test_update_settings(client, mock_edge_server):
     settings_data = {
         "tolerance": 1,
         "setpoint_min": 1,
@@ -118,8 +119,24 @@ def test_update_settings(client):
         "cascade_time": 5,
     }
     time.sleep(5)
+
+    # Test successful update
+    mock_edge_server.set_temperature_limits.return_value = {
+        "message": "Temperature limits updated successfully"
+    }
     response = client.post("/api/update_settings", json=settings_data)
     assert response.status_code == 200
     assert response.json() == {
         "message": f"Temperature setpoint set to {settings_data['setpoint_offset_winter']}°F"
     }
+
+    # Test read-only mode
+    mock_edge_server.set_temperature_limits.side_effect = EdgeServerError(
+        "Operation not permitted: system is in read-only mode"
+    )
+    response = client.post("/api/update_settings", json=settings_data)
+    assert response.status_code == 403
+    assert (
+        "Operation not permitted: system is in read-only mode"
+        in response.json()["detail"]
+    )

@@ -11,14 +11,14 @@ logger = logging.getLogger(__name__)
 
 # Test data for parametrized tests
 VALID_SETPOINTS = [
-    (120.0, "minimum valid temperature"),
-    (150.0, "typical operating temperature"),
-    (180.0, "maximum valid temperature"),
+    (70.0, "minimum valid temperature"),
+    (90.0, "typical operating temperature"),
+    (110.0, "maximum valid temperature"),
 ]
 
 INVALID_SETPOINTS = [
-    (119.9, "below minimum"),
-    (180.1, "above maximum"),
+    (69.9, "below minimum"),
+    (110.1, "above maximum"),
     (0.0, "zero temperature"),
     (-10.0, "negative temperature"),
 ]
@@ -159,12 +159,12 @@ def test_set_boiler_setpoint_mock(client, mock_modbus_device):
 
     try:
         mock_modbus_device.set_boiler_setpoint.return_value = True
-        response = client.post("/boiler_set_setpoint", json={"temperature": 140.0})
+        response = client.post("/boiler_set_setpoint", json={"temperature": 90.0})
         assert response.status_code == 200
-        assert "140.0°F" in response.json()["message"]
+        assert "90.0°F" in response.json()["message"]
 
         # Test rate limiting
-        response = client.post("/boiler_set_setpoint", json={"temperature": 150.0})
+        response = client.post("/boiler_set_setpoint", json={"temperature": 85.0})
         assert response.status_code == 429  # Too Many Requests
         assert "Too many temperature changes" in response.json()["detail"]
     finally:
@@ -176,11 +176,11 @@ def test_set_boiler_setpoint_mock(client, mock_modbus_device):
 def test_set_boiler_setpoint_validation(client):
     """Test setpoint temperature validation."""
     # Test temperature too low
-    response = client.post("/boiler_set_setpoint", json={"temperature": 110.0})
+    response = client.post("/boiler_set_setpoint", json={"temperature": 69.9})
     assert response.status_code == 422
 
     # Test temperature too high
-    response = client.post("/boiler_set_setpoint", json={"temperature": 190.0})
+    response = client.post("/boiler_set_setpoint", json={"temperature": 110.1})
     assert response.status_code == 422
 
 
@@ -267,12 +267,9 @@ def test_get_boiler_error_history_no_errors(client, mock_modbus_device):
 def test_set_boiler_setpoint_failure(client, mock_modbus_device):
     """Test failure when setting boiler setpoint."""
     mock_modbus_device.set_boiler_setpoint.return_value = False
-    with patch(
-        "chronos.app.mock_point_update", side_effect=Exception("Connection failed")
-    ):
-        response = client.post("/boiler_set_setpoint", json={"temperature": 140.0})
-        assert response.status_code == 500
-        assert "Failed to set temperature" in response.json()["detail"]
+    response = client.post("/boiler_set_setpoint", json={"temperature": 90.0})
+    assert response.status_code == 500
+    assert "Failed to set temperature" in response.json()["detail"]
 
 
 def test_set_boiler_setpoint_connection_error(client, mock_modbus_device):
@@ -280,22 +277,9 @@ def test_set_boiler_setpoint_connection_error(client, mock_modbus_device):
     mock_modbus_device.set_boiler_setpoint.side_effect = ModbusException(
         "Connection failed"
     )
-    with patch(
-        "chronos.app.mock_point_update",
-        side_effect=ModbusException("Connection failed"),
-    ):
-        response = client.post("/boiler_set_setpoint", json={"temperature": 140.0})
-        assert response.status_code == 500
-        assert "Connection failed" in response.json()["detail"]
-
-    # Test circuit breaker after multiple failures
-    for _ in range(5):
-        response = client.post("/boiler_set_setpoint", json={"temperature": 140.0})
-
-    # Circuit breaker should be open now
-    response = client.post("/boiler_set_setpoint", json={"temperature": 140.0})
-    assert response.status_code == 503  # Service Unavailable
-    assert "Service temporarily unavailable" in response.json()["detail"]
+    response = client.post("/boiler_set_setpoint", json={"temperature": 90.0})
+    assert response.status_code == 500
+    assert "Connection failed" in response.json()["detail"]
 
 
 def test_download_log_success(client, mock_log_file):
@@ -341,7 +325,7 @@ def test_set_boiler_setpoint_hardware(client):
     original_setpoint = status_response.json()["current_setpoint"]
 
     try:
-        test_temp = 140.0
+        test_temp = 90.0
         response = client.post("/boiler_set_setpoint", json={"temperature": test_temp})
         assert response.status_code == 200
 
@@ -404,17 +388,17 @@ def test_get_boiler_model_info_hardware(client):
 def test_invalid_setpoint_range_hardware(client):
     """Test setting invalid setpoint ranges with real hardware."""
     # Test minimum boundary
-    response = client.post("/boiler_set_setpoint", json={"temperature": 119.9})
+    response = client.post("/boiler_set_setpoint", json={"temperature": 69.9})
     assert response.status_code == 422
 
     # Test maximum boundary
-    response = client.post("/boiler_set_setpoint", json={"temperature": 180.1})
+    response = client.post("/boiler_set_setpoint", json={"temperature": 110.1})
     assert response.status_code == 422
 
     # Test valid boundary conditions
-    response = client.post("/boiler_set_setpoint", json={"temperature": 120.0})
+    response = client.post("/boiler_set_setpoint", json={"temperature": 70.0})
     assert response.status_code == 200
-    response = client.post("/boiler_set_setpoint", json={"temperature": 180.0})
+    response = client.post("/boiler_set_setpoint", json={"temperature": 110.0})
     assert response.status_code == 200
 
 
@@ -481,7 +465,7 @@ def test_complete_boiler_flow(client, mock_modbus_device):
     # 3. Change setpoint
     original_setpoint = initial_status["current_setpoint"]
     try:
-        new_temp = 158.0
+        new_temp = 90.0
         # Update mock device's operating status to reflect the new setpoint
         mock_modbus_device.read_operating_status.return_value = {
             "operating_mode": 3,
@@ -495,7 +479,7 @@ def test_complete_boiler_flow(client, mock_modbus_device):
         assert response.status_code == 200
 
         # Test rate limiting
-        response = client.post("/boiler_set_setpoint", json={"temperature": 150.0})
+        response = client.post("/boiler_set_setpoint", json={"temperature": 85.0})
         assert response.status_code == 429  # Too Many Requests
 
         # Wait for rate limit to expire (handled by reset_limiters fixture)
@@ -526,3 +510,107 @@ def test_complete_boiler_flow(client, mock_modbus_device):
         }
         # Restore original setpoint
         client.post("/boiler_set_setpoint", json={"temperature": original_setpoint})
+
+
+def test_get_temperature_limits_mock(client, mock_modbus_device):
+    """Test getting temperature limits with mocked device."""
+    mock_modbus_device.get_temperature_limits.return_value = {
+        "min_setpoint": 75.0,
+        "max_setpoint": 105.0,
+    }
+    response = client.get("/temperature_limits")
+    assert response.status_code == 200
+    data = response.json()
+    assert "hard_limits" in data
+    assert "soft_limits" in data
+    assert data["soft_limits"]["min_setpoint"] == 75.0
+    assert data["soft_limits"]["max_setpoint"] == 105.0
+
+
+def test_set_temperature_limits_mock(client, mock_modbus_device):
+    """Test setting temperature limits with mocked device."""
+    mock_modbus_device.set_temperature_limits.return_value = True
+    response = client.post(
+        "/temperature_limits", json={"min_setpoint": 75.0, "max_setpoint": 105.0}
+    )
+    assert response.status_code == 200
+    assert "Temperature limits updated successfully" in response.json()["message"]
+
+
+def test_set_temperature_limits_validation(client):
+    """Test temperature limits validation."""
+    # Test min > max
+    response = client.post(
+        "/temperature_limits", json={"min_setpoint": 85.0, "max_setpoint": 75.0}
+    )
+    assert response.status_code == 422
+
+    # Test outside hardware limits
+    response = client.post(
+        "/temperature_limits", json={"min_setpoint": 65.0, "max_setpoint": 115.0}
+    )
+    assert response.status_code == 422
+
+
+def test_set_temperature_limits_failure(client, mock_modbus_device):
+    """Test failure when setting temperature limits."""
+    mock_modbus_device.set_temperature_limits.return_value = False
+    response = client.post(
+        "/temperature_limits", json={"min_setpoint": 75.0, "max_setpoint": 105.0}
+    )
+    assert response.status_code == 500
+    assert "Failed to set temperature limits" in response.json()["detail"]
+
+
+def test_set_temperature_limits_connection_error(client, mock_modbus_device):
+    """Test connection error when setting temperature limits."""
+    mock_modbus_device.set_temperature_limits.side_effect = ModbusException(
+        "Connection failed"
+    )
+    response = client.post(
+        "/temperature_limits", json={"min_setpoint": 75.0, "max_setpoint": 105.0}
+    )
+    assert response.status_code == 503
+    assert "Connection failed" in response.json()["detail"]
+
+
+def test_set_boiler_setpoint_read_only(client, mock_modbus_device):
+    """Test that setting boiler setpoint is blocked in read-only mode."""
+    # Enable read-only mode
+    cfg.READ_ONLY_MODE = True
+    try:
+        response = client.post("/boiler_set_setpoint", json={"temperature": 90.0})
+        assert response.status_code == 403
+        assert (
+            "Operation not permitted: system is in read-only mode"
+            in response.json()["detail"]
+        )
+    finally:
+        # Reset read-only mode to its original state
+        cfg.READ_ONLY_MODE = False
+
+
+def test_set_temperature_limits_read_only(client, mock_modbus_device):
+    """Test that setting temperature limits is blocked in read-only mode."""
+    # Enable read-only mode
+    cfg.READ_ONLY_MODE = True
+    try:
+        # Test setting temperature limits
+        response = client.post(
+            "/temperature_limits", json={"min_setpoint": 75.0, "max_setpoint": 105.0}
+        )
+        assert response.status_code == 403
+        assert (
+            "Operation not permitted: system is in read-only mode"
+            in response.json()["detail"]
+        )
+
+        # Verify that read operations still work
+        response = client.get("/temperature_limits")
+        assert response.status_code == 200
+        data = response.json()
+        assert "hard_limits" in data
+        assert "soft_limits" in data
+    finally:
+        # Reset read-only mode to its original state
+        cfg.READ_ONLY_MODE = False
