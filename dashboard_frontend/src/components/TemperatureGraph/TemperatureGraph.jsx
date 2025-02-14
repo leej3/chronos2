@@ -13,11 +13,10 @@ import {
 } from 'recharts';
 
 import './TemperatureGraph.css';
-import { getCharData } from '../../api/getCharData';
 import { formatNumber } from '../../utils/tranform';
 
-const TemperatureGraph = () => {
-  const [data, setData] = useState([]);
+const TemperatureGraph = ({ data }) => {
+  const [chartData, setChartData] = useState([]);
   const [interval, setInterval] = useState(8);
   const [chartHeight, setChartHeight] = useState(600);
   const [isLoading, setIsLoading] = useState(true);
@@ -40,19 +39,9 @@ const TemperatureGraph = () => {
   };
 
   useEffect(() => {
-    const fetchData = async () => {
+    if (data) {
       try {
-        setIsLoading(true);
-        setError(null);
-        const response = await getCharData();
-        const result = await response.data;
-
-        if (!result || result.length === 0) {
-          setError('No data available');
-          return;
-        }
-
-        const mappedData = result.map((entry) => ({
+        const mappedData = data.map((entry) => ({
           date: new Date(entry.date).toLocaleString('en-US', {
             timeZone: 'America/Chicago',
             year: 'numeric',
@@ -66,27 +55,17 @@ const TemperatureGraph = () => {
           outlet: formatNumber(entry['column-1'], 1),
         }));
 
-        setData(mappedData);
+        setChartData(mappedData);
+        setIsLoading(false);
+        setError(null);
       } catch (error) {
-        setError('Failed to load data');
-      } finally {
+        setError('Failed to process data');
         setIsLoading(false);
       }
-    };
+    }
+  }, [data]);
 
-    fetchData();
-    const intervalId = setInterval(() => {
-      if (data.length === 0 || error) {
-        fetchData();
-      }
-    }, 10000);
-
-    const updateIntervalId = setInterval(() => {
-      if (data.length > 0) {
-        fetchData();
-      }
-    }, 120000);
-
+  useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 768) {
         setInterval(8);
@@ -107,8 +86,6 @@ const TemperatureGraph = () => {
     window.addEventListener('resize', handleResize);
 
     return () => {
-      clearInterval(intervalId);
-      clearInterval(updateIntervalId);
       window.removeEventListener('resize', handleResize);
     };
   }, []);
@@ -168,7 +145,11 @@ const TemperatureGraph = () => {
       'Inlet Temperature (°F)',
       'Outlet Temperature (°F)',
     ];
-    const rows = data.map((entry) => [entry.date, entry.inlet, entry.outlet]);
+    const rows = chartData.map((entry) => [
+      entry.date,
+      entry.inlet,
+      entry.outlet,
+    ]);
 
     let csvContent = 'data:text/csv;charset=utf-8,';
     csvContent += header.join(',') + '\n';
@@ -212,15 +193,15 @@ const TemperatureGraph = () => {
           </div>
         )}
         <>
-          {!isLoading && !error && data.length > 0 && (
+          {!isLoading && !error && chartData.length > 0 && (
             <>
               <ResponsiveContainer width="100%" height={chartHeight}>
                 <LineChart
-                  data={getFilteredData(data)}
+                  data={getFilteredData(chartData)}
                   margin={{
                     top: 20,
-                    right: 20,
-                    left: window.innerWidth < 768 ? 10 : 20,
+                    right: 30,
+                    left: window.innerWidth < 768 ? 20 : 30,
                     bottom: 30,
                   }}
                 >
@@ -241,7 +222,7 @@ const TemperatureGraph = () => {
                     textAnchor={window.innerWidth < 768 ? 'end' : 'middle'}
                     height={window.innerWidth < 768 ? 60 : 50}
                     interval={interval}
-                    padding={{ left: 10, right: 10 }}
+                    padding={{ left: 20, right: 20 }}
                   />
                   <YAxis
                     stroke="#dddddd"
@@ -253,7 +234,7 @@ const TemperatureGraph = () => {
                     tickFormatter={(tick) => parseFloat(tick.toFixed(1))}
                     domain={findYAxisDomain(data)}
                     padding={{ top: 20, bottom: 20 }}
-                    width={45}
+                    width={60}
                   >
                     <Label
                       value="Temperature (°F)"
@@ -264,7 +245,7 @@ const TemperatureGraph = () => {
                         textAnchor: 'middle',
                         fontSize: window.innerWidth < 768 ? 18 : 18,
                         fontWeight: 'bold',
-                        dy: -20,
+                        dy: -35,
                       }}
                     />
                   </YAxis>
@@ -304,7 +285,7 @@ const TemperatureGraph = () => {
               <button
                 className="download-button m-2"
                 onClick={downloadCSV}
-                disabled={isLoading || data.length === 0}
+                disabled={isLoading || chartData.length === 0}
               >
                 Download logs csv
               </button>
