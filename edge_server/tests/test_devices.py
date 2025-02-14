@@ -97,9 +97,10 @@ def test_send_command_exception(mock_serial, device_serial, caplog):
 @pytest.fixture
 def mock_modbus_device():
     """Create a mock ModbusDevice with mocked client."""
-    with patch("chronos.devices.ModbusSerialClient") as mock_client, patch(
-        "chronos.devices.cfg"
-    ) as mock_cfg:
+    with (
+        patch("chronos.devices.ModbusSerialClient") as mock_client,
+        patch("chronos.devices.cfg") as mock_cfg,
+    ):
         # Mock successful connection
         mock_client.return_value.connect.return_value = True
         mock_client.return_value.is_socket_open.return_value = True
@@ -235,9 +236,7 @@ def test_read_boiler_data(mock_modbus_device, registers, expected):
     mock_modbus_device.client.read_holding_registers.return_value.registers = registers[
         "holding"
     ]
-    mock_modbus_device.client.read_holding_registers.return_value.isError.return_value = (
-        False
-    )
+    mock_modbus_device.client.read_holding_registers.return_value.isError.return_value = False
 
     mock_modbus_device.client.read_input_registers.return_value.registers = registers[
         "input"
@@ -251,9 +250,9 @@ def test_read_boiler_data(mock_modbus_device, registers, expected):
 
     # Verify all expected values
     for key, value in expected.items():
-        assert (
-            result[key] == value
-        ), f"Mismatch for {key}: expected {value}, got {result[key]}"
+        assert result[key] == value, (
+            f"Mismatch for {key}: expected {value}, got {result[key]}"
+        )
 
 
 def test_read_boiler_data_disconnected(mock_modbus_device):

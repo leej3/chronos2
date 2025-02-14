@@ -30,7 +30,7 @@ const UserSettings = ({ data }) => {
   const [showForm, setShowForm] = useState(false);
   const [tempLimits, setTempLimits] = useState({
     hard_limits: { min_setpoint: 70, max_setpoint: 110 },
-    soft_limits: { min_setpoint: 70, max_setpoint: 110 }
+    soft_limits: { min_setpoint: 70, max_setpoint: 110 },
   });
   const [isInitialized, setIsInitialized] = useState(false);
   const season = useSelector((state) => state.chronos.season);
@@ -76,7 +76,7 @@ const UserSettings = ({ data }) => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: value === '' ? null : value,
     }));
@@ -86,34 +86,58 @@ const UserSettings = ({ data }) => {
     e.preventDefault();
     try {
       // Convert string values to numbers where needed
-      const processedData = Object.entries(formData).reduce((acc, [key, value]) => {
-        acc[key] = value === null ? null : Number(value);
-        return acc;
-      }, {});
+      const processedData = Object.entries(formData).reduce(
+        (acc, [key, value]) => {
+          acc[key] = value === null ? null : Number(value);
+          return acc;
+        },
+        {},
+      );
 
       // Validate setpoint min/max against hard limits
-      if (processedData.setpoint_min !== null || processedData.setpoint_max !== null) {
+      if (
+        processedData.setpoint_min !== null ||
+        processedData.setpoint_max !== null
+      ) {
         const { hard_limits } = tempLimits;
-        if (processedData.setpoint_min !== null && (processedData.setpoint_min < hard_limits.min_setpoint || processedData.setpoint_min > hard_limits.max_setpoint)) {
-          toast.error(`Minimum setpoint must be between ${hard_limits.min_setpoint}°F and ${hard_limits.max_setpoint}°F`);
+        if (
+          processedData.setpoint_min !== null &&
+          (processedData.setpoint_min < hard_limits.min_setpoint ||
+            processedData.setpoint_min > hard_limits.max_setpoint)
+        ) {
+          toast.error(
+            `Minimum setpoint must be between ${hard_limits.min_setpoint}°F and ${hard_limits.max_setpoint}°F`,
+          );
           return;
         }
-        if (processedData.setpoint_max !== null && (processedData.setpoint_max < hard_limits.min_setpoint || processedData.setpoint_max > hard_limits.max_setpoint)) {
-          toast.error(`Maximum setpoint must be between ${hard_limits.min_setpoint}°F and ${hard_limits.max_setpoint}°F`);
+        if (
+          processedData.setpoint_max !== null &&
+          (processedData.setpoint_max < hard_limits.min_setpoint ||
+            processedData.setpoint_max > hard_limits.max_setpoint)
+        ) {
+          toast.error(
+            `Maximum setpoint must be between ${hard_limits.min_setpoint}°F and ${hard_limits.max_setpoint}°F`,
+          );
           return;
         }
-        if (processedData.setpoint_min !== null && processedData.setpoint_max !== null && 
-            processedData.setpoint_min > processedData.setpoint_max) {
+        if (
+          processedData.setpoint_min !== null &&
+          processedData.setpoint_max !== null &&
+          processedData.setpoint_min > processedData.setpoint_max
+        ) {
           toast.error('Maximum setpoint must be greater than minimum setpoint');
           return;
         }
       }
-      
+
       const response = await updateSettings(processedData);
       toast.success(response?.data?.message);
     } catch (error) {
       console.error('Error response:', error);
-      const errorMessage = error?.data?.detail || error?.response?.data?.detail || 'Failed to update settings';
+      const errorMessage =
+        error?.data?.detail ||
+        error?.response?.data?.detail ||
+        'Failed to update settings';
       toast.error(errorMessage);
     }
   };
@@ -173,19 +197,19 @@ const UserSettings = ({ data }) => {
               <CRow>
                 {[
                   { label: 'Tolerance', key: 'tolerance' },
-                  { 
-                    label: 'Min. Setpoint', 
+                  {
+                    label: 'Min. Setpoint',
                     key: 'setpoint_min',
                     min: tempLimits.hard_limits.min_setpoint,
                     max: tempLimits.hard_limits.max_setpoint,
-                    help: `Hard limits: ${tempLimits.hard_limits.min_setpoint}°F - ${tempLimits.hard_limits.max_setpoint}°F`
+                    help: `Hard limits: ${tempLimits.hard_limits.min_setpoint}°F - ${tempLimits.hard_limits.max_setpoint}°F`,
                   },
-                  { 
-                    label: 'Max. Setpoint', 
+                  {
+                    label: 'Max. Setpoint',
                     key: 'setpoint_max',
                     min: tempLimits.hard_limits.min_setpoint,
                     max: tempLimits.hard_limits.max_setpoint,
-                    help: `Hard limits: ${tempLimits.hard_limits.min_setpoint}°F - ${tempLimits.hard_limits.max_setpoint}°F`
+                    help: `Hard limits: ${tempLimits.hard_limits.min_setpoint}°F - ${tempLimits.hard_limits.max_setpoint}°F`,
                   },
                   season === 'Summer' && {
                     label: 'Setpoint Offset (Summer)',
@@ -220,7 +244,10 @@ const UserSettings = ({ data }) => {
                         >
                           {label}:
                           {help && (
-                            <small className="text-muted ms-2" style={{ fontWeight: 'normal' }}>
+                            <small
+                              className="text-muted ms-2"
+                              style={{ fontWeight: 'normal' }}
+                            >
                               {help}
                             </small>
                           )}

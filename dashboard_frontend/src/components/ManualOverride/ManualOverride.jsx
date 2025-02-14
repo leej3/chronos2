@@ -44,7 +44,7 @@ const ManualOverride = ({ data, season }) => {
 
   const handleRadioChange = async (device, state) => {
     console.log('Attempting state change in read-only mode:', readOnlyMode);
-    
+
     if (readOnlyMode) {
       setAlertColor('warning');
       setAlertMessage('You are in read only mode');
@@ -89,7 +89,9 @@ const ManualOverride = ({ data, season }) => {
             {alertColor === 'warning' ? (
               alertMessage
             ) : (
-              <><strong>Error!</strong> {alertMessage}</>
+              <>
+                <strong>Error!</strong> {alertMessage}
+              </>
             )}
           </CAlert>
         )}

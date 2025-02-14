@@ -304,7 +304,8 @@ def test_temperature_conversion(temp_value, expected_f):
 def test_read_boiler_data_zero_temps(device, mock_modbus_client):
     """Test handling of zero temperature values."""
     mock_modbus_client.return_value.read_holding_registers.return_value = MagicMock(
-        isError=lambda: False, registers=[2, 1, 150, 120, 180, 0, 0]  # Zero supply temp
+        isError=lambda: False,
+        registers=[2, 1, 150, 120, 180, 0, 0],  # Zero supply temp
     )
 
     mock_modbus_client.return_value.read_input_registers.return_value = MagicMock(
@@ -433,9 +434,7 @@ def test_read_boiler_data(mock_modbus_device, registers, expected):
     mock_modbus_device.client.read_holding_registers.return_value.registers = registers[
         "holding"
     ]
-    mock_modbus_device.client.read_holding_registers.return_value.isError.return_value = (
-        False
-    )
+    mock_modbus_device.client.read_holding_registers.return_value.isError.return_value = False
 
     mock_modbus_device.client.read_input_registers.return_value.registers = registers[
         "input"
@@ -449,9 +448,9 @@ def test_read_boiler_data(mock_modbus_device, registers, expected):
 
     # Verify all expected values
     for key, value in expected.items():
-        assert (
-            result[key] == value
-        ), f"Mismatch for {key}: expected {value}, got {result[key]}"
+        assert result[key] == value, (
+            f"Mismatch for {key}: expected {value}, got {result[key]}"
+        )
 
 
 def test_read_boiler_data_retry_success(mock_modbus_device):
@@ -503,9 +502,9 @@ def test_temperature_conversion_edge_cases(
 
     result = device.read_boiler_data()
     assert result is not None
-    assert (
-        abs(result["system_supply_temp"] - expected_fahrenheit) < 0.1
-    ), f"Expected {expected_fahrenheit}°F but got {result['system_supply_temp']}°F"
+    assert abs(result["system_supply_temp"] - expected_fahrenheit) < 0.1, (
+        f"Expected {expected_fahrenheit}°F but got {result['system_supply_temp']}°F"
+    )
 
 
 def test_read_boiler_data_temperature_ramp(device, mock_modbus_client):
@@ -568,20 +567,20 @@ def test_read_boiler_data_temperature_ramp(device, mock_modbus_client):
         temp_change = (
             readings[i + 1]["system_supply_temp"] - readings[i]["system_supply_temp"]
         )
-        assert (
-            abs(temp_change) <= 5.0
-        ), f"Temperature changed too rapidly: {abs(temp_change)}°F"
+        assert abs(temp_change) <= 5.0, (
+            f"Temperature changed too rapidly: {abs(temp_change)}°F"
+        )
 
         # Verify relationships between temperatures
-        assert (
-            readings[i]["outlet_temp"] > readings[i]["system_supply_temp"]
-        ), "Outlet should be warmer than supply"
-        assert (
-            readings[i]["inlet_temp"] < readings[i]["system_supply_temp"]
-        ), "Inlet should be cooler than supply"
-        assert (
-            readings[i]["flue_temp"] > readings[i]["outlet_temp"]
-        ), "Flue should be warmest"
+        assert readings[i]["outlet_temp"] > readings[i]["system_supply_temp"], (
+            "Outlet should be warmer than supply"
+        )
+        assert readings[i]["inlet_temp"] < readings[i]["system_supply_temp"], (
+            "Inlet should be cooler than supply"
+        )
+        assert readings[i]["flue_temp"] > readings[i]["outlet_temp"], (
+            "Flue should be warmest"
+        )
 
 
 def test_read_boiler_data_with_delays(device, mock_modbus_client):

@@ -33,7 +33,7 @@ from chronos.mock_devices.mock_data import (
     mock_point_update,
     mock_sensors,
 )
-from fastapi import FastAPI, HTTPException, Query, Response
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
