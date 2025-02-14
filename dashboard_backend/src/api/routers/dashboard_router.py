@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Request, Security
 from fastapi.responses import JSONResponse, StreamingResponse
 from src.api.dependencies import get_current_user
-from src.api.dto.dashboard import UpdateDeviceState, UpdateSettings
+from src.api.dto.dashboard import SwitchSeason, UpdateDeviceState, UpdateSettings
 from src.core.services.chronos import Chronos
 from src.core.services.edge_server import EdgeServer
 from src.features.auth.jwt_handler import UserToken
@@ -56,17 +56,8 @@ async def update_settings(
     current_user: Annotated[UserToken, Security(get_current_user)],
 ):
     # Update for winter
-    try:
-        reponse = edge_server.boiler_set_setpoint(data.setpoint_offset_winter)
-        for key, value in data.dict().items():
-            if value is not None:
-                setattr(chronos, key, value)
-        return JSONResponse(content=reponse, status_code=200)
-
-    except Exception as e:
-        return JSONResponse(
-            content={"message": f"Error updating settings: {str(e)}"}, status_code=400
-        )
+    data = dashboard_service.update_settings(data)
+    return JSONResponse(content=data)
 
 
 @router.get("/boiler_stats")
@@ -99,3 +90,17 @@ async def boiler_info(
 ):
     data = edge_server.get_boiler_info()
     return JSONResponse(content=data)
+
+
+@router.post("/switch-season")
+async def switch_season(
+    data: SwitchSeason,
+    current_user: Annotated[UserToken, Security(get_current_user)],
+):
+    try:
+        result = dashboard_service.switch_season_mode(data.season_value)
+        return JSONResponse(content=result, status_code=200)
+    except Exception as e:
+        return JSONResponse(
+            content={"message": str(e), "status": "error"}, status_code=400
+        )
