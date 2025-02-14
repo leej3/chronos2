@@ -5,7 +5,7 @@ from fastapi import APIRouter, Request, Security
 from fastapi.responses import JSONResponse, StreamingResponse
 from src.api.dependencies import get_current_user
 from src.api.dto.dashboard import UpdateDeviceState, UpdateSettings
-from src.core.exceptions import EdgeServerError
+from src.core.common.exceptions import EdgeServerError
 from src.core.services.chronos import Chronos
 from src.core.services.edge_server import EdgeServer
 from src.features.auth.jwt_handler import UserToken
@@ -15,14 +15,18 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["Dashboard"])
 dashboard_service = DashboardService()
-edge_server = EdgeServer()
 chronos = Chronos()
+
+
+def get_edge_server():
+    return EdgeServer()
 
 
 @router.get("/")
 def dashboard_data(
     request: Request,
     current_user: Annotated[UserToken, Security(get_current_user)],
+    edge_server: Annotated[EdgeServer, Security(get_edge_server)],
 ):
     data = dashboard_service.get_data()
     return JSONResponse(content=data)
@@ -32,6 +36,7 @@ def dashboard_data(
 def update_state(
     data: UpdateDeviceState,
     current_user: Annotated[UserToken, Security(get_current_user)],
+    edge_server: Annotated[EdgeServer, Security(get_edge_server)],
 ):
     edge_server.update_device_state(id=data.id, state=data.state)
     return JSONResponse(content={"message": "Updated state successfully"})
@@ -58,6 +63,7 @@ def chart_data(
 async def update_settings(
     data: UpdateSettings,
     current_user: Annotated[UserToken, Security(get_current_user)],
+    edge_server: Annotated[EdgeServer, Security(get_edge_server)],
 ):
     try:
         logger.info(f"Received settings update request: {data.dict()}")
@@ -83,11 +89,6 @@ async def update_settings(
                 error_msg = f"Maximum setpoint must be between {hard_limits['min_setpoint']}°F and {hard_limits['max_setpoint']}°F"
                 return JSONResponse(content={"detail": error_msg}, status_code=400)
 
-        # Update settings
-        for key, value in data.dict().items():
-            if value is not None:
-                setattr(chronos, key, value)
-
         # Update temperature limits in edge server if they changed
         if data.setpoint_min is not None or data.setpoint_max is not None:
             soft_limits = {
@@ -102,25 +103,15 @@ async def update_settings(
                     else hard_limits["max_setpoint"]
                 ),
             }
-            try:
-                edge_server.set_temperature_limits(soft_limits)
-            except EdgeServerError as e:
-                if "read-only mode" in str(e).lower():
-                    return JSONResponse(
-                        content={
-                            "detail": "Operation not permitted: system is in read-only mode"
-                        },
-                        status_code=403,
-                    )
-                return JSONResponse(
-                    content={
-                        "detail": f"Failed to update temperature limits: {str(e)}"
-                    },
-                    status_code=400,
-                )
+            edge_server.set_temperature_limits(limits=soft_limits)
+
+        # Update settings
+        for key, value in data.dict().items():
+            if value is not None:
+                setattr(chronos, key, value)
 
         return JSONResponse(content={"message": "Settings updated successfully"})
-    except Exception as e:
+    except EdgeServerError as e:
         logger.error(f"Error updating settings: {str(e)}", exc_info=True)
         error_msg = str(e)
         if "read-only mode" in error_msg.lower():
@@ -131,7 +122,13 @@ async def update_settings(
                 status_code=403,
             )
         return JSONResponse(
-            content={"detail": f"Error updating settings: {error_msg}"},
+            content={"detail": f"Failed to update temperature limits: {error_msg}"},
+            status_code=400,
+        )
+    except Exception as e:
+        logger.error(f"Error updating settings: {str(e)}", exc_info=True)
+        return JSONResponse(
+            content={"detail": f"Error updating settings: {str(e)}"},
             status_code=400,
         )
 
@@ -139,6 +136,7 @@ async def update_settings(
 @router.get("/boiler_stats")
 async def boiler_stats(
     current_user: Annotated[UserToken, Security(get_current_user)],
+    edge_server: Annotated[EdgeServer, Security(get_edge_server)],
 ):
     data = edge_server.get_data_boiler_stats()
     return JSONResponse(content=data)
@@ -147,6 +145,7 @@ async def boiler_stats(
 @router.get("/boiler_status")
 async def boiler_status(
     current_user: Annotated[UserToken, Security(get_current_user)],
+    edge_server: Annotated[EdgeServer, Security(get_edge_server)],
 ):
     data = edge_server.get_boiler_status()
     return JSONResponse(content=data)
@@ -155,6 +154,7 @@ async def boiler_status(
 @router.get("/boiler_errors")
 async def boiler_errors(
     current_user: Annotated[UserToken, Security(get_current_user)],
+    edge_server: Annotated[EdgeServer, Security(get_edge_server)],
 ):
     data = edge_server.get_boiler_errors()
     return JSONResponse(content=data)
@@ -163,6 +163,7 @@ async def boiler_errors(
 @router.get("/boiler_info")
 async def boiler_info(
     current_user: Annotated[UserToken, Security(get_current_user)],
+    edge_server: Annotated[EdgeServer, Security(get_edge_server)],
 ):
     data = edge_server.get_boiler_info()
     return JSONResponse(content=data)
@@ -171,6 +172,7 @@ async def boiler_info(
 @router.get("/temperature_limits")
 async def temperature_limits(
     current_user: Annotated[UserToken, Security(get_current_user)],
+    edge_server: Annotated[EdgeServer, Security(get_edge_server)],
 ):
     """Get the valid temperature range for the boiler from the edge server."""
     data = edge_server.get_temperature_limits()
