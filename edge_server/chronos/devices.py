@@ -98,8 +98,8 @@ class ModbusDevice:
                         "operating_mode": 0x40000,  # Base address for holding registers
                         "cascade_mode": 0x40001,
                         "setpoint": 0x40002,
-                        "min_setpoint": 0x40003,
-                        "max_setpoint": 0x40004,
+                        "min_setpoint_limit": 0x40003,
+                        "max_setpoint_limit": 0x40004,
                         "last_lockout": 0x40005,
                         "model_id": 0x40006,
                         "system_supply_temp": 0x40007,
@@ -357,9 +357,13 @@ class ModbusDevice:
             raise ModbusException("Device not connected")
 
         # Validate range (70-110°F maps to 0-100%)
-        if not (70 <= effective_setpoint <= 110):
+        if not (
+            cfg.temperature.min_setpoint
+            <= effective_setpoint
+            <= cfg.temperature.max_setpoint
+        ):
             logger.error(
-                f"Setpoint {effective_setpoint}°F is out of valid range (70-110°F)"
+                f"Setpoint {effective_setpoint}°F is out of valid range ({cfg.temperature.min_setpoint}-{cfg.temperature.max_setpoint}°F)"
             )
             return False
 
@@ -480,6 +484,82 @@ class ModbusDevice:
         except (ModbusException, OSError, AttributeError, IndexError) as e:
             logger.error(f"Failed to read model info: {str(e)}")
             return None
+
+    def get_temperature_limits(self) -> dict:
+        """Get the current soft temperature limits from the device."""
+        try:
+            if not self.client or not self.client.is_socket_open():
+                raise ModbusException("Device not connected")
+
+            # Read min and max setpoint registers
+            min_setpoint = self.client.read_holding_registers(
+                address=self.registers.holding.min_setpoint_limit, count=1, slave=1
+            )
+            max_setpoint = self.client.read_holding_registers(
+                address=self.registers.holding.max_setpoint_limit, count=1, slave=1
+            )
+
+            if min_setpoint.isError() or max_setpoint.isError():
+                logger.error("Failed to read temperature limits")
+                return None
+
+            # Convert raw register values to temperature
+            min_temp = round(c_to_f(min_setpoint.registers[0] / 10.0), 1)
+            max_temp = round(c_to_f(max_setpoint.registers[0] / 10.0), 1)
+
+            return {
+                "min_setpoint": min_temp,
+                "max_setpoint": max_temp,
+            }
+        except Exception as e:
+            logger.error(f"Error reading temperature limits: {str(e)}")
+            return None
+
+    def set_temperature_limits(self, min_setpoint: float, max_setpoint: float) -> bool:
+        """Set soft temperature limits in the device."""
+        try:
+            if not self.client or not self.client.is_socket_open():
+                raise ModbusException("Device not connected")
+
+            # Validate against hard limits
+            if not (
+                cfg.temperature.min_setpoint
+                <= min_setpoint
+                <= cfg.temperature.max_setpoint
+            ) or not (
+                cfg.temperature.min_setpoint
+                <= max_setpoint
+                <= cfg.temperature.max_setpoint
+            ):
+                logger.error(
+                    f"Temperature limits {min_setpoint}-{max_setpoint}°F are outside valid range ({cfg.temperature.min_setpoint}-{cfg.temperature.max_setpoint}°F)"
+                )
+                return False
+
+            # Convert temperatures to register values (reverse of c_to_f)
+            min_value = int((min_setpoint - 32.0) * 5.0 / 9.0 * 10)
+            max_value = int((max_setpoint - 32.0) * 5.0 / 9.0 * 10)
+
+            # Write min and max setpoint registers
+            min_result = self.client.write_register(
+                address=self.registers.holding.min_setpoint_limit,
+                value=min_value,
+                slave=1,
+            )
+            max_result = self.client.write_register(
+                address=self.registers.holding.max_setpoint_limit,
+                value=max_value,
+                slave=1,
+            )
+
+            if min_result.isError() or max_result.isError():
+                logger.error("Failed to write temperature limits")
+                return False
+
+            return True
+        except Exception as e:
+            logger.error(f"Error setting temperature limits: {str(e)}")
+            return False
 
     def __enter__(self):
         return self

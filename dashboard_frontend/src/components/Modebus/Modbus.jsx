@@ -16,6 +16,7 @@ const TabContent = ({ label, value, unit = '' }) => (
     </div>
   </CCol>
 );
+import BoilerSetpoint from '../BoilerSetpoint/BoilerSetpoint';
 
 const Modbus = ({ boiler }) => {
   const statsItems = [
@@ -45,6 +46,124 @@ const Modbus = ({ boiler }) => {
       unit: ' %',
     },
   ];
+
+  const renderStatsTab = () => (
+    <CRow>
+      <CCol sm="12">
+        <div className="season-group">
+          <CFormLabel className="form-label">
+            <strong>System Supply Temp:</strong>{' '}
+            <span>{`${system_supply_temp} °F`}</span>
+          </CFormLabel>
+        </div>
+      </CCol>
+      <CCol sm="12">
+        <div className="season-group">
+          <CFormLabel className="form-label">
+            <strong>Outlet Temp:</strong> <span>{`${outlet_temp} °F`}</span>
+          </CFormLabel>
+        </div>
+      </CCol>
+      <CCol sm="12">
+        <div className="season-group">
+          <CFormLabel className="form-label">
+            <strong>Inlet Temp:</strong> <span>{`${inlet_temp} °F`}</span>
+          </CFormLabel>
+        </div>
+      </CCol>
+      <CCol sm="12">
+        <div className="season-group">
+          <CFormLabel className="form-label">
+            <strong>Cascade Power:</strong>{' '}
+            <span>{`${cascade_current_power} %`}</span>
+          </CFormLabel>
+        </div>
+      </CCol>
+      <CCol sm="12">
+        <div className="season-group">
+          <CFormLabel className="form-label">
+            <strong>Lead Firing Rate:</strong>{' '}
+            <span>{`${lead_firing_rate} %`}</span>
+          </CFormLabel>
+        </div>
+      </CCol>
+    </CRow>
+  );
+
+  const renderStatusTab = () => (
+    <CRow>
+      <CCol sm="12">
+        <div className="season-group">
+          <CFormLabel className="form-label">
+            <strong>Operating Mode:</strong> <span>{operating_mode}</span>
+          </CFormLabel>
+        </div>
+      </CCol>
+      <CCol sm="12">
+        <div className="season-group">
+          <CFormLabel className="form-label">
+            <strong>Cascade Mode:</strong> <span>{cascade_mode}</span>
+          </CFormLabel>
+        </div>
+      </CCol>
+      <CCol sm="12">
+        <div className="season-group">
+          <CFormLabel className="form-label">
+            <strong>Current Setpoint:</strong>{' '}
+            <span>{`${current_setpoint} °F`}</span>
+          </CFormLabel>
+        </div>
+      </CCol>
+      <CCol sm="12" className="mt-4">
+        <BoilerSetpoint currentSetpoint={current_setpoint} />
+      </CCol>
+    </CRow>
+  );
+
+  const renderErrorTab = () => (
+    <CRow>
+      <CCol sm="12">
+        <div className="season-group">
+          <CFormLabel className="form-label">
+            <strong>Last Lockout:</strong> <span>{last_lockout_str}</span>
+          </CFormLabel>
+        </div>
+      </CCol>
+      <CCol sm="12">
+        <div className="season-group">
+          <CFormLabel className="form-label">
+            <strong>Last Blockout:</strong> <span>{last_blockout_str}</span>
+          </CFormLabel>
+        </div>
+      </CCol>
+    </CRow>
+  );
+
+  const renderInfoTab = () => (
+    <CRow>
+      <CCol sm="12">
+        <div className="season-group">
+          <CFormLabel className="form-label">
+            <strong>Model Name:</strong> <span>{model_name}</span>
+          </CFormLabel>
+        </div>
+      </CCol>
+      <CCol sm="12">
+        <div className="season-group">
+          <CFormLabel className="form-label">
+            <strong>Firmware Version:</strong> <span>{firmware_version}</span>
+          </CFormLabel>
+        </div>
+      </CCol>
+      <CCol sm="12">
+        <div className="season-group">
+          <CFormLabel className="form-label">
+            <strong>Hardware Version:</strong> <span>{hardware_version}</span>
+          </CFormLabel>
+        </div>
+      </CCol>
+    </CRow>
+  );
 
   return (
     <CRow>

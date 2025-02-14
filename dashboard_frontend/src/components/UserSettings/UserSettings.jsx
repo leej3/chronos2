@@ -9,12 +9,14 @@ import {
   CCard,
 } from '@coreui/react';
 import { toast } from 'react-toastify';
+
+import { getTemperatureLimits } from '../../api/updateBoilerSetpoint';
 import { updateSettings } from '../../api/updateSetting';
 import './UserSettings.css';
 import SeasonSwitch from '../SeasonSwitch/SeasonSwitch';
 
 const UserSettings = ({ data }) => {
-  const initialFormData = {
+  const [formData, setFormData] = useState({
     tolerance: null,
     setpoint_min: null,
     setpoint_max: null,
@@ -23,14 +25,36 @@ const UserSettings = ({ data }) => {
     mode_change_delta_temp: null,
     mode_switch_lockout_time: null,
     cascade_time: null,
-  };
+  });
 
-  const [formData, setFormData] = useState(initialFormData);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [tempLimits, setTempLimits] = useState({
+    hard_limits: { min_setpoint: 70, max_setpoint: 110 },
+    soft_limits: { min_setpoint: 70, max_setpoint: 110 }
+  });
+  const [isInitialized, setIsInitialized] = useState(false);
+  const season = useSelector((state) => state.chronos.season);
 
+  // Only fetch limits once on mount
   useEffect(() => {
     if (data?.results && !isEditing) {
+    const fetchLimits = async () => {
+      try {
+        const limits = await getTemperatureLimits();
+        setTempLimits(limits);
+      } catch (error) {
+        console.error('Failed to fetch temperature limits:', error);
+      }
+    };
+    fetchLimits();
+  }
+  },[]); 
+
+  // Initialize form data only once when data is first received
+  useEffect(() => {
+    if (data?.results && !isInitialized) {
       setFormData({
         tolerance: data.results.tolerance ?? null,
         setpoint_min: data.results.setpoint_min ?? null,
@@ -52,16 +76,54 @@ const UserSettings = ({ data }) => {
       ...formData,
       [name]: value,
     });
+    setIsInitialized(true);
   };
+
+  if (!data?.results) {
+    return (
+      <div className="loading-container">
+        <div className="spinner"></div>
+        <p>Loading user settings...</p>
+      </div>
+    );
+  }
+
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await updateSettings(formData);
+      // Convert string values to numbers where needed
+      const processedData = Object.entries(formData).reduce((acc, [key, value]) => {
+        acc[key] = value === null ? null : Number(value);
+        return acc;
+      }, {});
+
+      // Validate setpoint min/max against hard limits
+      if (processedData.setpoint_min !== null || processedData.setpoint_max !== null) {
+        const { hard_limits } = tempLimits;
+        if (processedData.setpoint_min !== null && (processedData.setpoint_min < hard_limits.min_setpoint || processedData.setpoint_min > hard_limits.max_setpoint)) {
+          toast.error(`Minimum setpoint must be between ${hard_limits.min_setpoint}°F and ${hard_limits.max_setpoint}°F`);
+          return;
+        }
+        if (processedData.setpoint_max !== null && (processedData.setpoint_max < hard_limits.min_setpoint || processedData.setpoint_max > hard_limits.max_setpoint)) {
+          toast.error(`Maximum setpoint must be between ${hard_limits.min_setpoint}°F and ${hard_limits.max_setpoint}°F`);
+          return;
+        }
+        if (processedData.setpoint_min !== null && processedData.setpoint_max !== null && 
+            processedData.setpoint_min > processedData.setpoint_max) {
+          toast.error('Maximum setpoint must be greater than minimum setpoint');
+          return;
+        }
+      }
+      
+      const response = await updateSettings(processedData);
       toast.success(response?.data?.message);
       setIsEditing(false);
     } catch (error) {
-      toast.error(error?.response?.data?.message || 'An error occurred');
+      console.error('Error response:', error);
+      const errorMessage = error?.data?.detail || error?.response?.data?.detail || 'Failed to update settings';
+      toast.error(errorMessage);
     }
   };
 
@@ -143,6 +205,11 @@ const UserSettings = ({ data }) => {
                       <div style={{ marginBottom: '10px' }}>
                         <span htmlFor={key} className="temp-label ">
                           {label}:
+                          {help && (
+                            <small className="text-muted ms-2" style={{ fontWeight: 'normal' }}>
+                              {help}
+                            </small>
+                          )}
                         </span>
                         <CFormInput
                           type="number"
@@ -151,6 +218,8 @@ const UserSettings = ({ data }) => {
                           value={formData[key] ?? ''}
                           onChange={handleInputChange}
                           placeholder={`${data.results[key] ?? '0.0'} ${unit}`}
+                          min={min}
+                          max={max}
                         />
                       </div>
                     </CCol>

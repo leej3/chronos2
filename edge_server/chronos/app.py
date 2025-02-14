@@ -12,6 +12,7 @@ from chronos.data_models import (
     ErrorHistory,
     ModelInfo,
     OperatingStatus,
+    SetpointLimitsUpdate,
     SetpointUpdate,
     SystemStatus,
 )
@@ -32,7 +33,7 @@ from chronos.mock_devices.mock_data import (
     mock_point_update,
     mock_sensors,
 )
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
@@ -416,3 +417,68 @@ async def download_log():
         raise HTTPException(
             status_code=500, detail=f"Failed to read log file: {str(e)}"
         )
+
+
+@app.get("/temperature_limits")
+def get_temperature_limits():
+    """Get both hard and soft temperature limits for the boiler."""
+    if MOCK_DEVICES:
+        return {
+            "hard_limits": {
+                "min_setpoint": cfg.temperature.min_setpoint,
+                "max_setpoint": cfg.temperature.max_setpoint,
+            },
+            "soft_limits": {
+                "min_setpoint": cfg.temperature.min_setpoint,
+                "max_setpoint": cfg.temperature.max_setpoint,
+            },
+        }
+
+    try:
+        with create_modbus_connection() as device:
+            soft_limits = device.get_temperature_limits()
+            if not soft_limits:
+                soft_limits = {
+                    "min_setpoint": cfg.temperature.min_setpoint,
+                    "max_setpoint": cfg.temperature.max_setpoint,
+                }
+
+            return {
+                "hard_limits": {
+                    "min_setpoint": cfg.temperature.min_setpoint,
+                    "max_setpoint": cfg.temperature.max_setpoint,
+                },
+                "soft_limits": soft_limits,
+            }
+    except Exception as e:
+        logger.error(f"Failed to get temperature limits: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get temperature limits")
+
+
+@app.post("/temperature_limits")
+@check_read_only
+async def set_temperature_limits(limits: SetpointLimitsUpdate):
+    """Set soft temperature limits for the boiler."""
+    try:
+        # Validate that min < max
+        limits.validate_range()
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+    if MOCK_DEVICES:
+        return {"message": "Temperature limits updated successfully"}
+
+    # Set limits in modbus device
+    try:
+        with create_modbus_connection() as device:
+            success = device.set_temperature_limits(
+                limits.min_setpoint, limits.max_setpoint
+            )
+            if not success:
+                raise HTTPException(
+                    status_code=500, detail="Failed to set temperature limits"
+                )
+    except ModbusException as e:
+        raise HTTPException(status_code=503, detail=str(e))
+
+    return {"message": "Temperature limits updated successfully"}
