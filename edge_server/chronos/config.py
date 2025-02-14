@@ -68,5 +68,27 @@ config_dict = {
     },
     "MOCK_DEVICES": os.getenv("MOCK_DEVICES", "false").lower() == "true",
     "READ_ONLY_MODE": os.getenv("READ_ONLY_MODE", "false").lower() == "true",
+    "registers": {
+        "holding": {
+            "operating_mode": 0x40000,  # Base address for holding registers
+            "cascade_mode": 0x40001,
+            "setpoint": 0x40002,
+            "min_setpoint_limit": 0x40003,
+            "max_setpoint_limit": 0x40004,
+            "last_lockout": 0x40005,
+            "model_id": 0x40006,
+            "system_supply_temp": 0x40007,
+        },
+        "input": {
+            "alarm": 0x30003,  # Base address for input registers
+            "pump": 0x30004,
+            "flame": 0x30005,
+            "cascade_current_power": 0x30006,
+            "outlet_temp": 0x30008,
+            "inlet_temp": 0x30009,
+            "flue_temp": 0x30010,
+            "lead_firing_rate": 0x30011,
+        },
+    },
 }
 cfg = Struct(config_dict)

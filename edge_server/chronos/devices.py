@@ -3,6 +3,7 @@ import math
 import time
 from contextlib import contextmanager
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Optional
 
 from chronos.config import cfg
@@ -88,39 +89,29 @@ class ModbusDevice:
             port=port, baudrate=baudrate, parity=parity, timeout=timeout
         )
 
-        # Create register mappings (using correct base addresses)
-        class Registers:
-            def __init__(self):
-                self.holding = type(
-                    "Holding",
-                    (),
-                    {
-                        "operating_mode": 0x40000,  # Base address for holding registers
-                        "cascade_mode": 0x40001,
-                        "setpoint": 0x40002,
-                        "min_setpoint_limit": 0x40003,
-                        "max_setpoint_limit": 0x40004,
-                        "last_lockout": 0x40005,
-                        "model_id": 0x40006,
-                        "system_supply_temp": 0x40007,
-                    },
-                )()
-                self.input = type(
-                    "Input",
-                    (),
-                    {
-                        "alarm": 0x30003,  # Base address for input registers
-                        "pump": 0x30004,
-                        "flame": 0x30005,
-                        "cascade_current_power": 0x30006,
-                        "outlet_temp": 0x30008,
-                        "inlet_temp": 0x30009,
-                        "flue_temp": 0x30010,
-                        "lead_firing_rate": 0x30011,
-                    },
-                )()
-
-        self.registers = Registers()
+        # Cleaned up by moving register mappings to cfg.registers in config.py
+        self.registers = SimpleNamespace(
+            holding=SimpleNamespace(
+                operating_mode=cfg.registers.holding.operating_mode,
+                cascade_mode=cfg.registers.holding.cascade_mode,
+                setpoint=cfg.registers.holding.setpoint,
+                min_setpoint_limit=cfg.registers.holding.min_setpoint_limit,
+                max_setpoint_limit=cfg.registers.holding.max_setpoint_limit,
+                last_lockout=cfg.registers.holding.last_lockout,
+                model_id=cfg.registers.holding.model_id,
+                system_supply_temp=cfg.registers.holding.system_supply_temp,
+            ),
+            input=SimpleNamespace(
+                alarm=cfg.registers.input.alarm,
+                pump=cfg.registers.input.pump,
+                flame=cfg.registers.input.flame,
+                cascade_current_power=cfg.registers.input.cascade_current_power,
+                outlet_temp=cfg.registers.input.outlet_temp,
+                inlet_temp=cfg.registers.input.inlet_temp,
+                flue_temp=cfg.registers.input.flue_temp,
+                lead_firing_rate=cfg.registers.input.lead_firing_rate,
+            ),
+        )
 
         # Updated operating modes to match working implementation
         self.operating_modes = {
