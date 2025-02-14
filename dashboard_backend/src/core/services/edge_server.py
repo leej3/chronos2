@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 from functools import wraps
 
 import requests

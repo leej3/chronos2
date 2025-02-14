@@ -10,7 +10,10 @@ import {
   CRow,
 } from '@coreui/react';
 
-import { updateBoilerSetpoint, getTemperatureLimits } from '../../api/updateBoilerSetpoint';
+import {
+  updateBoilerSetpoint,
+  getTemperatureLimits,
+} from '../../api/updateBoilerSetpoint';
 
 const BoilerSetpoint = () => {
   const [temperature, setTemperature] = useState('');
@@ -47,7 +50,9 @@ const BoilerSetpoint = () => {
     }
 
     if (temp < limits.min_setpoint || temp > limits.max_setpoint) {
-      setError(`Temperature must be between ${limits.min_setpoint}°F and ${limits.max_setpoint}°F`);
+      setError(
+        `Temperature must be between ${limits.min_setpoint}°F and ${limits.max_setpoint}°F`,
+      );
       return;
     }
 
@@ -82,12 +87,22 @@ const BoilerSetpoint = () => {
             />
           </CCol>
         </CRow>
-        <CButton type="submit" color="primary" className="mt-3">Update Temperature</CButton>
+        <CButton type="submit" color="primary" className="mt-3">
+          Update Temperature
+        </CButton>
       </CForm>
-      {error && <CAlert color="danger" className="mt-3">{error}</CAlert>}
-      {success && <CAlert color="success" className="mt-3">Temperature updated successfully!</CAlert>}
+      {error && (
+        <CAlert color="danger" className="mt-3">
+          {error}
+        </CAlert>
+      )}
+      {success && (
+        <CAlert color="success" className="mt-3">
+          Temperature updated successfully!
+        </CAlert>
+      )}
     </div>
   );
 };
 
-export default BoilerSetpoint; 
+export default BoilerSetpoint;

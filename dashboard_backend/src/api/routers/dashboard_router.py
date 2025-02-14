@@ -7,7 +7,6 @@ from src.api.dependencies import get_current_user
 from src.api.dto.dashboard import SwitchSeason, UpdateDeviceState, UpdateSettings
 from src.api.dto.dashboard import UpdateDeviceState, UpdateSettings
 from src.core.exceptions import EdgeServerError
-from src.core.models.setting import Settings
 from src.core.services.chronos import Chronos
 from src.core.services.edge_server import EdgeServer
 from src.features.auth.jwt_handler import UserToken
