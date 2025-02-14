@@ -216,7 +216,6 @@ async def get_device_state(
 @with_circuit_breaker
 @with_rate_limit
 async def update_device_state(data: DeviceModel):
-    raise ValueError("This endpoint is broken")
     if MOCK_DEVICES:
         return DeviceModel(id=data.id, state=data.state)
     """Legacy endpoint for updating device state."""
