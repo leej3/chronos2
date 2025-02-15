@@ -17,6 +17,7 @@ import {
 
 import './Modbus.css';
 import { formatNumber } from '../../utils/tranform';
+import BoilerSetpoint from '../BoilerSetpoint/BoilerSetpoint';
 
 const Modbus = ({ boiler }) => {
   const [activeTab, setActiveTab] = useState('statsTab');
@@ -47,6 +48,7 @@ const Modbus = ({ boiler }) => {
     { tab: 'errorTab', label: 'Boiler Error' },
     { tab: 'infoTab', label: 'Boiler Info' },
   ];
+
   const renderStatsTab = () => (
     <CRow>
       <CCol sm="12">
@@ -113,6 +115,9 @@ const Modbus = ({ boiler }) => {
             <span>{`${current_setpoint} °F`}</span>
           </CFormLabel>
         </div>
+      </CCol>
+      <CCol sm="12" className="mt-4">
+        <BoilerSetpoint currentSetpoint={current_setpoint} />
       </CCol>
     </CRow>
   );

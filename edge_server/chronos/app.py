@@ -12,6 +12,7 @@ from chronos.data_models import (
     ErrorHistory,
     ModelInfo,
     OperatingStatus,
+    SetpointLimitsUpdate,
     SetpointUpdate,
     SystemStatus,
 )
@@ -132,6 +133,21 @@ def with_rate_limit(func: Callable):
     return wrapper
 
 
+def check_read_only(func: Callable):
+    """Decorator to prevent write operations in read-only mode."""
+
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        if cfg.READ_ONLY_MODE:
+            raise HTTPException(
+                status_code=403,
+                detail="Operation not permitted: system is in read-only mode",
+            )
+        return await func(*args, **kwargs)
+
+    return wrapper
+
+
 DeviceTuple = namedtuple(
     "DeviceTuple", ["boiler", "chiller1", "chiller2", "chiller3", "chiller4"]
 )
@@ -181,10 +197,17 @@ async def get_data():
                 devices=devices,
                 status=status,
                 mock_devices=MOCK_DEVICES,
+                read_only_mode=cfg.READ_ONLY_MODE,
             )
         except Exception as e:
             logger.error(f"Error reading data: {e}")
-            return SystemStatus(sensors={}, devices={}, status=False, mock_devices=True)
+            return SystemStatus(
+                sensors={},
+                devices={},
+                status=False,
+                mock_devices=True,
+                read_only_mode=cfg.READ_ONLY_MODE,
+            )
 
     try:
         sensors = {
@@ -194,11 +217,21 @@ async def get_data():
         status = get_chronos_status()
         devices = {i: DEVICES[i].state for i in range(len(DEVICES))}
         return SystemStatus(
-            sensors=sensors, devices=devices, status=status, mock_devices=False
+            sensors=sensors,
+            devices=devices,
+            status=status,
+            mock_devices=MOCK_DEVICES,
+            read_only_mode=cfg.READ_ONLY_MODE,
         )
     except Exception as e:
         logger.error(f"Error reading data: {e}")
-        return SystemStatus(sensors={}, devices={}, status=False, mock_devices=False)
+        return SystemStatus(
+            sensors={},
+            devices={},
+            status=False,
+            mock_devices=False,
+            read_only_mode=cfg.READ_ONLY_MODE,
+        )
 
 
 @app.get("/device_state", response_model=DeviceModel)
@@ -215,6 +248,7 @@ async def get_device_state(
 @app.post("/device_state")
 @with_circuit_breaker
 @with_rate_limit
+@check_read_only
 async def update_device_state(data: DeviceModel):
     if MOCK_DEVICES:
         return DeviceModel(id=data.id, state=data.state)
@@ -341,6 +375,7 @@ async def get_boiler_info():
 @app.post("/boiler_set_setpoint")
 @with_circuit_breaker
 @with_rate_limit
+@check_read_only
 async def set_setpoint(data: SetpointUpdate):
     if MOCK_DEVICES:
         try:
@@ -382,3 +417,68 @@ async def download_log():
         raise HTTPException(
             status_code=500, detail=f"Failed to read log file: {str(e)}"
         )
+
+
+@app.get("/temperature_limits")
+def get_temperature_limits():
+    """Get both hard and soft temperature limits for the boiler."""
+    if MOCK_DEVICES:
+        return {
+            "hard_limits": {
+                "min_setpoint": cfg.temperature.min_setpoint,
+                "max_setpoint": cfg.temperature.max_setpoint,
+            },
+            "soft_limits": {
+                "min_setpoint": cfg.temperature.min_setpoint,
+                "max_setpoint": cfg.temperature.max_setpoint,
+            },
+        }
+
+    try:
+        with create_modbus_connection() as device:
+            soft_limits = device.get_temperature_limits()
+            if not soft_limits:
+                soft_limits = {
+                    "min_setpoint": cfg.temperature.min_setpoint,
+                    "max_setpoint": cfg.temperature.max_setpoint,
+                }
+
+            return {
+                "hard_limits": {
+                    "min_setpoint": cfg.temperature.min_setpoint,
+                    "max_setpoint": cfg.temperature.max_setpoint,
+                },
+                "soft_limits": soft_limits,
+            }
+    except Exception as e:
+        logger.error(f"Failed to get temperature limits: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get temperature limits")
+
+
+@app.post("/temperature_limits")
+@check_read_only
+async def set_temperature_limits(limits: SetpointLimitsUpdate):
+    """Set soft temperature limits for the boiler."""
+    try:
+        # Validate that min < max
+        limits.validate_range()
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+    if MOCK_DEVICES:
+        return {"message": "Temperature limits updated successfully"}
+
+    # Set limits in modbus device
+    try:
+        with create_modbus_connection() as device:
+            success = device.set_temperature_limits(
+                limits.min_setpoint, limits.max_setpoint
+            )
+            if not success:
+                raise HTTPException(
+                    status_code=500, detail="Failed to set temperature limits"
+                )
+    except ModbusException as e:
+        raise HTTPException(status_code=503, detail=str(e))
+
+    return {"message": "Temperature limits updated successfully"}

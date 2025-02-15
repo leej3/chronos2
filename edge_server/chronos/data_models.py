@@ -2,12 +2,15 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
+from .config import cfg
+
 
 class SystemStatus(BaseModel):
     sensors: dict
     devices: dict
     status: bool
     mock_devices: bool = False
+    read_only_mode: bool = False
 
 
 class DeviceModel(BaseModel):
@@ -78,5 +81,36 @@ class SetpointUpdate(BaseModel):
     """Temperature setpoint update."""
 
     temperature: float = Field(
-        ..., description="Desired temperature setpoint in °F", ge=120, le=180
+        ...,
+        description="Desired temperature setpoint in °F",
+        ge=cfg.temperature.min_setpoint,
+        le=cfg.temperature.max_setpoint,
+        error_messages={
+            "type_error": "Temperature must be a number",
+            "ge": f"Temperature must be at least {cfg.temperature.min_setpoint}°F for safe operation",
+            "le": f"Temperature must not exceed {cfg.temperature.max_setpoint}°F for safe operation",
+        },
     )
+
+
+class SetpointLimitsUpdate(BaseModel):
+    """Update for user-defined soft temperature limits."""
+
+    min_setpoint: float = Field(
+        ...,
+        description="Minimum allowed setpoint in °F",
+        ge=cfg.temperature.min_setpoint,
+        le=cfg.temperature.max_setpoint,
+    )
+    max_setpoint: float = Field(
+        ...,
+        description="Maximum allowed setpoint in °F",
+        ge=cfg.temperature.min_setpoint,
+        le=cfg.temperature.max_setpoint,
+    )
+
+    def validate_range(self):
+        """Ensure min is less than max."""
+        if self.min_setpoint >= self.max_setpoint:
+            raise ValueError("Minimum setpoint must be less than maximum setpoint")
+        return self

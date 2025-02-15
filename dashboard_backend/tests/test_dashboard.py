@@ -1,6 +1,5 @@
 import os
 import sys
-import time
 
 import pytest
 from fastapi.testclient import TestClient
@@ -10,10 +9,21 @@ from unittest.mock import MagicMock
 
 from main import app
 from src.api.dependencies import get_current_user
+from src.core.common.exceptions import EdgeServerError
 from src.core.services.chronos import Chronos
 from src.core.services.edge_server import EdgeServer
 from src.features.auth.jwt_handler import UserToken
 from src.features.dashboard.dashboard_service import DashboardService
+
+
+@pytest.fixture(autouse=True)
+def setup_env():
+    """Set up test environment variables."""
+    os.environ["READ_ONLY_MODE"] = "false"
+    yield
+    # Clean up
+    if "READ_ONLY_MODE" in os.environ:
+        del os.environ["READ_ONLY_MODE"]
 
 
 @pytest.fixture
@@ -26,10 +36,26 @@ def mock_dashboard_service():
 
 
 @pytest.fixture
-def mock_edge_server():
-    mock = MagicMock(EdgeServer)
-    mock.update_device_state.return_value = None
-    return mock
+def mock_edge_server(monkeypatch):
+    """Create a dummy edge server for testing."""
+
+    class DummyEdgeServer:
+        def get_temperature_limits(self):
+            return {
+                "hard_limits": {"min_setpoint": 70.0, "max_setpoint": 110.0},
+                "soft_limits": {"min_setpoint": 70.0, "max_setpoint": 110.0},
+            }
+
+        def set_temperature_limits(self, limits: dict):
+            # This will be overridden in specific tests
+            return {"status": "ok"}
+
+        def update_device_state(self, *args, **kwargs):
+            return None
+
+    dummy = DummyEdgeServer()
+    monkeypatch.setattr("src.api.routers.dashboard_router.EdgeServer", lambda: dummy)
+    return dummy
 
 
 @pytest.fixture
@@ -41,16 +67,15 @@ def mock_chronos():
 
 @pytest.fixture
 def mock_current_user():
-    return UserToken(sub="test_user", email="admin@gmail.com")
+    return UserToken(user_id="test_user", sub="test_user", email="admin@gmail.com")
 
 
 @pytest.fixture
-def client(mock_dashboard_service, mock_edge_server, mock_chronos):
+def client(mock_dashboard_service, mock_edge_server, mock_chronos, mock_current_user):
     app.dependency_overrides[DashboardService] = lambda: mock_dashboard_service
     app.dependency_overrides[EdgeServer] = lambda: mock_edge_server
     app.dependency_overrides[Chronos] = lambda: mock_chronos
     app.dependency_overrides[get_current_user] = lambda: mock_current_user
-
     return TestClient(app)
 
 
@@ -106,20 +131,30 @@ def test_chart_data(client):
     )
 
 
-def test_update_settings(client):
+def test_update_settings(client, mock_edge_server):
     settings_data = {
         "tolerance": 1,
-        "setpoint_min": 1,
-        "setpoint_max": 10,
+        "setpoint_min": 75,  # Within valid range
+        "setpoint_max": 105,  # Within valid range
         "setpoint_offset_summer": 140,
         "setpoint_offset_winter": 130.0,
         "mode_change_delta_temp": 3,
         "mode_switch_lockout_time": 30,
         "cascade_time": 5,
     }
-    time.sleep(5)
+
+    # Test successful update
     response = client.post("/api/update_settings", json=settings_data)
     assert response.status_code == 200
+    assert response.json() == {"message": "Settings updated successfully"}
+
+    # Test read-only mode error
+    def raise_read_only_error(*args, **kwargs):
+        raise EdgeServerError("Operation not permitted: system is in read-only mode")
+
+    mock_edge_server.set_temperature_limits = raise_read_only_error
+    response = client.post("/api/update_settings", json=settings_data)
+    assert response.status_code == 403
     assert response.json() == {
-        "message": f"Temperature setpoint set to {settings_data['setpoint_offset_winter']}°F"
+        "detail": "Operation not permitted: system is in read-only mode"
     }

@@ -1,8 +1,9 @@
+# Initial seed data with hardcoded temperature limits
 SETTING_DATA = [
     {
         "id": 1,
-        "setpoint_min": 70,
-        "setpoint_max": 102,
+        "setpoint_min": 70.0,
+        "setpoint_max": 110.0,
         "setpoint_offset_summer": 0,
         "setpoint_offset_winter": -10,
         "tolerance": 0,

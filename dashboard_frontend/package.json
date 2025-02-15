@@ -8,7 +8,7 @@
     "build": "vite build",
     "eslint": "eslint . --fix",
     "start": "vite preview --host 0.0.0.0",
-    "test": "jest",
+    "test": "node --no-deprecation ./node_modules/.bin/jest --config jest.config.cjs",
     "prettier": "prettier . --write",
     "lint": "npm run prettier && npm run eslint"
   },
@@ -62,24 +62,5 @@
     "prettier": "^3.4.2",
     "redux-mock-store": "^1.5.5",
     "vite": "^5.4.1"
-  },
-  "jest": {
-    "clearMocks": true,
-    "coverageDirectory": "coverage",
-    "testEnvironment": "jsdom",
-    "transform": {
-      "^.+\\.[jt]sx?$": "babel-jest"
-    },
-    "extensionsToTreatAsEsm": [
-      ".jsx",
-      ".ts",
-      ".tsx"
-    ],
-    "moduleNameMapper": {
-      "^.+\\.module\\.(css|sass|scss)$": "identity-obj-proxy"
-    },
-    "setupFilesAfterEnv": [
-      "@testing-library/jest-dom"
-    ]
   }
 }

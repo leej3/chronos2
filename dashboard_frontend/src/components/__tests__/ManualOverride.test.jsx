@@ -1,3 +1,4 @@
+/* global jest, it, expect */
 import React from 'react';
 
 import { render, screen, fireEvent, act } from '@testing-library/react';
@@ -27,6 +28,9 @@ it('should render and toggle device states', async () => {
       chiller2: true,
       chiller3: false,
       chiller4: true,
+    },
+    chronos: {
+      read_only_mode: false,
     },
   });
 
