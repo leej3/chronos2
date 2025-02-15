@@ -1,3 +1,4 @@
+/* global jest, it, expect */
 import React from 'react';
 
 import { render, screen, fireEvent, act } from '@testing-library/react';
@@ -30,6 +31,7 @@ it('should render and toggle device states', async () => {
     },
     chronos: {
       season: 0,
+      read_only_mode: false,
     },
   });
 

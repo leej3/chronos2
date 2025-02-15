@@ -8,9 +8,7 @@ export const DEVICES = {
   chiller4: 4,
 };
 
-export const getDeviceId = (device) => {
-  return DEVICES[device];
-};
+export const getDeviceId = (device) => DEVICES[device];
 
 export const REFRESH_TIME = 5;
 export const RETRY_TIME = 10;
