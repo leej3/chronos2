@@ -1,11 +1,28 @@
+/* global jest, describe, beforeEach, test, expect */
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { createStore } from 'redux';
-import UserSettings from './UserSettings';
-import { updateSettings } from '../../api/updateSetting';
-import { getTemperatureLimits } from '../../api/updateBoilerSetpoint';
 import { toast } from 'react-toastify';
+
+// Mock the constants module
+jest.mock('../../utils/constant', () => ({
+  API_BASE_URL: 'http://localhost:8000',
+  DEVICES: {
+    boiler: 0,
+    chiller1: 1,
+    chiller2: 2,
+    chiller3: 3,
+    chiller4: 4,
+  },
+  getDeviceId: (device) => device,
+  REFRESH_TIME: 5,
+  RETRY_TIME: 10,
+}));
+
+import { getTemperatureLimits } from '../../api/updateBoilerSetpoint';
+import { updateSettings } from '../../api/updateSetting';
+import UserSettings from './UserSettings';
 
 // Mock the API calls and toast functions
 jest.mock('../../api/updateSetting');
@@ -18,7 +35,13 @@ jest.mock('react-toastify', () => ({
 }));
 
 // Create a dummy Redux store, providing a simple reducer with initial state
-const initialState = { chronos: { season: 'Summer' } };
+const initialState = {
+  chronos: {
+    season: 'Summer',
+    read_only_mode: false,
+    mock_devices: false,
+  },
+};
 const storeReducer = (state = initialState, action) => state;
 const store = createStore(storeReducer);
 
