@@ -1,9 +1,14 @@
 /* global jest, describe, beforeEach, test, expect */
 import React from 'react';
+
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { createStore } from 'redux';
 import { toast } from 'react-toastify';
+
+import { getTemperatureLimits } from '../../api/updateBoilerSetpoint';
+import { updateSettings } from '../../api/updateSetting';
+import UserSettings from './UserSettings';
 
 // Mock the constants module
 jest.mock('../../utils/constant', () => ({
@@ -19,10 +24,6 @@ jest.mock('../../utils/constant', () => ({
   REFRESH_TIME: 5,
   RETRY_TIME: 10,
 }));
-
-import { getTemperatureLimits } from '../../api/updateBoilerSetpoint';
-import { updateSettings } from '../../api/updateSetting';
-import UserSettings from './UserSettings';
 
 // Mock the API calls and toast functions
 jest.mock('../../api/updateSetting');
@@ -42,6 +43,8 @@ const initialState = {
     mock_devices: false,
   },
 };
+
+// eslint-disable-next-line no-unused-vars
 const storeReducer = (state = initialState, action) => state;
 const store = createStore(storeReducer);
 
