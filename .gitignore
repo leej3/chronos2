@@ -7,7 +7,14 @@
 *egg-info
 __pycache__
 frp_config/frps.toml
+frp_config/frpc.toml
 .vscode
 uv.lock
 .env.docker
 deployment.log
+env
+deploy-staging.sh
+deploy-production.sh
+env-prod
+env-stage
+env-*

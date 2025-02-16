@@ -14,17 +14,17 @@ provider "aws" {
 }
 
 resource "aws_s3_bucket" "tf_state" {
-  bucket = "${var.bucket_name}-${var.environment}"
+  bucket = var.bucket_name
 
   tags = {
-    Name = "${var.bucket_name}-${var.environment}"
+    Name = var.bucket_name
   }
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "tf_state" {
   bucket = aws_s3_bucket.tf_state.id
   rule {
-    id     = "tf_state_${var.environment}"
+    id     = "tf_state"
     status = "Enabled"
 
     transition {
@@ -57,7 +57,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "default" {
 }
 
 resource "aws_dynamodb_table" "tf_locks" {
-  name         = "${var.table_name}-${var.environment}"
+  name         = var.table_name
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "LockID"
 
@@ -67,6 +67,6 @@ resource "aws_dynamodb_table" "tf_locks" {
   }
 
   tags = {
-    Name = "${var.bucket_name}-${var.environment}"
+    Name = var.bucket_name
   }
 }

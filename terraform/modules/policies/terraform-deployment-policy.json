@@ -1,0 +1,50 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:*"
+            ],
+            "Resource": [
+                "arn:aws:s3:::agt-chronos-terraform-state-storage",
+                "arn:aws:s3:::agt-chronos-terraform-state-storage/*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "dynamodb:*"
+            ],
+            "Resource": [
+                "arn:aws:dynamodb:*:436957243186:table/agt-chronos-terraform-state-locks"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ec2:*"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "iam:*"
+            ],
+            "Resource": [
+                "arn:aws:iam::436957243186:role/agt-*",
+                "arn:aws:iam::436957243186:policy/agt-*",
+                "arn:aws:iam::436957243186:oidc-provider/*",
+                "arn:aws:iam::436957243186:instance-profile/agt-*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ecr:*"
+            ],
+            "Resource": "arn:aws:ecr:*:436957243186:repository/agt-*"
+        }
+    ]
+}

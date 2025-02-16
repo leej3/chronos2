@@ -47,7 +47,9 @@ config_dict = {
         "in_id": "28-00000677d509",
         "out_id": "28-011927cd8e7d",
     },
-    "files": {"log_path": str(ensure_log_path(Path("/var/log/chronos/chronos.log")))},
+    "files": {
+        "log_path": str(ensure_log_path(Path("/opt/chronos/edge_server/chronos.log")))
+    },
     "relay": {
         "boiler": 0,
         "chiller1": 2,
