@@ -4,30 +4,149 @@
 
 The deployment architecture uses a combination of local deployment scripts and EC2 instance setup scripts. Here's how the components interact:
 
-**```mermaid
-graph TD
-    A[Local Machine] -->|deploy.sh| B[OpenTofu Apply]
-    B -->|User Data| C[EC2 Instance]
-    D[env file] -->|TF_VAR_*| B
-    B -->|Variables| E[ec2-setup.sh]
-    E -->|Clone & Setup| F[chronos2 repo]
-    E -->|Environment Updates| G[.env files]
-    G -->|Variables| H[Docker Compose]
+```mermaid
+graph LR
 
-    subgraph "Local Environment"
-        A
-        B
-        D
-    end
+%% --------------------------------------------------
+%% Subgraph: Local Environment
+%% --------------------------------------------------
+subgraph "Local Environment"
+direction TB
+    A[Local Machine]
+    B1[terraform/deployments/env-stage/prod]
+    B2[edge_server/env-stage/prod]
+    D1[deploy-dashboard.sh]
+    D2[deploy-edge.sh]
 
-    subgraph "AWS Environment"
-        C
-        E
-        F
-        G
-        H
-    end
-```**
+    A --> |runs| D1
+    A --> |runs| D2
+    D1 --> |sources| B1
+    D2 --> |sources| B2
+end
+
+%% --------------------------------------------------
+%% Subgraph: GitHub Repository
+%% --------------------------------------------------
+subgraph "GitHub Repository"
+    GH[chronos2 Repository]
+end
+
+%% --------------------------------------------------
+%% Subgraph: Variable Flow
+%% --------------------------------------------------
+subgraph "Variable Flow"
+direction TB
+    V1[TF_VAR_* Variables]
+    V2[AWS Credentials]
+    V3[Dashboard Git Reference]
+    V4[Edge Server Variables]
+    V5[Edge Git Reference]
+
+    B1 --> |set/export| V1
+    B1 --> |set/export| V3
+    B2 --> |set/export| V4
+    B2 --> |set/export| V5
+    A  --> |provides| V2
+
+    V1 --> |used by| T2
+    V2 --> |used by| T2
+    V3 --> |used by| E1
+    V4 --> |used by| ES1
+    V5 --> |used by| ES1
+end
+
+%% --------------------------------------------------
+%% Subgraph: Terraform Execution
+%% --------------------------------------------------
+subgraph "Terraform Execution"
+direction TB
+    T1[OpenTofu Init]
+    T2[OpenTofu Plan/Apply]
+    T3[backend-stage/prod.hcl]
+
+    D1 --> |runs| T1
+    T1 --> |uses| T3
+    T1 --> |configures| T2
+end
+
+%% --------------------------------------------------
+%% Subgraph: Remote State
+%% --------------------------------------------------
+subgraph "Remote State"
+direction TB
+    S1[S3 Bucket]
+    S2[DynamoDB Table]
+
+    T2 --> |stores state| S1
+    T2 --> |locks state| S2
+end
+
+%% --------------------------------------------------
+%% Subgraph: EC2 Dashboard Server
+%% --------------------------------------------------
+subgraph "EC2 Dashboard Server"
+direction TB
+    E1["ec2-setup.sh (on server)"]
+    E2[install.sh]
+    E3[Docker Compose]
+    FRP[FRP Config Update]
+
+    T2 --> |provisions & runs| E1
+    E1 --> |clones from| GH
+    E1 --> |runs| E2
+    E2 --> |starts| E3
+    E1 --> |updates| FRP
+end
+
+%% --------------------------------------------------
+%% Subgraph: Edge Server
+%% --------------------------------------------------
+subgraph "Edge Server"
+direction TB
+    ES1[edge_server/install.sh]
+    ES2[chronos-edge.service]
+
+    D2 --> |SSH & runs| ES1
+    ES1 --> |clones from| GH
+    ES1 --> |configures| ES2
+end
+
+%% --------------------------------------------------
+%% Subgraph: Environment Files
+%% --------------------------------------------------
+subgraph "Environment Files"
+direction TB
+    EF1[dashboard_frontend/.env.docker]
+    EF2[dashboard_backend/.env.docker]
+    EF3[frp_config/frps.toml]
+    EF4[root .env]
+
+    E1 --> |configures| EF1
+    E1 --> |configures| EF2
+    E1 --> |configures| EF3
+    E1 --> |updates| EF4
+end
+
+%% --------------------------------------------------
+%% Subgraph: Monitoring & Logging
+%% --------------------------------------------------
+subgraph "Monitoring & Logging"
+direction TB
+    ML1[Dashboard: Docker Logs]
+    ML2[Edge: systemd logs]
+end
+
+E2 --> |logs monitored| ML1
+ES2 --> |monitored by| ML2
+
+%% --------------------------------------------------
+%% Optional Styling
+%% --------------------------------------------------
+style A   fill:#f9f,stroke:#333,stroke-width:2px
+style T2  fill:#bbf,stroke:#333,stroke-width:2px
+style E1  fill:#bfb,stroke:#333,stroke-width:2px
+style ES1 fill:#bfb,stroke:#333,stroke-width:2px
+```
 
 ## Prerequisites
 
