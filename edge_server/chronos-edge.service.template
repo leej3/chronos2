@@ -1,0 +1,19 @@
+[Unit]
+Description=Chronos Edge Server
+After=network.target
+Wants=frpc.service
+After=frpc.service
+
+[Service]
+User=__USER__
+Group=dialout
+Type=simple
+WorkingDirectory=/opt/chronos/edge_server
+Environment=PATH=/opt/chronos/edge_server/.venv/bin:$PATH
+Environment=READ_ONLY_MODE=__READ_ONLY_MODE__
+ExecStart=/opt/chronos/edge_server/.venv/bin/uvicorn chronos.app:app --host 0.0.0.0 --port 5171
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target

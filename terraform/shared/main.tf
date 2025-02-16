@@ -8,13 +8,7 @@ terraform {
     }
   }
 
-  backend "s3" {
-    bucket         = "${var.state_bucket_name}-${var.environment}"
-    key            = var.state_backend_key
-    region         = var.state_storage_region
-    dynamodb_table = "${var.state_table_name}-${var.environment}"
-    encrypt        = true
-  }
+  backend "s3" {}
 }
 
 module "networking" {
@@ -22,20 +16,29 @@ module "networking" {
   environment = var.environment
 }
 
-module "ecr_api" {
-  source      = "../modules/ecr/"
-  environment = var.environment
-  ecr_name    = "backend"
-}
-
-module "ecr_dashboard" {
-  source      = "../modules/ecr/"
-  environment = var.environment
-  ecr_name    = "frontend"
-}
-
 module "iam_role_and_policy" {
   source         = "../modules/iam/"
   environment    = var.environment
   AWS_ACCOUNT_ID = var.AWS_ACCOUNT_ID
+}
+
+# Elastic IPs for environments
+resource "aws_eip" "chronos_production" {
+  domain = "vpc"
+  tags = {
+    Name = "chronos-production-eip"
+    Environment = "production"
+    ManagedBy = "terraform"
+    Persistent = "true"
+  }
+}
+
+resource "aws_eip" "chronos_staging" {
+  domain = "vpc"
+  tags = {
+    Name = "chronos-staging-eip"
+    Environment = "staging"
+    ManagedBy = "terraform"
+    Persistent = "true"
+  }
 }

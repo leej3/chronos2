@@ -10,9 +10,9 @@ data "aws_ami" "ubuntu" {
 data "terraform_remote_state" "shared" {
   backend = "s3"
   config = {
-    bucket         = "${var.state_bucket_name}-shared"
+    bucket         = var.state_bucket_name
     key            = var.state_backend_key
-    dynamodb_table = "${var.state_table_name}-shared"
+    dynamodb_table = var.state_table_name
     region         = var.state_storage_region
   }
 }

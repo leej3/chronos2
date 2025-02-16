@@ -1,154 +1,218 @@
-# Resource Deployment
+# Infrastructure and Deployment Guide
 
-## General Notes
+## Architecture Overview
 
-Deployment of infrastructure resources requires [OpenTofu](https://opentofu.org/) (version >=1.8.0).
+The deployment architecture uses a combination of local deployment scripts and EC2 instance setup scripts. Here's how the components interact:
 
-When calling modules, the relevant input variables can be found in their `variables.tf` file or sometimes their `variables_state.tf` file. This is where the parametrization takes place. In general, a module's `main.tf` file should only be modified if you would like to change what infrastructure is created. Modifying a module's `main.tf` file should seldom be necessary.
+**```mermaid
+graph TD
+    A[Local Machine] -->|deploy.sh| B[OpenTofu Apply]
+    B -->|User Data| C[EC2 Instance]
+    D[env file] -->|TF_VAR_*| B
+    B -->|Variables| E[ec2-setup.sh]
+    E -->|Clone & Setup| F[chronos2 repo]
+    E -->|Environment Updates| G[.env files]
+    G -->|Variables| H[Docker Compose]
 
-## Repository Secrets and Variables
+    subgraph "Local Environment"
+        A
+        B
+        D
+    end
 
-You must set the following [repository secrets](https://github.com/leej3/chronos/settings/secrets/actions) before running the GitHub workflows:
+    subgraph "AWS Environment"
+        C
+        E
+        F
+        G
+        H
+    end
+```**
 
-* `AWS_ACCOUNT_ID`: The [AWS account ID](https://docs.aws.amazon.com/accounts/latest/reference/manage-acct-identifiers.html#FindAccountId) used for the deployments
-* `AWS_REGION`: The AWS region where the deployments reside
-* `SSH_PRIVATE_KEY`: The private SSH key used to ssh into the ec2 instances
-* `SSH_PUBLIC_KEY`: The public SSH key used to ssh into the ec2 instances
-  corresponding to the above private key (use `ssh-keygen -y -f
-  path/to/private/key > path/to/public/key` if you have lost the public key, and
-  `ssh-keygen -f key.pub -i -m PKCS8` to convert from RSA format)
-* `SSH_PROD_HOST`: The static IP address of the production ec2 instance
-* `SSH_STAGE_HOST`: The static IP address of the staging ec2 instance
-* `LETSENCRYPT_ADMIN_EMAIL`: The email address associated with the Let's Encrypt certificate
-* `DEPLOYMENT_USERNAME`: The username used to ssh into the ec2 instances. Defaults to `ubuntu`.
-You must also set the following [repository variables](https://github.com/leej3/chronos/settings/variables/actions) before running the GitHub workflows:
+## Prerequisites
 
-* `PRODUCTION_DEPLOYMENT_URI`: The URL of the production deployment. Probably `'chronos.org'` (including single quotes `'`)
-* `STAGING_DEPLOYMENT_URI`: The URL of the staging deployment. Probably `'dev.chronos.org'` (including single quotes `'`)
-* `ADDITIONAL_PUBLIC_KEY`: The public key of the additional user that has access to the ec2 instance.
+- [OpenTofu](https://opentofu.org/) version >=1.8.0
+- AWS CLI configured with appropriate credentials
+- SSH key pair for EC2 access
 
-## Manual Deployment Steps
+## IAM Setup
 
-### 0. Bootstrap Step: Deploy State Resources
+Before creating any resources, set up the appropriate IAM permissions:
 
-> **_Note:_** This step should be run manually on the developer's/infrastructure engineer's local machine. All subsequent steps will be run automatically by a CD workflow.
-
-> **_Note:_** This step should only be run once for the lifetime of the deployment.
-
-It is recommended that you use the default variable values, as defined in `modules/state/variables.tf`. If you want to change the values from the defaults, you can add your desired values in `state/main.tf`. You will then need to change the corresponding values in the `variables_state.tf` files of the resources (i.e. `shared`, `staging`, and `production`) to match what you set in `state/main.tf`. This can be done in an automated way by running
-
+1. Create an IAM policy:
 ```bash
-$ cd ~/path-to-repo/terraform/
-$ # Change DynamoDB state lock table names
-$ find . -name "*.tf" -exec sed -i '' "s/terraform-state-locks/chronos-state-locks/g" {} +
-$ # Change names of S3 buckets that store OpenTofu state
-$ find .  -name "*.tf" -exec sed -i '' "s/chronos-terraform-state-storage/chronos-state-storage-test/g" {} +
-$ # Change AWS region where state resources reside
-$ find . -name "*.tf" -exec sed -i '' "s/us-east-1/us-east-1/g" {} +
+# Save the policy from terraform/modules/policies/terraform-deployment-policy.json
+aws iam create-policy \
+    --policy-name agt-chronos-terraform-deployment \
+    --policy-document file://terraform/modules/policies/terraform-deployment-policy.json
 ```
 
-Once you have configured the variables (or preferably will be using the defaults), you can deploy the state management resources with
+The policy provides:
+- Full access to AGT-specific state resources (S3 bucket and DynamoDB table)
+- EC2 permissions for creating and managing infrastructure:
+  - VPC and networking components (subnets, internet gateways, route tables)
+  - Security groups and network ACLs
+  - Elastic IPs
+  - EC2 instances and related resources
+- IAM permissions for AGT-prefixed roles and policies
+- ECR permissions for AGT-prefixed repositories
 
+2. Attach the policy to your IAM user:
 ```bash
-$ cd ~/path-to-repo/terraform/state/
-$ tofu init
-$ tofu plan # This is not required, but gives a nice preview
-$ tofu apply
+aws iam attach-user-policy \
+    --user-name YOUR_USERNAME \
+    --policy-arn arn:aws:iam::436957243186:policy/agt-chronos-terraform-deployment
 ```
 
-> **_NOTE:_** In order to prevent accidental destruction, the `state` modules are configured to [prevent destruction](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#prevent_destroy) ([more info on `prevent_destroy`](https://developer.hashicorp.com/terraform/tutorials/state/resource-lifecycle#prevent-resource-deletion)) using OpenTofu. To destroy state resources, you must do so manually in the AWS Management Console.
-
-### 1. Deploy Shared Resources
-
-> **_Note:_** This step will usually be run by a CD workflow. This step is included here for development/debugging purposes.
-
-> **_Note:_** Until IAM policies are fixed, this step must also be run manually when deploying the infrastructure for the first time.
-
-You can deploy the shared resources with
-
+3. Configure AWS CLI profile:
 ```bash
-$ cd ~/path-to-repo/terraform/shared/
-$ tofu init
-$ tofu plan # This is not required, but gives a nice preview
-$ tofu apply
+aws configure --profile agt
+# Enter your access key and secret
+# Set the default region to us-east-1
+export AWS_PROFILE=agt  # This profile name will be used to prefix resource names
 ```
 
-If you modify the shared deployment, you can redeploy it with
+## Deployment Process
+
+### 1. State Management Setup
+
+> **_Note:_** This step should be run manually once for the lifetime of the deployment.
+
+The state management setup follows a bootstrapping process:
+
+1. **Initial State Creation (Bootstrap)**
+   - Uses a local backend initially (no remote state required)
+   - Creates the S3 bucket and DynamoDB table for future state management
+   - This is a one-time setup per AWS account/profile
 
 ```bash
-$ cd ~/path-to-repo/terraform/shared/
-$ tofu plan # This is not required, but gives a nice preview
-$ tofu apply
+cd terraform/state
+tofu init
+tofu plan -var="bucket_name=${AWS_PROFILE}-chronos-terraform-state-storage" \
+         -var="table_name=${AWS_PROFILE}-chronos-terraform-state-locks"
+tofu apply -var="bucket_name=${AWS_PROFILE}-chronos-terraform-state-storage" \
+          -var="table_name=${AWS_PROFILE}-chronos-terraform-state-locks"
 ```
 
-### 2. Deploy Staging Resources
+This creates:
+- S3 bucket: `${AWS_PROFILE}-chronos-terraform-state-storage`
+- DynamoDB table: `${AWS_PROFILE}-chronos-terraform-state-locks`
 
-> **_Note:_** This step will usually be run by a CD workflow. This step is included here for development/debugging purposes.
+2. **Remote State Transition**
+   - After bootstrap, all subsequent deployments use these resources
+   - State is stored in: `${AWS_PROFILE}-chronos-terraform-state-storage`
+   - Locks managed in: `${AWS_PROFILE}-chronos-terraform-state-locks`
+   - Backend configs (e.g., `backend-stage-agt.hcl`) point to these resources
 
-You can deploy the staging resources with
+Note: State resources are protected against accidental destruction. Manual intervention in AWS Console is required for removal.
+
+### 2. Deploy Shared Resources
+
+After state resources are created, deploy shared resources:
 
 ```bash
-$ cd ~/path-to-repo/terraform/staging/
-$ tofu init
-$ tofu plan # This is not required, but gives a nice preview
-$ tofu apply
+cd terraform/shared
+tofu init -backend-config="../deployments/backend-stage-${AWS_PROFILE}.hcl"
+tofu plan    # Review the changes
+tofu apply   # Apply the changes
 ```
 
-If you modify the staging deployment, you can redeploy it with
+This creates:
+- VPC with IPv6 support
+- Public subnet with auto-assign public IP
+- Internet Gateway with IPv4 and IPv6 routes
+- Security Group allowing all traffic (customize as needed)
+- Network ACL with basic allow rules
+- Elastic IPs for staging and production environments
+- IAM roles and policies for EC2 instances
 
+### 3. Dashboard Deployment
+
+1. Configure environment:
 ```bash
-$ cd ~/path-to-repo/terraform/staging/
-$ tofu plan # This is not required, but gives a nice preview
-$ tofu apply
+# Copy the template for your environment (stage or prod)
+cp terraform/deployments/env.template terraform/deployments/env-stage  # or env-prod
+
+# Edit the environment file with your values:
+# Required variables:
+# - TF_VAR_deptype: Must match environment (stage or prod)
+# - TF_VAR_public_key: Your SSH public key
+# - TF_VAR_additional_public_key: Additional SSH key if needed
+# - TF_VAR_vite_api_base_url: API URL (e.g., https://your-domain.com/api)
+# - TF_VAR_postgres_password: Database password
+# - TF_VAR_jwt_secret_key: JWT secret for authentication
+# - TF_VAR_edge_server_ip: Edge server IP address
+# - TF_VAR_edge_server_port: Edge server port
+# - TF_VAR_user_1_email: Admin user email
+# - TF_VAR_user_1_password: Admin user password
+# - GIT_REF: Git reference to deploy (e.g., main)
 ```
 
-### 3. Deploy Production Resources
-
-> **_Note:_** This step will usually be run by a CD workflow. This step is included here for development/debugging purposes.
-
-You can deploy the production resources with
-
+2. Deploy:
 ```bash
-$ cd ~/path-to-repo/terraform/production/
-$ tofu init
-$ tofu plan # This is not required, but gives a nice preview
-$ tofu apply
+cd terraform
+./deploy-dashboard.sh stage  # or prod
 ```
 
-If you modify the production deployment, you can redeploy it with
+The script supports three actions:
+- plan: Preview changes (default)
+- apply: Apply changes
+- destroy: Destroy resources
 
+Example:
 ```bash
-$ cd ~/path-to-repo/terraform/production/
-$ tofu plan # This is not required, but gives a nice preview
-$ tofu apply
+./deploy-dashboard.sh stage plan   # Preview changes
+./deploy-dashboard.sh stage apply  # Apply changes
 ```
 
-## Development/Deployment Workflow
+## Implementation Details
 
-In general, once everything is configured and resources are up, the only human interaction necessary is during [deployment to production](#deployment-to-production).
+### Variable Flow
 
-During development, for every push where a file in `terraform` or `.github/workflows/deploy-opentofu.yml` is modified, [`deploy-opentofu.yml`](../../../.github/workflows/deploy-opentofu.yml) will be run, and the actions up to the `tofu plan` steps will be run as feedback for the developer. The `tofu apply` steps will _not_ be run.
+1. **Local Environment Variables**
+   - Variables are set in `deployments/env-stage` or `deployments/env-prod` files
+   - Format: `TF_VAR_variable_name="value"`
+   - These variables are used by both OpenTofu and the deployment scripts
 
-### Deployment to Staging
+2. **OpenTofu to EC2**
+   - Variables are passed to the EC2 instance via user data script
+   - The `ec2-setup.sh` script receives these variables as shell variables
+   - Used for initial instance configuration and application setup
 
-When pull requests are merged to main, up to two main workflows are run: [`deploy-docker.yml`](../../../.github/workflows/deploy-docker.yml) and [`deploy-opentofu.yml`](../../../.github/workflows/deploy-opentofu.yml).
+3. **Application Configuration**
+   - Environment variables are injected into various `.env` files:
+     - `dashboard_frontend/.env.docker`
+     - `dashboard_backend/.env.docker`
+     - `edge_server/.env.docker`
+     - `frp_config/frps.toml`
+     - `.env` (root level)
 
-If none of the files in a pull request are included in `terraform` or `.github/workflows/deploy-opentofu.yml`, then only `deploy-docker.yml` will be run and the Docker image on the staging EC2 instance will be pushed and rerun.
+### EC2 Instance Setup
 
-If any of the files in a pull request is included in `terraform` or `.github/workflows/deploy-opentofu.yml`, then both `deploy-docker.yml` and `deploy-opentofu.yml` will be run. In this case, however, `deploy-docker.yml` will see that paths dealing with OpenTofu were modified and terminate early and successfully without doing anything. At the same time, `deploy-opentofu.yml` will run and redeploy both shared and staging resources to the staging EC2 instance. After running all OpenTofu actions successfully, `deploy-opentofu.yml` will run `deploy-docker.yml` as a child workflow via the [`workflow_call`](https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#workflow_call) trigger. This way, the potent parts of `deploy-docker.yml`, i.e. the parts that actually build and deploy images, is only run once per merged pull request.
+The `ec2-setup.sh` script performs:
+1. Installs Docker and required packages
+2. Adds the configured public SSH keys for the ubuntu user
+3. Clones the repository and initializes submodules
+4. Creates and updates environment files
+5. Configures FRP
+6. Runs the installation script
 
-### Deployment to Production
+### Domain Configuration
 
-The way to deploy to production is to [manually dispatch your desired workflow](#manual-deployment-from-github-actions).
+The domain name is managed through environment variables:
+- Base URL is extracted from `TF_VAR_vite_api_base_url`
+- Used in frontend configuration and deployment URI
+- Docker Compose uses `DEPLOYMENT_URI` from environment
 
-Note that running the OpenTofu deployment to production will _not_ redeploy the shared resources.
+## Notes
 
-### Manual Deployment from GitHub Actions
+- Environment files (env-*) are gitignored to prevent committing sensitive information
+- Each environment (stage/prod) maintains its own state in the configured S3 bucket
+- The deployment scripts validate all required variables before proceeding
+- State resources are protected against accidental destruction (manual intervention in AWS Console required for removal)
 
-You can manually deploy the [Docker images](https://github.com/leej3/chronos/actions/workflows/deploy-docker.yml) and [OpenTofu deployment](https://github.com/leej3/chronos/actions/workflows/deploy-opentofu.yml) by navigating to the appropriate action and clicking the "Run workflow" button to reveal the associated menu. Using that menu, you can dispatch either workflow from an arbitrary branch in the repository to either staging or production.
+## Monitoring
 
-Note that running the OpenTofu deployment will automatically run the Docker deployment as a child workflow.
-
-## Implementation Notes
-
-The two main workflows are implemented in [`deploy-docker.yml`](../../../.github/workflows/deploy-docker.yml) and [`deploy-opentofu.yml`](../../../.github/workflows/deploy-opentofu.yml). There are other workflows that are called as child workflows to those two, but they are never called directly themselves.
+To view logs:
+- Dashboard: Connect to the EC2 instance and check docker logs
+- Edge Server: `journalctl -u chronos-edge -f`
