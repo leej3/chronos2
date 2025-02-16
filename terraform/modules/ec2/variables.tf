@@ -1,36 +1,36 @@
 variable "region" {
-  description = "The AWS region used by the deployment"
+  description = "AWS region"
   type        = string
   default     = "us-east-1"
 }
 
 variable "environment" {
-  description = "The name of the development environment. Usually `stage` or `prod`."
+  description = "Environment name (e.g., staging, production)"
   type        = string
 }
 
 variable "instance_type" {
   description = "EC2 instance type"
-  default     = "t3.small"
   type        = string
+  default     = "t3.small"
 }
 
 variable "ec2_key_name" {
-  description = "Key name of the Key Pair to use for the instance; which can be managed using the `aws_key_pair` resource."
-  default     = "pi4_2024"
+  description = "Name of the EC2 key pair"
   type        = string
+  default     = "deployer-key"
 }
 
 variable "ec2_root_block_device_size" {
-  description = "Size of the volume in gibibytes (GiB)."
-  default     = 30
+  description = "Size of the root block device in GB"
   type        = number
+  default     = 30
 }
 
 variable "ec2_root_block_device_type" {
-  description = "Type of volume. Valid values include standard, gp2, gp3, io1, io2, sc1, or st1."
-  default     = "gp2"
+  description = "Type of the root block device"
   type        = string
+  default     = "gp3"
 }
 
 variable "eip_domain" {
@@ -46,11 +46,67 @@ variable "ubuntu_ami_release" {
 }
 
 variable "public_key" {
-  description = "The public key used to deploy to the EC2 instance via ssh"
+  description = "Public SSH key for EC2 access"
   type        = string
 }
 
 variable "additional_public_key" {
-  description = "An additional SSH public key to be added to the EC2 instance authorized_keys"
+  description = "Additional public SSH key for EC2 access"
   type        = string
+}
+
+variable "eip_allocation_id" {
+  description = "Allocation ID of the Elastic IP to associate with the instance"
+  type        = string
+}
+
+# Application Configuration Variables
+variable "vite_api_base_url" {
+  description = "Base URL for the frontend API"
+  type        = string
+}
+
+variable "postgres_password" {
+  description = "Password for PostgreSQL database"
+  type        = string
+  sensitive   = true
+}
+
+variable "jwt_secret_key" {
+  description = "Secret key for JWT token generation"
+  type        = string
+  sensitive   = true
+}
+
+variable "edge_server_ip" {
+  description = "IP address for the edge server"
+  type        = string
+}
+
+variable "edge_server_port" {
+  description = "Port for the edge server"
+  type        = string
+}
+
+variable "user_1_email" {
+  description = "Email for the first user"
+  type        = string
+}
+
+variable "user_1_password" {
+  description = "Password for the first user"
+  type        = string
+  sensitive   = true
+}
+
+variable "frp_auth_token" {
+  description = "Authentication token for FRP server"
+  type        = string
+  sensitive   = true
+}
+
+variable "git_ref" {
+  description = "Git reference (commit hash, branch, or tag) to deploy"
+  type        = string
+  default     = "main"
 }

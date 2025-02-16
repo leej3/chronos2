@@ -1,18 +1,28 @@
 terraform {
   required_version = ">= 1.0.0, < 2.0.0"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+
+  backend "local" {}
 }
 
-module "stage_state" {
-  source      = "../modules/state/"
-  environment = "stage"
+variable "bucket_name" {
+  description = "Name of the S3 bucket for Terraform state"
+  type        = string
 }
 
-module "prod_state" {
-  source      = "../modules/state/"
-  environment = "prod"
+variable "table_name" {
+  description = "Name of the DynamoDB table for state locking"
+  type        = string
 }
 
-module "shared_state" {
-  source      = "../modules/state/"
-  environment = "shared"
+module "state" {
+  source      = "../modules/state"
+  bucket_name = var.bucket_name
+  table_name  = var.table_name
 }
