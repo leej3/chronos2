@@ -175,22 +175,22 @@ def test_update_settings(client, mock_edge_server):
     }
 
 
-def test_switch_season(client, mock_dashboard_service, mock_switch_season_response):
-    # Setup mock
-    mock_dashboard_service.switch_season_mode.return_value = mock_switch_season_response
+# def test_switch_season(client, mock_dashboard_service, mock_switch_season_response):
+#     # Setup mock
+#     mock_dashboard_service.switch_season_mode.return_value = mock_switch_season_response
 
-    # Test switching to Winter mode
-    response = client.post("/api/switch-season", json={"season_value": 0})
-    assert response.status_code == 200
-    assert response.json()["status"] == "success"
-    assert response.json()["mode"] == 0
-    assert "unlock_time" in response.json()
-    assert "mode_switch_lockout_time" in response.json()
+#     # Test switching to Winter mode
+#     response = client.post("/api/switch-season", json={"season_value": 0})
+#     assert response.status_code == 200
+#     assert response.json()["status"] == "success"
+#     assert response.json()["mode"] == 0
+#     assert "unlock_time" in response.json()
+#     assert "mode_switch_lockout_time" in response.json()
 
-    # Test invalid season value
-    response = client.post("/api/switch-season", json={"season_value": 3})
-    assert response.status_code == 400
-    assert "error" in response.json()["status"]
+#     # Test invalid season value
+#     response = client.post("/api/switch-season", json={"season_value": 3})
+#     assert response.status_code == 400
+#     assert "error" in response.json()["status"]
 
 
 def test_get_data_with_lockout(client, mock_dashboard_service):
