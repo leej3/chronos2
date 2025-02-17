@@ -25,7 +25,7 @@ import TableTemplate from '../../components/Sensor/TableTemplate';
 import SwitchTimeDisplay from '../../components/SwitchTimeDisplay/SwitchTimeDisplay';
 import Modbus from '../../components/Modebus/Modbus';
 import EfficiencyMetrics from '../../components/EfficiencyMetrics/EfficiencyMetrics';
-
+import { fetchCharData } from '../../features/chronos/temperatureSlice';
 import './Home.css';
 
 const LoadingOverlay = ({ remainingTimeRefresh, error, lastUpdated }) => (
@@ -50,44 +50,71 @@ const Home = () => {
   const { data, status, error, season, lastUpdated } = useSelector(
     (state) => state.chronos,
   );
+  const { data: temperatureData, status: temperatureStatus } = useSelector(
+    (state) => state.temperature,
+  );
   const [recallAPITime, setRecallAPITime] = useState(0);
+  const [recallChartTime, setRecallChartTime] = useState(0);
   const [isShowPopupReload, setIsShowPopupReload] = useState(false);
   const [isReCallAPI, setIsReCallAPI] = useState(false);
   const intervalRef = useRef(null);
+  const chartIntervalRef = useRef(null);
   const timeoutRef = useRef(null);
 
   const fetchHomeData = async () => {
     dispatch(fetchData());
   };
 
+  const fetchChartData = async () => {
+    dispatch(fetchCharData());
+  };
+
   useEffect(() => {
     fetchHomeData();
+    fetchChartData();
 
     intervalRef.current = setInterval(() => {
       setRecallAPITime((prevTime) => (prevTime > 0 ? prevTime - 1 : 0));
     }, 1000);
 
-    return () => clearInterval(intervalRef.current);
+    chartIntervalRef.current = setInterval(() => {
+      setRecallChartTime((prevTime) => (prevTime > 0 ? prevTime - 1 : 0));
+    }, 1000);
+
+    return () => {
+      clearInterval(intervalRef.current);
+      clearInterval(chartIntervalRef.current);
+    };
   }, []);
 
   useEffect(() => {
-    if (status === 'failed') {
+    if (recallChartTime === 0) {
+      fetchChartData();
+      setRecallChartTime(10);
+    }
+  }, [recallChartTime]);
+
+  useEffect(() => {
+    if (status === 'failed' || temperatureStatus === 'failed') {
       setIsShowPopupReload(true);
       setRecallAPITime(RETRY_TIME);
       toast.error('Failed to fetch data from edge server');
-    } else if (status === 'succeeded') {
+    } else if (status === 'succeeded' || temperatureStatus === 'succeeded') {
       if (isShowPopupReload) {
         toast.success('Data fetched successfully from edge server');
       }
       setIsShowPopupReload(false);
       setRecallAPITime(REFRESH_TIME);
     }
-  }, [status]);
+  }, [status, temperatureStatus]);
 
   useEffect(() => {
     if (
       recallAPITime === 0 &&
-      (status === 'succeeded' || status === 'failed')
+      (status === 'succeeded' ||
+        status === 'failed' ||
+        temperatureStatus === 'succeeded' ||
+        temperatureStatus === 'failed')
     ) {
       setIsReCallAPI(true);
       timeoutRef.current = setTimeout(() => {
@@ -97,7 +124,8 @@ const Home = () => {
     }
 
     return () => clearTimeout(timeoutRef.current);
-  }, [recallAPITime, status]);
+  }, [recallAPITime, status, temperatureStatus]);
+
   return (
     <>
       {isShowPopupReload && (
@@ -114,7 +142,7 @@ const Home = () => {
           <CCol xs={12}>
             <CCard>
               <CCardBody className="p-0">
-                <TemperatureGraph />
+                <TemperatureGraph data={temperatureData} />
               </CCardBody>
             </CCard>
           </CCol>
@@ -200,7 +228,7 @@ const Home = () => {
           <CCol lg={12}>
             <CCard className="mt-3">
               <CCardBody className="p-0">
-                <TemperatureGraph />
+                <TemperatureGraph data={temperatureData} />
               </CCardBody>
             </CCard>
           </CCol>
