@@ -63,48 +63,25 @@ const ManualOverride = ({ data }) => {
     }
 
     setAlertColor('danger');
+    console.log(device, state);
+    dispatch(setOverride({ name: device, value: state }));
 
-    const deviceName = device.charAt(0).toUpperCase() + device.slice(1);
-    const statusText = newState ? 'ON' : 'OFF';
+    const payload = {
+      id: getDeviceId(device),
+      state: state,
+    };
 
-    try {
-      dispatch(setOverride({ name: device, value: newState }));
-
-      const response = await updateDeviceState({
-        id: getDeviceId(device),
-        state: newState,
+    updateDeviceState(payload)
+      .then((response) => {
+        if (!response.status) throw new Error('Network response was not ok');
+        return response.data;
+      })
+      .then((data) => {
+        if (data.error) setAlertMessage('Relay switching has failed.');
+      })
+      .catch(() => {
+        setAlertMessage('Relay switching has failed.');
       });
-
-      if (!response.status || response.data.error) {
-        throw new Error('Failed to switch relay');
-      }
-
-      await dispatch(fetchData());
-
-      toast.success(`${deviceName} has been turned ${statusText}`, {
-        position: 'top-right',
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-    } catch (error) {
-      dispatch(setOverride({ name: device, value: !newState }));
-
-      toast.error(
-        `Failed to turn ${deviceName} ${statusText}. Please try again.`,
-        {
-          position: 'top-right',
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        },
-      );
-      setAlertMessage('Relay switching has failed.');
-    }
   };
 
   const renderDeviceControl = (device) => {
@@ -155,39 +132,39 @@ const ManualOverride = ({ data }) => {
   };
 
   return (
-    <div>
-      <CRow>
-        <CCol>
-          <CCard className="modbus-card">
-            <CCardBody>
-              <h2 className="chronous-title m-0">Manual Override</h2>
-              <div className="p-3">
-                {alertMessage && (
-                  <CAlert
-                    color={alertColor}
-                    dismissible
-                    onClose={() => setAlertMessage('')}
-                  >
-                    <strong>
-                      {alertColor === 'danger' ? 'Error!' : 'Warning!'}
-                    </strong>{' '}
-                    {alertMessage}
-                  </CAlert>
-                )}
-                <CRow className="g-3 mx-0">
-                  {Object.keys(state)
-                    .filter(
-                      (device, index) =>
-                        index <= 4 &&
-                        (device === 'boiler' || device.startsWith('chiller')),
-                    )
-                    .map(renderDeviceControl)}
-                </CRow>
-              </div>
-            </CCardBody>
-          </CCard>
-        </CCol>
-      </CRow>
+    <div className="manual-override">
+      <h2 className="section-title px-3 py-2 m-0 text-break">
+        Manual Override - {season === 1 ? 'Summer' : 'Winter'} Mode
+      </h2>
+      <div className="p-3">
+        {alertMessage && (
+          <CAlert
+            color={alertColor}
+            dismissible
+            onClose={() => {
+              setAlertMessage('');
+              setAlertColor('danger');
+            }}
+          >
+            {alertColor === 'warning' ? (
+              alertMessage
+            ) : (
+              <>
+                <strong>Error!</strong> {alertMessage}
+              </>
+            )}
+          </CAlert>
+        )}
+        <CRow className="g-3 mx-0">
+          {Object.keys(state)
+            .filter(
+              (device, index) =>
+                index <= 4 &&
+                (device === 'boiler' || device.startsWith('chiller')),
+            )
+            .map(renderDeviceControl)}
+        </CRow>
+      </div>
     </div>
   );
 };

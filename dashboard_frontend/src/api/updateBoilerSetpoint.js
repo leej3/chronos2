@@ -6,7 +6,7 @@ export const updateBoilerSetpoint = async (temperature) => {
 
 export const getTemperatureLimits = async () => {
   try {
-    const response = await axiosApi.get('/api/temperature_limits');
+    const response = await axiosApi.get('/temperature_limits');
     return response.data;
   } catch (error) {
     throw error?.response?.data || error;
