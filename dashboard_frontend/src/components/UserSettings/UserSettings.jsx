@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-
 import {
   CForm,
   CFormInput,
@@ -7,17 +6,17 @@ import {
   CRow,
   CCol,
   CCardBody,
+  CCard,
 } from '@coreui/react';
-import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
-
+import { useSelector } from 'react-redux';
 import { getTemperatureLimits } from '../../api/updateBoilerSetpoint';
 import { updateSettings } from '../../api/updateSetting';
-
 import './UserSettings.css';
+import SeasonSwitch from '../SeasonSwitch/SeasonSwitch';
 
 const UserSettings = ({ data }) => {
-  const [formData, setFormData] = useState({
+  const initialFormData = {
     tolerance: null,
     setpoint_min: null,
     setpoint_max: null,
@@ -26,29 +25,33 @@ const UserSettings = ({ data }) => {
     mode_change_delta_temp: null,
     mode_switch_lockout_time: null,
     cascade_time: null,
-  });
-  const [showForm, setShowForm] = useState(false);
+  };
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [formData, setFormData] = useState(initialFormData);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const season = useSelector((state) => state.chronos.season);
   const [tempLimits, setTempLimits] = useState({
     hard_limits: { min_setpoint: 70, max_setpoint: 110 },
     soft_limits: { min_setpoint: 70, max_setpoint: 110 },
   });
-  const [isInitialized, setIsInitialized] = useState(false);
-  const season = useSelector((state) => state.chronos.season);
 
   // Only fetch limits once on mount
   useEffect(() => {
-    const fetchLimits = async () => {
-      try {
-        const limits = await getTemperatureLimits();
-        setTempLimits(limits);
-      } catch (error) {
-        console.error('Failed to fetch temperature limits:', error);
-      }
-    };
-    fetchLimits();
-  }, []); // Empty dependency array means this only runs once on mount
+    if (data?.results && !isEditing) {
+      const fetchLimits = async () => {
+        try {
+          const limits = await getTemperatureLimits();
+          setTempLimits(limits);
+        } catch (error) {
+          console.error('Failed to fetch temperature limits:', error);
+        }
+      };
+      fetchLimits();
+    }
+  }, []);
 
-  // Initialize form data only once when data is first received
   useEffect(() => {
     if (data?.results && !isInitialized) {
       setFormData({
@@ -61,25 +64,18 @@ const UserSettings = ({ data }) => {
         mode_switch_lockout_time: data.results.mode_switch_lockout_time ?? null,
         cascade_time: data.results.cascade_time ?? null,
       });
-      setIsInitialized(true);
+      setIsLoading(false);
     }
-  }, [data, isInitialized]);
-
-  if (!data?.results) {
-    return (
-      <div className="loading-container">
-        <div className="spinner"></div>
-        <p>Loading user settings...</p>
-      </div>
-    );
-  }
+  }, [data, isEditing]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value === '' ? null : value,
-    }));
+    setIsEditing(true);
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+    setIsInitialized(true);
   };
 
   const handleSubmit = async (e) => {
@@ -132,116 +128,102 @@ const UserSettings = ({ data }) => {
 
       const response = await updateSettings(processedData);
       toast.success(response?.data?.message);
+      setIsEditing(false);
     } catch (error) {
-      console.error('Error response:', error);
-      const errorMessage =
-        error?.data?.detail ||
-        error?.response?.data?.detail ||
-        'Failed to update settings';
-      toast.error(errorMessage);
+      toast.error(error?.response?.data?.message || 'Đã có lỗi xảy ra');
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="loading-container">
+        <div className="spinner"></div>
+        <p>Loading user settings...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="text-start">
-      <CCardBody>
-        <CForm onSubmit={handleSubmit}>
-          <CRow>
-            <CRow className="position-relative mb-2">
-              {[
-                { label: 'Baseline Setpoint', key: 'baseline_setpoint' },
-                { label: 'THA Setpoint', key: 'tha_setpoint' },
-                { label: 'Effective Setpoint', key: 'effective_setpoint' },
-              ].map(({ label, key }) => (
-                <CCol xs="12" key={key} className="mt-2">
-                  <label
-                    className="font-weight-bold"
-                    htmlFor={key}
-                    style={{ fontSize: '18px', fontWeight: 'bold' }}
-                  >
-                    {label}:
-                  </label>
-                  <span
-                    className="font-italic"
-                    style={{ fontSize: '16px', marginLeft: '10px' }}
-                  >
-                    {data.results[key] ?? '0.0'} <span>°F</span>
-                  </span>
-                </CCol>
-              ))}
+    <CRow>
+      <CCol>
+        <CCard className="text-start">
+          <CCardBody>
+            <h2 className="chronous-title text-center mb-4">User Settings</h2>
+            <SeasonSwitch />
 
-              <div className="icon_mode">
-                {season === 'Summer' ? (
-                  <span style={{ color: 'orange', fontSize: '24px' }}>
-                    ☀️ Summer
-                  </span>
-                ) : season === 'Winter' ? (
-                  <span style={{ color: 'lightblue', fontSize: '24px' }}>
-                    ❄️ Winter
-                  </span>
-                ) : null}
+            <CForm onSubmit={handleSubmit}>
+              <div className="content-container-mobile">
+                <CRow className="tab-content-container">
+                  {[
+                    {
+                      label: 'Baseline ',
+                      key: 'baseline_setpoint',
+                    },
+                    { label: 'THA ', key: 'tha_setpoint' },
+                    {
+                      label: 'Effective',
+                      key: 'effective_setpoint',
+                    },
+                  ].map(({ label, key }) => (
+                    <CCol sm="12" key={key}>
+                      <div className="temp-item">
+                        <span className=" temp-label" htmlFor={key}>
+                          {label}:
+                        </span>
+                        <span className="temp-value">
+                          {data.results[key] ?? '0.0'} <span>°F</span>
+                        </span>
+                      </div>
+                    </CCol>
+                  ))}
+                </CRow>
               </div>
-            </CRow>
-
-            <CCol xs="12" className="text-center">
-              <CButton
-                color="primary"
-                onClick={() => setShowForm(!showForm)}
-                className="show-settings-btn"
-              >
-                {showForm ? 'Hide Settings' : 'Show Settings'}
-              </CButton>
-            </CCol>
-
-            <div className={`show-settings-form ${showForm ? 'show' : ''}`}>
-              <CRow>
-                {[
-                  { label: 'Tolerance', key: 'tolerance' },
-                  {
-                    label: 'Min. Setpoint',
-                    key: 'setpoint_min',
-                    min: tempLimits.hard_limits.min_setpoint,
-                    max: tempLimits.hard_limits.max_setpoint,
-                    help: `Hard limits: ${tempLimits.hard_limits.min_setpoint}°F - ${tempLimits.hard_limits.max_setpoint}°F`,
-                  },
-                  {
-                    label: 'Max. Setpoint',
-                    key: 'setpoint_max',
-                    min: tempLimits.hard_limits.min_setpoint,
-                    max: tempLimits.hard_limits.max_setpoint,
-                    help: `Hard limits: ${tempLimits.hard_limits.min_setpoint}°F - ${tempLimits.hard_limits.max_setpoint}°F`,
-                  },
-                  season === 'Summer' && {
-                    label: 'Setpoint Offset (Summer)',
-                    key: 'setpoint_offset_summer',
-                  },
-                  season === 'Winter' && {
-                    label: 'Setpoint Offset (Winter)',
-                    key: 'setpoint_offset_winter',
-                  },
-                  {
-                    label: 'Mode Change Delta Temp',
-                    key: 'mode_change_delta_temp',
-                  },
-                  {
-                    label: 'Mode Switch Lockout Time',
-                    key: 'mode_switch_lockout_time',
-                    unit: 'min.',
-                  },
-                  { label: 'Cascade Time', key: 'cascade_time', unit: 'min.' },
-                ]
-                  .filter(Boolean)
-                  .map(({ label, key, unit = '', min, max, help }) => (
+              <h2 className="chronous-title text-center mb-0">Configuration</h2>
+              <div className="content-container-mobile">
+                <CRow className="tab-content-container">
+                  {[
+                    { label: 'Tolerance', key: 'tolerance' },
+                    {
+                      label: 'Min. Setpoint',
+                      key: 'setpoint_min',
+                      min: tempLimits.hard_limits.min_setpoint,
+                      max: tempLimits.hard_limits.max_setpoint,
+                      help: `Hard limits: ${tempLimits.hard_limits.min_setpoint}°F - ${tempLimits.hard_limits.max_setpoint}°F`,
+                    },
+                    {
+                      label: 'Max. Setpoint',
+                      key: 'setpoint_max',
+                      min: tempLimits.hard_limits.min_setpoint,
+                      max: tempLimits.hard_limits.max_setpoint,
+                      help: `Hard limits: ${tempLimits.hard_limits.min_setpoint}°F - ${tempLimits.hard_limits.max_setpoint}°F`,
+                    },
+                    {
+                      label: `Setpoint Offset (${
+                        season === 1 ? 'Summer' : 'Winter'
+                      })`,
+                      key:
+                        season === 1
+                          ? 'setpoint_offset_summer'
+                          : 'setpoint_offset_winter',
+                    },
+                    {
+                      label: 'Mode Change Delta Temp',
+                      key: 'mode_change_delta_temp',
+                    },
+                    {
+                      label: 'Mode Switch Lockout Time (Minutes)',
+                      key: 'mode_switch_lockout_time',
+                      unit: 'min.',
+                    },
+                    {
+                      label: 'Cascade Time',
+                      key: 'cascade_time',
+                      unit: 'min.',
+                    },
+                  ].map(({ label, key, unit = '', min, max, help }) => (
                     <CCol xs="12" key={key}>
                       <div style={{ marginBottom: '10px' }}>
-                        <label
-                          htmlFor={key}
-                          style={{
-                            fontWeight: 'bold',
-                            display: 'block',
-                            marginBottom: '5px',
-                          }}
-                        >
+                        <span htmlFor={key} className="temp-label ">
                           {label}:
                           {help && (
                             <small
@@ -251,7 +233,7 @@ const UserSettings = ({ data }) => {
                               {help}
                             </small>
                           )}
-                        </label>
+                        </span>
                         <CFormInput
                           type="number"
                           name={key}
@@ -265,17 +247,22 @@ const UserSettings = ({ data }) => {
                       </div>
                     </CCol>
                   ))}
-                <CCol xs="12" className="text-end">
-                  <CButton type="submit" color="primary" className="update-btn">
-                    Update
-                  </CButton>
-                </CCol>
-              </CRow>
-            </div>
-          </CRow>
-        </CForm>
-      </CCardBody>
-    </div>
+                </CRow>
+              </div>
+              <CCol xs="12" className="text-end">
+                <CButton
+                  type="submit"
+                  color="primary"
+                  className="update-btn m-2"
+                >
+                  Update
+                </CButton>
+              </CCol>
+            </CForm>
+          </CCardBody>
+        </CCard>
+      </CCol>
+    </CRow>
   );
 };
 

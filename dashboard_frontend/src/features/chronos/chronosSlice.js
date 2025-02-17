@@ -10,6 +10,8 @@ const initialState = {
   mock_devices: true,
   read_only_mode: false,
   lastUpdated: null,
+  systemStatus: 'OFFLINE',
+  lockoutInfo: null,
 };
 
 export const fetchData = createAsyncThunk('chronos/fetchData', async () => {
@@ -37,10 +39,29 @@ export const chronosSlice = createSlice({
         console.log('Updated read_only_mode state:', state.read_only_mode);
         state.lastUpdated = new Date().toISOString();
         state.status = 'succeeded';
+        state.systemStatus = data.status ? 'ONLINE' : 'OFFLINE';
         state.error = null;
+
+        if (data.results?.lockout_info) {
+          const unlockTime = new Date(data.results.lockout_info.unlock_time);
+          const now = new Date();
+          if (unlockTime > now) {
+            state.lockoutInfo = {
+              modeSwitchTimestamp:
+                data.results.lockout_info.mode_switch_timestamp,
+              lockoutTime: data.results.lockout_info.mode_switch_lockout_time,
+              unlockTime: data.results.lockout_info.unlock_time,
+            };
+          } else {
+            state.lockoutInfo = null;
+          }
+        } else {
+          state.lockoutInfo = null;
+        }
       })
       .addCase(fetchData.rejected, (state, action) => {
         state.status = 'failed';
+        state.systemStatus = 'OFFLINE';
         state.error = action.error.message;
         state.isFirstLoad = false;
       });

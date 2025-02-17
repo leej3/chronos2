@@ -1,6 +1,7 @@
 from datetime import UTC, datetime, timedelta
 
 import requests
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.schedulers.background import BackgroundScheduler
 from sqlalchemy import desc
 from sqlalchemy.sql import func
@@ -15,11 +16,18 @@ from src.core.services.edge_server import EdgeServer
 from src.core.services.valve import Valve
 from src.core.utils.constant import (
     EFFICIENCY_HOUR,
-    SUMMER,
+    MANUAL_AUTO,
+    MANUAL_OFF,
+    MANUAL_ON,
+    OFF,
+    ON,
+    VALVES_SWITCH_TIME,
     WEATHER_HEADERS,
     WEATHER_URL,
-    WINTER,
+    Mode,
 )
+
+scheduler = AsyncIOScheduler()
 
 
 class Chronos(object):
@@ -39,6 +47,7 @@ class Chronos(object):
             self.chiller4,
         )
         self.valves = (self.winter_valve, self.summer_valve)
+
         self._outside_temp = None
         self._wind_speed = None
         self._baseline_setpoint = None
@@ -47,10 +56,20 @@ class Chronos(object):
         self._water_out_temp = None
         self._return_temp = None
         self.scheduler = BackgroundScheduler()
+        self.scheduler.start()
+        logger.info("Background scheduler started")
         #
         self.history_repository = HistoryRepository()
         self.setting_repository = SettingRepository()
         self.edge_server = EdgeServer()
+
+    @property
+    def mode(self):
+        return self.setting_repository._get_property_from_db("mode")
+
+    @mode.setter
+    def mode(self, mode: int):
+        self.setting_repository._update_property_in_db("mode", mode)
 
     def get_data_from_web(self):
         logger.debug("Retrieve data from web.")
@@ -91,17 +110,13 @@ class Chronos(object):
         return self._wind_speed or self.get_data_from_web()["wind_speed"]
 
     @property
-    def mode(self):
-        return self.setting_repository._get_property_from_db("mode")
-
-    @property
     def cascade_fire_rate_avg(self):
         timespan = datetime.now() - timedelta(hours=EFFICIENCY_HOUR)
         with session_scope() as session:
             result = (
                 session.query(History.cascade_fire_rate)
                 .order_by(desc(History.id))
-                .filter(History.mode == WINTER, History.timestamp > timespan)
+                .filter(History.mode == Mode.WINTER.value, History.timestamp > timespan)
                 .subquery()
             )
             (average_cascade_fire_rate,) = session.query(
@@ -109,11 +124,21 @@ class Chronos(object):
             ).first()
         return average_cascade_fire_rate or 0
 
+    @property
+    def mode_switch_lockout_time(self):
+        return self.setting_repository._get_property_from_db("mode_switch_lockout_time")
+
+    @mode_switch_lockout_time.setter
+    def mode_switch_lockout_time(self, mode_switch_lockout_time):
+        self.setting_repository._update_property_in_db(
+            "mode_switch_lockout_time", mode_switch_lockout_time
+        )
+
     def create_update_history(self):
         edge_server_data = self.edge_server.get_data()
         sensors = edge_server_data["sensors"]
         mode = self.mode
-        if mode in (WINTER, SUMMER):
+        if mode in (Mode.WINTER.value, Mode.SUMMER.value):
             with session_scope() as session:
                 parameters = History(
                     timestamp=datetime.now(UTC),
@@ -123,3 +148,82 @@ class Chronos(object):
                     mode=mode,
                 )
                 session.add(parameters)
+
+    def _switch_devices(self):
+        for device in self.devices:
+            if device.manual_override == MANUAL_ON:
+                device.turn_on(relay_only=True)
+            elif device.manual_override == MANUAL_OFF:
+                device.turn_off(relay_only=True)
+            elif device.manual_override == MANUAL_AUTO:
+                if device.status == ON:
+                    device.turn_on(relay_only=True)
+                elif device.status == OFF:
+                    device.turn_off(relay_only=True)
+
+    def _save_devices_states(self, mode):
+        if mode == Mode.SWITCHING_TO_SUMMER.value:
+            self.boiler.save_status()
+        elif mode == Mode.SWITCHING_TO_WINTER.value:
+            for chiller in self.devices[1:]:
+                chiller.save_status()
+
+    def _restore_devices_states(self, mode: Mode):
+        if mode == Mode.SWITCHING_TO_SUMMER.value:
+            self.boiler.restore_status()
+        elif mode == Mode.SWITCHING_TO_WINTER.value:
+            for chiller in self.devices[1:]:
+                chiller.restore_status()
+
+    def turn_off_devices(self, with_valves=False, relay_only=False):
+        if relay_only:
+            for device in self.devices:
+                device.turn_off(relay_only=relay_only)
+        else:
+            for device in self.devices:
+                device.manual_override = MANUAL_OFF
+            if with_valves:
+                self.winter_valve.turn_off()
+                self.summer_valve.turn_off()
+
+    def _switch_season(self, mode: int):
+        if mode == Mode.WAITING_SWITCH_TO_SUMMER.value:
+            logger.debug("Switching to summer mode")
+            self.mode = Mode.WAITING_SWITCH_TO_SUMMER.value
+            self._save_devices_states(mode)
+            self.turn_off_devices()
+            self.summer_valve.turn_on()
+            self.winter_valve.turn_off()
+
+            self.scheduler.add_job(
+                self._switch_season,
+                "date",
+                run_date=datetime.now() + timedelta(minutes=VALVES_SWITCH_TIME),
+                args=[Mode.SWITCHING_TO_SUMMER.value],
+            )
+        elif mode == Mode.WAITING_SWITCH_TO_WINTER.value:
+            logger.debug("Switching to winter mode")
+            self.mode = Mode.WAITING_SWITCH_TO_WINTER.value
+            self._save_devices_states(mode)
+            self.turn_off_devices()
+            self.summer_valve.turn_off()
+            self.winter_valve.turn_on()
+
+            self.scheduler.add_job(
+                self._switch_season,
+                "date",
+                run_date=datetime.now() + timedelta(minutes=VALVES_SWITCH_TIME),
+                args=[Mode.SWITCHING_TO_WINTER.value],
+            )
+        elif mode == Mode.SWITCHING_TO_WINTER.value:
+            logger.debug("Switched to winter mode")
+            self._restore_devices_states(mode)
+            self._switch_devices()
+            self.mode = Mode.WINTER.value
+            self.mode_switch_timestamp = datetime.now()
+        elif mode == Mode.SWITCHING_TO_SUMMER.value:
+            logger.debug("Switched to summer mode")
+            self._restore_devices_states(mode)
+            self._switch_devices()
+            self.mode = Mode.SUMMER.value
+            self.mode_switch_timestamp = datetime.now()

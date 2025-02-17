@@ -1,7 +1,8 @@
+from src.core.services.device import Device
 from src.core.utils.constant import Relay
 
 
-class Valve:
+class Valve(Device):
     def __init__(self, season):
         if season not in ("winter", "summer"):
             raise ValueError("Valve must be winter or summer")
@@ -13,3 +14,9 @@ class Valve:
         if name in ("save_status", "restore_status"):
             raise AttributeError("There is no such attribute")
         super(Valve, self).__getattr__(name)
+
+    def turn_on(self, relay_only=False):
+        self._switch_state("on", relay_only=relay_only)
+
+    def turn_off(self, relay_only=False):
+        self._switch_state("off", relay_only=relay_only)

@@ -234,6 +234,15 @@ async def get_data():
         )
 
 
+@app.get("/switch_state")
+@with_circuit_breaker
+async def switch_state(command: str, relay_only: bool = False):
+    if MOCK_DEVICES:
+        return True
+    """Switch state of a device."""
+    return DEVICES[0].switch_state(command, relay_only)
+
+
 @app.get("/device_state", response_model=DeviceModel)
 @with_circuit_breaker
 async def get_device_state(
