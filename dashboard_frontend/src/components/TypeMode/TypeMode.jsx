@@ -1,18 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-import { CCardBody, CRow, CCol, CBadge, CCard } from '@coreui/react';
-import {
-  CCardBody,
-  CRow,
-  CCol,
-  CBadge,
-  CDropdownItem,
-  CDropdownMenu,
-  CDropdown,
-  CDropdownToggle,
-  CContainer,
-  CCard,
-} from '@coreui/react';
+import { CCardBody, CRow, CCol, CCard } from '@coreui/react';
 import { FaThermometerHalf } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 import { getFormattedChicagoTime } from '../../utils/dateUtils';

@@ -1,22 +1,6 @@
 import React from 'react';
 import { CFormLabel, CCol, CRow, CCard, CCardBody } from '@coreui/react';
-import React, { useState } from 'react';
-import {
-  CFormLabel,
-  CCol,
-  CRow,
-  CNav,
-  CNavItem,
-  CNavLink,
-  CTabContent,
-  CTabPane,
-  CDropdown,
-  CDropdownToggle,
-  CDropdownMenu,
-  CDropdownItem,
-  CCard,
-  CCardBody,
-} from '@coreui/react';
+
 import { formatNumber } from '../../utils/tranform';
 import './Modbus.css';
 

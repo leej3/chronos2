@@ -57,8 +57,6 @@ const ManualOverride = ({ data }) => {
 
   const handleDeviceStateChange = async (device, newState) => {
     if (isDeviceDisabled(device)) return;
-  const handleRadioChange = async (device, state) => {
-    console.log('Attempting state change in read-only mode:', readOnlyMode);
 
     if (readOnlyMode) {
       setAlertColor('warning');
@@ -67,8 +65,7 @@ const ManualOverride = ({ data }) => {
     }
 
     setAlertColor('danger');
-    console.log(device, state);
-    dispatch(setOverride({ name: device, value: state }));
+    console.log(device, newState);
 
     const deviceName = device.charAt(0).toUpperCase() + device.slice(1);
     const statusText = newState ? 'ON' : 'OFF';
@@ -162,66 +159,68 @@ const ManualOverride = ({ data }) => {
   };
 
   return (
-    <CRow>
-      <CCol>
-        <CCard className="modbus-card">
-          <CCardBody>
-            <h2 className="chronous-title m-0">Manual Override</h2>
-            <div className="p-3">
-              {alertMessage && (
-                <CAlert
-                  color="danger"
-                  dismissible
-                  onClose={() => setAlertMessage('')}
-                >
+    <div>
+      <CRow>
+        <CCol>
+          <CCard className="modbus-card">
+            <CCardBody>
+              <h2 className="chronous-title m-0">Manual Override</h2>
+              <div className="p-3">
+                {alertMessage && (
+                  <CAlert
+                    color="danger"
+                    dismissible
+                    onClose={() => setAlertMessage('')}
+                  >
+                    <strong>Error!</strong> {alertMessage}
+                  </CAlert>
+                )}
+                <CRow className="g-3 mx-0">
+                  {Object.keys(state)
+                    .filter(
+                      (device, index) =>
+                        index <= 4 &&
+                        (device === 'boiler' || device.startsWith('chiller')),
+                    )
+                    .map(renderDeviceControl)}
+                </CRow>
+              </div>
+            </CCardBody>
+          </CCard>
+        </CCol>
+      </CRow>
+      <CCard className="bgr">
+        <h2 className="section-title">Manual Override - {season} Mode</h2>
+        <CCardBody className="p-0">
+          {alertMessage && (
+            <CAlert
+              color={alertColor}
+              dismissible
+              onClose={() => {
+                setAlertMessage('');
+                setAlertColor('danger');
+              }}
+            >
+              {alertColor === 'warning' ? (
+                alertMessage
+              ) : (
+                <>
                   <strong>Error!</strong> {alertMessage}
-                </CAlert>
+                </>
               )}
-              <CRow className="g-3 mx-0">
-                {Object.keys(state)
-                  .filter(
-                    (device, index) =>
-                      index <= 4 &&
-                      (device === 'boiler' || device.startsWith('chiller')),
-                  )
-                  .map(renderDeviceControl)}
-              </CRow>
-            </div>
-          </CCardBody>
-        </CCard>
-      </CCol>
-    </CRow>
-    <CCard className="bgr">
-      <h2 className="section-title">Manual Override - {season} Mode</h2>
-      <CCardBody className="p-0">
-        {alertMessage && (
-          <CAlert
-            color={alertColor}
-            dismissible
-            onClose={() => {
-              setAlertMessage('');
-              setAlertColor('danger');
-            }}
-          >
-            {alertColor === 'warning' ? (
-              alertMessage
-            ) : (
-              <>
-                <strong>Error!</strong> {alertMessage}
-              </>
-            )}
-          </CAlert>
-        )}
-        <CRow className="g-3 mx-0">
-          {Object.keys(state)
-            .filter(
-              (device, index) =>
-                index <= 4 &&
-                (device === 'boiler' || device.startsWith('chiller')),
-            )
-            .map(renderDeviceControl)}
-        </CRow>
-      </div>
+            </CAlert>
+          )}
+          <CRow className="g-3 mx-0">
+            {Object.keys(state)
+              .filter(
+                (device, index) =>
+                  index <= 4 &&
+                  (device === 'boiler' || device.startsWith('chiller')),
+              )
+              .map(renderDeviceControl)}
+          </CRow>
+        </CCardBody>
+      </CCard>
     </div>
   );
 };

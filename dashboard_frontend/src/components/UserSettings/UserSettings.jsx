@@ -9,7 +9,7 @@ import {
   CCard,
 } from '@coreui/react';
 import { toast } from 'react-toastify';
-
+import { useSelector } from 'react-redux';
 import { getTemperatureLimits } from '../../api/updateBoilerSetpoint';
 import { updateSettings } from '../../api/updateSetting';
 import './UserSettings.css';
@@ -29,26 +29,29 @@ const UserSettings = ({ data }) => {
 
   const [isLoading, setIsLoading] = useState(true);
   const [formData, setFormData] = useState(initialFormData);
-  const [showForm, setShowForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const season = useSelector((state) => state.season.season);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const season = useSelector((state) => state.chronos.season);
+  const [tempLimits, setTempLimits] = useState({
+    hard_limits: { min_setpoint: 70, max_setpoint: 110 },
+    soft_limits: { min_setpoint: 70, max_setpoint: 110 },
+  });
 
   // Only fetch limits once on mount
   useEffect(() => {
     if (data?.results && !isEditing) {
-    const fetchLimits = async () => {
-      try {
-        const limits = await getTemperatureLimits();
-        setTempLimits(limits);
-      } catch (error) {
-        console.error('Failed to fetch temperature limits:', error);
-      }
-    };
-    fetchLimits();
-  }
-  },[]); 
+      const fetchLimits = async () => {
+        try {
+          const limits = await getTemperatureLimits();
+          setTempLimits(limits);
+        } catch (error) {
+          console.error('Failed to fetch temperature limits:', error);
+        }
+      };
+      fetchLimits();
+    }
+  }, []);
 
-  // Initialize form data only once when data is first received
   useEffect(() => {
     if (data?.results && !isInitialized) {
       setFormData({
@@ -74,54 +77,6 @@ const UserSettings = ({ data }) => {
     });
     setIsInitialized(true);
   };
-
-  useEffect(() => {
-    if (data?.results?.lockout_info) {
-      const unlockTime = parseISO(data.results.lockout_info.unlock_time);
-      const now = new Date();
-
-      if (unlockTime > now) {
-        setLockoutInfo({
-          lockoutTime: data.results.lockout_info.mode_switch_lockout_time,
-          unlockTime: unlockTime,
-        });
-
-        const currentMode = data.results.mode;
-        setSwitchDirection(currentMode === 0 ? 'toWinter' : 'toSummer');
-      } else {
-        setLockoutInfo(null);
-        setSwitchDirection(null);
-      }
-    }
-  }, [data]);
-
-  useEffect(() => {
-    let timer;
-    if (lockoutInfo?.unlockTime) {
-      timer = setInterval(() => {
-        const now = new Date();
-        const diff = lockoutInfo.unlockTime.getTime() - now.getTime();
-
-        if (diff <= 0) {
-          setLockoutInfo(null);
-          setSwitchDirection(null);
-          setCountdown(null);
-          clearInterval(timer);
-        } else {
-          const minutes = Math.floor(diff / 1000 / 60);
-          const seconds = Math.floor((diff / 1000) % 60);
-          setCountdown(`${minutes}:${seconds.toString().padStart(2, '0')}`);
-        }
-      }, 1000);
-    }
-
-    return () => {
-      if (timer) clearInterval(timer);
-    };
-  }, [lockoutInfo]);
-
-  
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -228,15 +183,28 @@ const UserSettings = ({ data }) => {
                 <CRow className="tab-content-container">
                   {[
                     { label: 'Tolerance', key: 'tolerance' },
-                    { label: 'Min. Setpoint', key: 'setpoint_min' },
-                    { label: 'Max. Setpoint', key: 'setpoint_max' },
                     {
-                      label: 'Setpoint Offset (Summer)',
-                      key: 'setpoint_offset_summer',
+                      label: 'Min. Setpoint',
+                      key: 'setpoint_min',
+                      min: tempLimits.hard_limits.min_setpoint,
+                      max: tempLimits.hard_limits.max_setpoint,
+                      help: `Hard limits: ${tempLimits.hard_limits.min_setpoint}°F - ${tempLimits.hard_limits.max_setpoint}°F`,
                     },
                     {
-                      label: 'Setpoint Offset (Winter)',
-                      key: 'setpoint_offset_winter',
+                      label: 'Max. Setpoint',
+                      key: 'setpoint_max',
+                      min: tempLimits.hard_limits.min_setpoint,
+                      max: tempLimits.hard_limits.max_setpoint,
+                      help: `Hard limits: ${tempLimits.hard_limits.min_setpoint}°F - ${tempLimits.hard_limits.max_setpoint}°F`,
+                    },
+                    {
+                      label: `Setpoint Offset (${
+                        season === 1 ? 'Summer' : 'Winter'
+                      })`,
+                      key:
+                        season === 1
+                          ? 'setpoint_offset_summer'
+                          : 'setpoint_offset_winter',
                     },
                     {
                       label: 'Mode Change Delta Temp',
@@ -252,7 +220,7 @@ const UserSettings = ({ data }) => {
                       key: 'cascade_time',
                       unit: 'min.',
                     },
-                  ].map(({ label, key, unit = '' }) => (
+                  ].map(({ label, key, unit = '', min, max, help }) => (
                     <CCol xs="12" key={key}>
                       <div style={{ marginBottom: '10px' }}>
                         <span htmlFor={key} className="temp-label ">
