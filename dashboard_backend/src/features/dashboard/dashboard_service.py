@@ -276,15 +276,15 @@ class DashboardService:
             self.edge_server.update_device_state(Relay.CHILLER2.value, False)
             self.edge_server.update_device_state(Relay.CHILLER3.value, False)
             self.edge_server.update_device_state(Relay.CHILLER4.value, False)
-        except Exception as e:
-            raise Exception(f"Can not turn off devices!")
+        except Exception:
+            raise Exception("Can not turn off devices!")
 
     def switch_season_mode(self, season_value: int):
         try:
             if season_value not in [WINTER, SUMMER]:
                 raise ValueError(f"Invalid season value: {season_value}")
 
-            self.turn_off_devices()
+            # self.turn_off_devices()
 
             # TODO Update Edge Server mode
             # raise Exception("Test error for season mode switch")

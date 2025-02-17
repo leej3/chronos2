@@ -198,8 +198,9 @@ const UserSettings = ({ data }) => {
                       help: `Hard limits: ${tempLimits.hard_limits.min_setpoint}°F - ${tempLimits.hard_limits.max_setpoint}°F`,
                     },
                     {
-                      label: `Setpoint Offset (${season === 1 ? 'Summer' : 'Winter'
-                        })`,
+                      label: `Setpoint Offset (${
+                        season === 1 ? 'Summer' : 'Winter'
+                      })`,
                       key:
                         season === 1
                           ? 'setpoint_offset_summer'

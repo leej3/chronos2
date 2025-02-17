@@ -8,7 +8,7 @@ import configureStore from 'redux-mock-store';
 import { updateDeviceState } from '../../api/updateState';
 import ManualOverride from '../ManualOverride/ManualOverride';
 
-jest.mock('../ManualOverride/ManualOverride.css', () => { });
+jest.mock('../ManualOverride/ManualOverride.css', () => {});
 jest.mock('../../api/updateState');
 jest.mock('../../utils/constant', () => ({
   getDeviceId: jest.fn(() => 1),
