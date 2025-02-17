@@ -22,7 +22,7 @@ class SettingRepository:
             (value,) = session.query(param).first()
         return value
 
-    def _update_property(self, param, value):
+    def _update_property_in_db(self, param, value):
         param = getattr(Settings, param)
         with session_scope() as session:
             session.query(Settings).filter(Settings.id == 1).update({param: value})
