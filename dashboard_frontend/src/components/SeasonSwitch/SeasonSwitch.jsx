@@ -11,6 +11,7 @@ import './SeasonSwitch.css';
 const SeasonSwitch = () => {
   const dispatch = useDispatch();
   const season = useSelector((state) => state.chronos.season);
+  const readOnlyMode = useSelector((state) => state.chronos.read_only_mode);
   const reduxLockoutInfo = useSelector((state) => state.chronos.lockoutInfo);
   const readOnlyMode = useSelector((state) => state.chronos.read_only_mode);
   const [lockoutInfo, setLockoutInfo] = useState(null);
@@ -58,6 +59,10 @@ const SeasonSwitch = () => {
   }, [lockoutInfo]);
 
   const handleSeasonChange = async (newSeason) => {
+    if (readOnlyMode) {
+      toast.error('Read only mode is enabled');
+      return;
+    }
     try {
       if (readOnlyMode) {
         setAlertColor('warning');
