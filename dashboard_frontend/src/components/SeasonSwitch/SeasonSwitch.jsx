@@ -13,7 +13,6 @@ const SeasonSwitch = () => {
   const season = useSelector((state) => state.chronos.season);
   const readOnlyMode = useSelector((state) => state.chronos.read_only_mode);
   const reduxLockoutInfo = useSelector((state) => state.chronos.lockoutInfo);
-  const readOnlyMode = useSelector((state) => state.chronos.read_only_mode);
   const [lockoutInfo, setLockoutInfo] = useState(null);
   const [countdown, setCountdown] = useState(null);
   const [switchDirection, setSwitchDirection] = useState(null);
