@@ -13,7 +13,6 @@ class Device(object):
         self.edge_server = EdgeServer()
 
     def _switch_state(self, command, relay_only=False):
-        return True
         return self.edge_server._switch_state(command, relay_only)
 
     # @property

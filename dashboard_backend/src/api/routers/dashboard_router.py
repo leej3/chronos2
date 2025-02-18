@@ -5,7 +5,7 @@ from fastapi import APIRouter, Request, Security
 from fastapi.responses import JSONResponse, StreamingResponse
 from src.api.dependencies import get_current_user
 from src.api.dto.dashboard import SwitchSeason, UpdateDeviceState, UpdateSettings
-from src.core.common.exceptions import EdgeServerError
+from src.core.common.exceptions import ConnectToEdgeServerError, EdgeServerError
 from src.core.services.chronos import Chronos
 from src.core.services.edge_server import EdgeServer
 from src.features.auth.jwt_handler import UserToken
@@ -22,11 +22,16 @@ def get_edge_server():
     return EdgeServer()
 
 
+def get_dashboard_service():
+    return DashboardService()
+
+
 @router.get("/")
 def dashboard_data(
     request: Request,
     current_user: Annotated[UserToken, Security(get_current_user)],
     edge_server: Annotated[EdgeServer, Security(get_edge_server)],
+    dashboard_service: Annotated[DashboardService, Security(get_dashboard_service)],
 ):
     data = dashboard_service.get_data()
     return JSONResponse(content=data)
@@ -38,8 +43,13 @@ def update_state(
     current_user: Annotated[UserToken, Security(get_current_user)],
     edge_server: Annotated[EdgeServer, Security(get_edge_server)],
 ):
-    edge_server.update_device_state(id=data.id, state=data.state)
-    return JSONResponse(content={"message": "Updated state successfully"})
+    try:
+        edge_server.update_device_state(id=data.id, state=data.state)
+        return JSONResponse(content={"message": "Updated state successfully"})
+    except ConnectToEdgeServerError:
+        return JSONResponse(
+            content={"detail": "Could not connect to edge server"}, status_code=403
+        )
 
 
 @router.get("/download_log")
@@ -186,11 +196,8 @@ async def temperature_limits(
 async def switch_season(
     data: SwitchSeason,
     current_user: Annotated[UserToken, Security(get_current_user)],
+    dashboard_service: Annotated[DashboardService, Security(get_dashboard_service)],
+    edge_server: Annotated[EdgeServer, Security(get_edge_server)],
 ):
-    try:
-        result = dashboard_service.switch_season_mode(data.season_value)
-        return JSONResponse(content=result, status_code=200)
-    except Exception as e:
-        return JSONResponse(
-            content={"message": str(e), "status": "error"}, status_code=400
-        )
+    result = dashboard_service.switch_season_mode(data.season_value)
+    return JSONResponse(content=result, status_code=200)

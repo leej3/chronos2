@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 
+from fastapi import HTTPException
 from sqlalchemy import desc, or_
 from sqlalchemy.sql import func
 from src.core.configs.database import session_scope
@@ -270,32 +271,30 @@ class DashboardService:
         return reponse
 
     def switch_season_mode(self, season_value: int):
-        try:
-            mode_values = [mode.value for mode in Mode]
-            if season_value not in mode_values:
-                raise ValueError(f"Invalid season value: {season_value}")
-
-            self.chronos._switch_season(season_value)
-
-            # TODO Update Edge Server mode
-            # raise Exception("Test error for season mode switch")
-            # self.edge_server.set_mode(season_value)
-
-            current_time = datetime.now()
-
-            settings = self.setting_repository.get_last_settings()
-
-            unlock_time = current_time + timedelta(
-                minutes=settings.mode_switch_lockout_time
+        mode_values = [mode.value for mode in Mode]
+        if season_value not in mode_values:
+            raise HTTPException(
+                status_code=400, detail=f"Invalid season value: {season_value}"
             )
 
-            return {
-                "status": "success",
-                "mode": season_value,
-                "mode_switch_timestamp": current_time.isoformat(),
-                "mode_switch_lockout_time": self.chronos.mode_switch_lockout_time,
-                "unlock_time": unlock_time.isoformat(),
-            }
+        self.chronos._switch_season(season_value)
 
-        except Exception as e:
-            raise Exception(f"Failed to switch season mode: {str(e)}")
+        # TODO Update Edge Server mode
+        # raise Exception("Test error for season mode switch")
+        # self.edge_server.set_mode(season_value)
+
+        current_time = datetime.now()
+
+        settings = self.setting_repository.get_last_settings()
+
+        unlock_time = current_time + timedelta(
+            minutes=settings.mode_switch_lockout_time
+        )
+
+        return {
+            "status": "success",
+            "mode": season_value,
+            "mode_switch_timestamp": current_time.isoformat(),
+            "mode_switch_lockout_time": self.chronos.mode_switch_lockout_time,
+            "unlock_time": unlock_time.isoformat(),
+        }
