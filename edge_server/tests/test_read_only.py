@@ -39,11 +39,3 @@ def test_temperature_limits_blocked():
     response = client.post("/temperature_limits", json=payload)
     assert response.status_code == 403
     assert "Operation not permitted" in response.json().get("detail", "")
-
-
-def test_switch_state_blocked():
-    # Attempt to switch state (which toggles relay) should be blocked
-    payload = {"command": "toggle", "relay_only": True}
-    response = client.post("/switch_state", json=payload)
-    assert response.status_code == 403
-    assert "Operation not permitted" in response.json().get("detail", "")

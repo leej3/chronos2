@@ -33,7 +33,7 @@ from chronos.mock_devices.mock_data import (
     mock_point_update,
     mock_sensors,
 )
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
@@ -133,21 +133,6 @@ def with_rate_limit(func: Callable):
     return wrapper
 
 
-def check_read_only(func: Callable):
-    """Decorator to prevent write operations in read-only mode."""
-
-    @wraps(func)
-    async def wrapper(*args, **kwargs):
-        if cfg.READ_ONLY_MODE:
-            raise HTTPException(
-                status_code=403,
-                detail="Operation not permitted: system is in read-only mode",
-            )
-        return await func(*args, **kwargs)
-
-    return wrapper
-
-
 DeviceTuple = namedtuple(
     "DeviceTuple", ["boiler", "chiller1", "chiller2", "chiller3", "chiller4"]
 )
@@ -168,6 +153,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+def ensure_not_read_only():
+    if cfg.READ_ONLY_MODE:
+        raise HTTPException(
+            status_code=403,
+            detail="Operation not permitted: system is in read-only mode",
+        )
+    return True
 
 
 # Legacy endpoints
@@ -239,20 +233,17 @@ async def get_data():
 async def get_device_state(
     device: int = Query(..., ge=0, lt=5, description="The device ID (0-4)"),
 ):
-    """Legacy endpoint for device state."""
     if MOCK_DEVICES:
         return DeviceModel(id=device, state=True)
     return DeviceModel(id=device, state=DEVICES[device].state)
 
 
-@app.post("/device_state")
+@app.post("/device_state", dependencies=[Depends(ensure_not_read_only)])
 @with_circuit_breaker
 @with_rate_limit
-@check_read_only
 async def update_device_state(data: DeviceModel):
     if MOCK_DEVICES:
         return DeviceModel(id=data.id, state=data.state)
-    """Legacy endpoint for updating device state."""
     device_obj = DEVICES[data.id]
     device_obj.state = data.state
     return DeviceModel(id=device_obj.id, state=device_obj.state)
@@ -372,34 +363,24 @@ async def get_boiler_info():
         )
 
 
-@app.post("/boiler_set_setpoint")
+@app.post("/boiler_set_setpoint", dependencies=[Depends(ensure_not_read_only)])
 @with_circuit_breaker
 @with_rate_limit
-@check_read_only
 async def set_setpoint(data: SetpointUpdate):
     if MOCK_DEVICES:
         try:
             mock_point_update()
             return {"message": f"Temperature setpoint set to {data.temperature}°F"}
-        except ModbusException as e:
-            raise HTTPException(status_code=500, detail=str(e))
         except Exception as e:
-            raise HTTPException(
-                status_code=500, detail=f"Failed to set temperature: {str(e)}"
-            )
-    """Update boiler temperature setpoint."""
+            raise HTTPException(status_code=500, detail=str(e))
     try:
         with create_modbus_connection() as device:
             success = device.set_boiler_setpoint(data.temperature)
             if not success:
                 raise HTTPException(status_code=500, detail="Failed to set temperature")
             return {"message": f"Temperature setpoint set to {data.temperature}°F"}
-    except ModbusException as e:
-        raise HTTPException(status_code=500, detail=str(e))
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to set temperature: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/download_log", response_class=FileResponse)
@@ -455,20 +436,14 @@ def get_temperature_limits():
         raise HTTPException(status_code=500, detail="Failed to get temperature limits")
 
 
-@app.post("/temperature_limits")
-@check_read_only
+@app.post("/temperature_limits", dependencies=[Depends(ensure_not_read_only)])
 async def set_temperature_limits(limits: SetpointLimitsUpdate):
-    """Set soft temperature limits for the boiler."""
     try:
-        # Validate that min < max
         limits.validate_range()
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
-
     if MOCK_DEVICES:
         return {"message": "Temperature limits updated successfully"}
-
-    # Set limits in modbus device
     try:
         with create_modbus_connection() as device:
             success = device.set_temperature_limits(
@@ -478,7 +453,6 @@ async def set_temperature_limits(limits: SetpointLimitsUpdate):
                 raise HTTPException(
                     status_code=500, detail="Failed to set temperature limits"
                 )
-    except ModbusException as e:
+    except Exception as e:
         raise HTTPException(status_code=503, detail=str(e))
-
     return {"message": "Temperature limits updated successfully"}
