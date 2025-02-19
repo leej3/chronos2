@@ -1,20 +1,33 @@
-.DS_Store
+# Environment files
 .env
+.env.local
+.env.*.local
+.env.docker
+env-*
+
+# But allow templates and systemd env file
+!.env.sample
+!.env.sample.local
+!.env.deployment
+
+# Build and development
+.DS_Store
 .venv
+__pycache__
+*egg-info
+.vscode
+uv.lock
+deployment.log
+
+# Terraform
 .terraform
 .terraform.lock.hcl
 *.tfstate
-*egg-info
-__pycache__
+
+# FRP config
 frp_config/frps.toml
 frp_config/frpc.toml
-.vscode
-uv.lock
-.env.docker
-deployment.log
-env
+
+# Deployment scripts
 deploy-staging.sh
 deploy-production.sh
-env-prod
-env-stage
-env-*

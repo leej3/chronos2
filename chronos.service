@@ -6,7 +6,7 @@ Requires=docker.service
 [Service]
 Type=simple
 WorkingDirectory=/opt/chronos
-EnvironmentFile=/opt/chronos/.env
+EnvironmentFile=/opt/chronos/.env.deployment
 
 # Ensure docker-compose is down before starting
 ExecStartPre=-/usr/bin/docker compose -f docker-compose.yml -f docker-compose.deployment.yml down

@@ -40,16 +40,15 @@ echo "Setting up installation directory..."
 mkdir -p "$INSTALL_DIR"
 rsync -av --delete . "$INSTALL_DIR/"
 
-# Create deployment environment file if it doesn't exist
-if [ ! -f "$INSTALL_DIR/.env" ]; then
-    echo No .env file detected...
-    exit 1
-fi
 
 # Verify deployment environment variables
-if ! grep -q "DEPLOYMENT_URI=" "$INSTALL_DIR/.env" || ! grep -q "LETSENCRYPT_ADMIN_EMAIL=" "$INSTALL_DIR/.env"; then
+if [ ! -f "$INSTALL_DIR/.env.deployment" ]; then
+    echo "No .env.deployment file detected..."
+    exit 1
+fi
+if ! grep -q "DEPLOYMENT_URI=" "$INSTALL_DIR/.env.deployment" || ! grep -q "LETSENCRYPT_ADMIN_EMAIL=" "$INSTALL_DIR/.env.deployment"; then
     echo "Error: Deployment environment not configured"
-    echo "The .env file must contain:"
+    echo "The .env.deployment file must contain:"
     echo "- DEPLOYMENT_URI"
     echo "- LETSENCRYPT_ADMIN_EMAIL"
     exit 1
