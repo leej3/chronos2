@@ -79,17 +79,27 @@ class CircuitBreaker:
         return False
 
 
-# Rate limiter for temperature changes
+# Rate limiter for relay toggles
 class RateLimiter:
-    def __init__(self, min_interval: float = 5.0):
+    def __init__(self, min_interval: float = 5.0, season_interval: float = 2.0):
         self.min_interval = min_interval
         self.last_change_time = 0
+        self.season_interval = season_interval
+        self.last_season_change_time = 0
 
     def can_change(self) -> bool:
-        """Check if enough time has passed since last change."""
+        """Check if enough time has passed since last relay toggle."""
         current_time = time.time()
         if current_time - self.last_change_time >= self.min_interval:
             self.last_change_time = current_time
+            return True
+        return False
+
+    def can_season_change(self) -> bool:
+        """Check if enough time has passed for a season change."""
+        current_time = time.time()
+        if current_time - self.last_season_change_time >= self.season_interval:
+            self.last_season_change_time = current_time
             return True
         return False
 
@@ -124,11 +134,37 @@ def with_circuit_breaker(func: Callable):
 def with_rate_limit(func: Callable):
     @wraps(func)
     async def wrapper(*args, **kwargs):
-        if not rate_limiter.can_change():
-            raise HTTPException(
-                status_code=429,
-                detail="Too many temperature changes. Please wait before trying again.",
-            )
+        logger.debug("with_rate_limit: args=%s, kwargs=%s", args, kwargs)
+
+        data = None
+        if "data" in kwargs:
+            data = kwargs["data"]
+        else:
+            for arg in args:
+                if hasattr(arg, "command") or hasattr(arg, "temperature"):
+                    data = arg
+                    break
+
+        if data:
+            # If it's a command-based request
+            if hasattr(data, "command"):
+                if data.command == "switch-season" or (
+                    hasattr(data, "is_season_switch") and data.is_season_switch
+                ):
+                    return await func(*args, **kwargs)
+                if not rate_limiter.can_change():
+                    raise HTTPException(
+                        status_code=429,
+                        detail="Too many relay toggles. Please wait before trying again.",
+                    )
+            # Else if it's a temperature (setpoint) update request
+            elif getattr(data, "temperature", None) is not None:
+                if not rate_limiter.can_change():
+                    raise HTTPException(
+                        status_code=429,
+                        detail="Too many temperature changes. Please wait before trying again.",
+                    )
+
         return await func(*args, **kwargs)
 
     return wrapper
@@ -252,7 +288,6 @@ async def get_device_state(
 
 @app.post("/device_state", dependencies=[Depends(ensure_not_read_only)])
 @with_circuit_breaker
-@with_rate_limit
 async def update_device_state(data: DeviceModel):
     if MOCK_DEVICES:
         return DeviceModel(id=data.id, state=data.state)

@@ -194,49 +194,26 @@ class Chronos(object):
                 self.winter_valve.turn_off()
                 self.summer_valve.turn_off()
 
-    def _switch_season(self, mode: int):
-        if mode == Mode.WAITING_SWITCH_TO_SUMMER.value:
-            logger.debug("Switching to summer mode")
-            self.mode = Mode.WAITING_SWITCH_TO_SUMMER.value
-            self.mode_switch_timestamp = datetime.now()
-            self._save_devices_states(mode)
-            self.turn_off_devices()
-            self.summer_valve.turn_on()
-            self.winter_valve.turn_off()
+    def _switch_season(self, mode):
+        """Switch season mode."""
+        try:
+            # Turn off all devices
+            self.edge_server._switch_state("off", relay_only=False)
+            # Turn on/off valves
+            if mode == Mode.WAITING_SWITCH_TO_WINTER.value:
+                self.winter_valve.turn_on()
+                self.summer_valve.turn_off()
+            else:
+                self.winter_valve.turn_off()
+                self.summer_valve.turn_on()
 
-            self.scheduler.add_job(
-                self._switch_season,
-                "date",
-                run_date=datetime.now()
-                + timedelta(minutes=self.mode_switch_lockout_time),
-                args=[Mode.SWITCHING_TO_SUMMER.value],
+            # Update mode
+            self.mode = mode
+            self.setting_repository._update_property_to_db("mode", mode)
+            self.setting_repository._update_property_to_db(
+                "mode_switch_timestamp", datetime.now()
             )
-
-        elif mode == Mode.WAITING_SWITCH_TO_WINTER.value:
-            logger.debug("Switching to winter mode")
-            self.mode = Mode.WAITING_SWITCH_TO_WINTER.value
-            self.mode_switch_timestamp = datetime.now()
-            self._save_devices_states(mode)
-            self.turn_off_devices()
-            self.summer_valve.turn_off()
-            self.winter_valve.turn_on()
-
-            self.scheduler.add_job(
-                self._switch_season,
-                "date",
-                run_date=datetime.now()
-                + timedelta(minutes=self.mode_switch_lockout_time),
-                args=[Mode.SWITCHING_TO_WINTER.value],
-            )
-
-        elif mode == Mode.SWITCHING_TO_WINTER.value:
-            logger.debug("Switched to winter mode")
-            self._restore_devices_states(mode)
-            self._switch_devices()
-            self.mode = Mode.WINTER.value
-
-        elif mode == Mode.SWITCHING_TO_SUMMER.value:
-            logger.debug("Switched to summer mode")
-            self._restore_devices_states(mode)
-            self._switch_devices()
-            self.mode = Mode.SUMMER.value
+            return True
+        except Exception as e:
+            logger.error(f"Error switching season: {str(e)}")
+            return False

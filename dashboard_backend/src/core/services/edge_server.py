@@ -129,6 +129,10 @@ class EdgeServer:
     def _switch_state(self, command, relay_only=False):
         response = requests.post(
             f"{self.url}/switch_state",
-            json={"command": command, "relay_only": relay_only},
+            json={
+                "command": command,
+                "relay_only": relay_only,
+                "is_season_switch": command == "switch-season",
+            },
         )
         return self._handle_response(response)

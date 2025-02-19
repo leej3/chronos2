@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 
 from .config import cfg
 
@@ -16,6 +16,13 @@ class SystemStatus(BaseModel):
 class SwitchStateRequest(BaseModel):
     command: str
     relay_only: bool = False
+    is_season_switch: bool = False
+
+    @validator("command")
+    def validate_command(cls, v):
+        if v not in ["on", "off", "switch-season"]:
+            raise ValueError("Command must be 'on', 'off', or 'switch-season'")
+        return v
 
 
 class DeviceModel(BaseModel):
