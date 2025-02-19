@@ -35,8 +35,8 @@ cd /home/ubuntu
 sudo -u ubuntu git clone https://github.com/leej3/chronos2.git
 cd chronos2
 
-# Checkout specific git reference if provided
-sudo -u ubuntu git checkout ${git_ref}
+# Checkout the specified git reference
+sudo -u ubuntu git checkout "${git_ref}"
 
 # Configure git to use HTTPS instead of SSH for submodules
 sudo -u ubuntu git config --global url."https://github.com/".insteadOf git@github.com:
@@ -63,9 +63,13 @@ sed -i "s|EDGE_SERVER_IP=.*|EDGE_SERVER_IP=${edge_server_ip}|" dashboard_backend
 sed -i "s|EDGE_SERVER_PORT=.*|EDGE_SERVER_PORT=${edge_server_port}|" dashboard_backend/.env.docker
 sed -i "s|USER_1_EMAIL=.*|USER_1_EMAIL=${user_1_email}|" dashboard_backend/.env.docker
 sed -i "s|USER_1_PASSWORD=.*|USER_1_PASSWORD=${user_1_password}|" dashboard_backend/.env.docker
+sed -i "s|LETSENCRYPT_ADMIN_EMAIL=.*|LETSENCRYPT_ADMIN_EMAIL=${letsencrypt_admin_email}|" dashboard_backend/.env.docker
 
-# Update deployment URI in .env
-sed -i "s|DEPLOYMENT_URI=.*|DEPLOYMENT_URI=$DOMAIN|" .env
+# Create deployment .env.deployment file for only systemd/compose stack required variables
+cat > .env.deployment << EOF
+DEPLOYMENT_URI=$DOMAIN
+LETSENCRYPT_ADMIN_EMAIL=${letsencrypt_admin_email}
+EOF
 '
 
 # Setup FRP configuration

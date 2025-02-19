@@ -82,3 +82,13 @@ variable "table_name" {
   description = "Name of the DynamoDB table for state locking"
   type        = string
 }
+
+variable "letsencrypt_admin_email" {
+  description = "The admin email address used by Let's Encrypt for certificate administration"
+  type        = string
+}
+
+variable "git_ref" {
+  description = "Git reference (branch, tag, or commit) to deploy"
+  type        = string
+}

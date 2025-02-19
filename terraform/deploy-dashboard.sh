@@ -73,6 +73,78 @@ fi
 echo "Initializing Terraform for ${ENV}${ENV_SUFFIX} environment..."
 tofu init -reconfigure -backend-config="backend-${ENV}${BACKEND_SUFFIX}.hcl"
 
+# Add this function for checking instance readiness
+wait_for_instance() {
+    local instance_dns=$1
+    local max_attempts=30
+    local attempt=1
+
+    echo "Waiting for instance to be ready..."
+    while [ $attempt -le $max_attempts ]; do
+        if ssh -o ConnectTimeout=5 -o BatchMode=yes -o StrictHostKeyChecking=accept-new "ubuntu@$instance_dns" "exit" 2>/dev/null; then
+            echo "Instance is ready!"
+            return 0
+        fi
+        echo "Attempt $attempt/$max_attempts: Instance not ready yet, waiting..."
+        sleep 10
+        attempt=$((attempt + 1))
+    done
+
+    echo "Error: Instance failed to become ready after 5 minutes"
+    return 1
+}
+
+# Add this function near the start of the file, after the environment validation
+deploy_application() {
+    local instance_dns=$1
+    local max_retries=3
+    local retry_count=0
+
+    echo "Deploying to dashboard server ($ENV environment): $instance_dns"
+
+    while [ $retry_count -lt $max_retries ]; do
+        if ssh -o ConnectTimeout=10 "ubuntu@$instance_dns" bash -s << ENDSSH; then
+            set -e
+            echo "Starting deployment on remote host..."
+
+            # Check if repository exists, if not clone it
+            if [ ! -d "chronos2" ]; then
+                echo "Cloning repository..."
+                git clone https://github.com/leej3/chronos2.git
+            fi
+
+            # Enter repository directory
+            cd chronos2
+
+            # Fetch latest changes and checkout specified ref
+            echo "Updating repository..."
+            git fetch origin
+            git checkout -f "${TF_VAR_git_ref}"
+            git reset --hard "origin/${TF_VAR_git_ref}"  # Ensure we're exactly at the remote version
+
+            # Update submodules
+            git submodule update --init --recursive
+
+            # Run the dashboard installation/update script
+            echo "Running dashboard update..."
+            sudo bash install.sh
+ENDSSH
+            echo "Deployment successful!"
+            return 0
+        else
+            retry_count=$((retry_count + 1))
+            if [ $retry_count -lt $max_retries ]; then
+                echo "Deployment failed. Retrying in 10 seconds... (Attempt $retry_count of $max_retries)"
+                sleep 10
+            else
+                echo "Error: Deployment failed after $max_retries attempts"
+                return 1
+            fi
+        fi
+    done
+    return 1
+}
+
 case "$ACTION" in
     "plan")
         echo "Running Terraform plan for ${ENV} environment..."
@@ -81,49 +153,41 @@ case "$ACTION" in
     "apply")
         echo "Running Terraform apply for ${ENV} environment..."
         # Capture the plan output to check for changes
-        plan_output=$(tofu plan -detailed-exitcode 2>&1)
+        set +e  # Temporarily disable exit on error since we want to capture the exit code
+        tofu plan -detailed-exitcode > plan_output.txt 2>&1
         plan_exit_code=$?
+        set -e  # Re-enable exit on error
+
+        # Extract hostname from API URL using bash string substitution
+        instance_dns=${TF_VAR_vite_api_base_url#*//}
+        instance_dns=${instance_dns%%:*}
+        instance_dns=${instance_dns%/api}
 
         # Exit code 0 means no changes, 1 means error, 2 means changes present
         if [ $plan_exit_code -eq 0 ]; then
             echo "No infrastructure changes detected. Proceeding with application deployment..."
-            # Extract hostname from API URL using bash string substitution
-            instance_dns=${TF_VAR_vite_api_base_url#*//}
-            instance_dns=${instance_dns%%:*}
-            instance_dns=${instance_dns%/api}
-
-            echo "Deploying to dashboard server ($ENV environment): $instance_dns"
-            ssh "ubuntu@$instance_dns" bash -s << ENDSSH
-set -e
-echo "Starting deployment on remote host..."
-
-# Check if repository exists, if not clone it
-if [ ! -d "chronos2" ]; then
-    echo "Cloning repository..."
-    git clone https://github.com/leej3/chronos2.git
-fi
-
-# Enter repository directory
-cd chronos2
-
-# Fetch latest changes and checkout specified ref
-echo "Updating repository..."
-git fetch origin
-git checkout \${TF_VAR_git_ref:-main}
-git pull origin \${TF_VAR_git_ref:-main}
-
-# Run the dashboard installation/update script
-echo "Running dashboard update..."
-sudo bash install.sh
-ENDSSH
+            deploy_application "$instance_dns"
         elif [ $plan_exit_code -eq 2 ]; then
             echo "Infrastructure changes detected. Running Terraform apply..."
+            cat plan_output.txt  # Show the plan output
             tofu apply -auto-approve
+
+            echo "Waiting for instance to be ready..."
+            if ! wait_for_instance "$instance_dns"; then
+                echo "Error: Instance failed to become ready"
+                exit 1
+            fi
+
+            echo "Infrastructure changes applied successfully."
+            echo "Note: The EC2 instance is handling the deployment through user data script."
+            echo "You can check the instance's system log for deployment progress."
         else
             echo "Error during Terraform plan:"
-            echo "$plan_output"
+            cat plan_output.txt
+            rm plan_output.txt
             exit 1
         fi
+        rm -f plan_output.txt  # Clean up the temporary file
         ;;
     "destroy")
         echo "WARNING: You are about to destroy the ${ENV} environment!"

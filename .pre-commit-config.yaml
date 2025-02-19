@@ -51,3 +51,11 @@ repos:
       - id: check-json
       - id: end-of-file-fixer
         exclude: "examples|docs/examples|tests/data"
+
+  - repo: local
+    hooks:
+      - id: no-root-env
+        name: No .env in root directory
+        entry: No .env file allowed in project root. Use .env.deployment for deployment and .env.docker for services.
+        language: fail
+        files: ^\.env$

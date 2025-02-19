@@ -43,6 +43,7 @@ resource "aws_instance" "deployment" {
     user_1_password     = var.user_1_password
     frp_auth_token      = var.frp_auth_token
     git_ref             = var.git_ref
+    letsencrypt_admin_email = var.letsencrypt_admin_email
   })
   user_data_replace_on_change = true
 }

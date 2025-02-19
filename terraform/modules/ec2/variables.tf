@@ -106,7 +106,11 @@ variable "frp_auth_token" {
 }
 
 variable "git_ref" {
-  description = "Git reference (commit hash, branch, or tag) to deploy"
+  description = "Git reference (branch, tag, or commit) to deploy"
   type        = string
-  default     = "main"
+}
+
+variable "letsencrypt_admin_email" {
+  type        = string
+  description = "The admin email address used by Let's Encrypt for certificate administration."
 }
