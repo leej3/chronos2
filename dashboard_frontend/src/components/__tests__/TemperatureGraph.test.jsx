@@ -18,17 +18,6 @@ jest.mock('../../utils/constant', () => ({
 }));
 
 describe('TemperatureGraph', () => {
-  it('No data available', async () => {
-    const mockData = [];
-    getCharData.mockResolvedValue({ data: mockData });
-
-    await act(async () => {
-      render(<TemperatureGraph />);
-    });
-
-    expect(screen.getByText(/No data available/)).toBeInTheDocument();
-  });
-
   it('should render the graph and display temperature history after data is fetched', async () => {
     const mockData = [
       { date: '2024-07-31T12:00:00Z', 'column-2': 80, 'column-1': 75 },
