@@ -1,24 +1,35 @@
 import React, { useState, useEffect } from 'react';
+
+import { CTooltip, CAlert } from '@coreui/react';
+import { parseISO } from 'date-fns';
 import { BsArrowRight, BsArrowLeft } from 'react-icons/bs';
-import { CTooltip } from '@coreui/react';
 import { useSelector, useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
-import { format, parseISO } from 'date-fns';
-import { setSeason, setSystemStatus } from '../../features/state/seasonSlice';
+
 import { switchSeason } from '../../api/switchSeason';
-import { CAlert } from '@coreui/react';
+import { setSeason, setSystemStatus, setManualOverride } from '../../features/state/seasonSlice';
+
 import './SeasonSwitch.css';
 
 const SeasonSwitch = () => {
   const dispatch = useDispatch();
   const season = useSelector((state) => state.chronos.season);
   const readOnlyMode = useSelector((state) => state.chronos.read_only_mode);
+  const manualOverride = useSelector((state) => state.chronos.manual_override);
   const [lockoutInfo, setLockoutInfo] = useState(null);
   const [countdown, setCountdown] = useState(null);
   const [switchDirection, setSwitchDirection] = useState(null);
   const [alertColor, setAlertColor] = useState('danger');
   const [alertMessage, setAlertMessage] = useState('');
   const unlockTime = useSelector((state) => state.chronos.unlock_time);
+
+  const winterTooltip = (lockoutInfo || manualOverride)
+    ? `Locked${lockoutInfo ? ` - ${countdown} remaining` : ''}${manualOverride ? ' (Manual override active)' : ''}`
+    : (season === 0 ? 'Currently in Winter mode' : 'Switch to Winter mode');
+
+  const summerTooltip = (lockoutInfo || manualOverride)
+    ? `Locked${lockoutInfo ? ` - ${countdown} remaining` : ''}${manualOverride ? ' (Manual override active)' : ''}`
+    : (season === 1 ? 'Currently in Summer mode' : 'Switch to Summer mode');
 
   useEffect(() => {
     if (unlockTime) {
@@ -67,29 +78,50 @@ const SeasonSwitch = () => {
       setAlertMessage('You are in read only mode');
       return;
     }
+
+    // Clear any previous manual override flag for a new switch attempt
+    dispatch(setManualOverride(false));
+
+    // Store previous season to revert if needed
+    const previousSeason = season;
+
+    // Determine numeric season value: 0 for Winter, 1 for Summer
+    const seasonValue = newSeason === 'Winter' ? 0 : 1;
+
+    // Optimistically update the UI immediately
+    dispatch(setSeason(seasonValue));
+
     try {
-      const seasonValue = newSeason === 'Winter' ? 0 : 1;
       setSwitchDirection(newSeason === 'Winter' ? 'toWinter' : 'toSummer');
 
       const response = await switchSeason(seasonValue);
 
-      if (response?.data?.status === 'success') {
-        dispatch(setSeason(newSeason));
+      // If API indicates success and no manual override issue, continue normally
+      if (response?.data?.status === 'success' && !response?.data?.manual_override) {
         dispatch(setSystemStatus('ONLINE'));
         toast.success(response.data.message);
 
         if (response.data.unlock_time) {
           const unlockTime = parseISO(response.data.unlock_time);
-          setLockoutInfo({
-            unlockTime: unlockTime,
-          });
+          setLockoutInfo({ unlockTime });
           setSwitchDirection(null);
         }
+      } else {
+        // If success but manual_override flag is true or status is not 'success', then treat as failure
+        toast.error(response?.data?.manual_override ? 'Relay toggle failed due to manual override.' : 'Season switch failed.');
+        // Set manual override flag
+        dispatch(setManualOverride(true));
+        // Revert optimistic update
+        dispatch(setSeason(previousSeason));
+        setSwitchDirection(null);
       }
     } catch (error) {
       dispatch(setSystemStatus('OFFLINE'));
-      setSwitchDirection(null);
       toast.error(error?.message || 'Failed to switch season');
+      setSwitchDirection(null);
+      // Revert optimistic update and set manual override
+      dispatch(setSeason(previousSeason));
+      dispatch(setManualOverride(true));
     }
   };
 
@@ -116,83 +148,49 @@ const SeasonSwitch = () => {
       )}
       <div className="season-toggle-header">
         <CTooltip
-          content={
-            lockoutInfo
-              ? `Locked - ${countdown} remaining`
-              : season === 0
-              ? 'Currently in Winter mode'
-              : 'Switch to Winter mode'
-          }
+          content={winterTooltip}
           placement="bottom"
         >
           <div
-            className={`season-icon ${season === 0 ? 'active disabled' : ''} ${
-              lockoutInfo ? 'locked' : ''
-            }`}
-            onClick={() =>
-              !lockoutInfo && season !== 0 && handleSeasonChange('Winter')
-            }
+            className={`season-icon ${season === 0 ? 'active disabled' : ''} ${(lockoutInfo || manualOverride) ? 'locked' : ''}`}
+            onClick={() => { if (!lockoutInfo && !manualOverride && season !== 0) { handleSeasonChange('Winter'); }}}
+            style={{ cursor: (lockoutInfo || manualOverride) ? 'not-allowed' : 'pointer', opacity: (lockoutInfo || manualOverride) ? 0.5 : 1 }}
           >
             <img
-              src={`/images/Icons/WinterSummer/${
-                season === 0 ? 'WOn' : 'WOff'
-              }.png`}
+              src={`/images/Icons/WinterSummer/${season === 0 ? 'WOn' : 'WOff'}.png`}
               alt="Winter"
               className="season-icon-img"
             />
             <span>Winter</span>
+            {lockoutInfo && <div className="lockout-indicator">{countdown}</div>}
           </div>
         </CTooltip>
 
         {season === 0 ? (
-          <BsArrowRight
-            className={`arrow-icon ${switchDirection ? 'switching' : ''}`}
-          />
+          <BsArrowRight className={`arrow-icon ${switchDirection ? 'switching' : ''}`} />
         ) : (
-          <BsArrowLeft
-            className={`arrow-icon ${switchDirection ? 'switching' : ''}`}
-          />
+          <BsArrowLeft className={`arrow-icon ${switchDirection ? 'switching' : ''}`} />
         )}
 
         <CTooltip
-          content={
-            lockoutInfo
-              ? `Locked - ${countdown} remaining`
-              : season === 1
-              ? 'Currently in Summer mode'
-              : 'Switch to Summer mode'
-          }
+          content={summerTooltip}
           placement="bottom"
         >
           <div
-            className={`season-icon ${season === 1 ? 'active disabled' : ''} ${
-              lockoutInfo ? 'locked' : ''
-            }`}
-            onClick={() =>
-              !lockoutInfo && season !== 1 && handleSeasonChange('Summer')
-            }
+            className={`season-icon ${season === 1 ? 'active disabled' : ''} ${(lockoutInfo || manualOverride) ? 'locked' : ''}`}
+            onClick={() => { if (!lockoutInfo && !manualOverride && season !== 1) { handleSeasonChange('Summer'); }}}
+            style={{ cursor: (lockoutInfo || manualOverride) ? 'not-allowed' : 'pointer', opacity: (lockoutInfo || manualOverride) ? 0.5 : 1 }}
           >
             <img
-              src={`/images/Icons/WinterSummer/${
-                season === 1 ? 'SOn' : 'SOff'
-              }.png`}
+              src={`/images/Icons/WinterSummer/${season === 1 ? 'SOn' : 'SOff'}.png`}
               alt="Summer"
               className="season-icon-img"
             />
             <span>Summer</span>
+            {lockoutInfo && <div className="lockout-indicator">{countdown}</div>}
           </div>
         </CTooltip>
       </div>
-
-      {lockoutInfo && (
-        <div className="season-switch-overlay">
-          <div className="switch-message">
-            <h3>System Locked</h3>
-            <p>Time remaining until next switch: {countdown}</p>
-            <div className="lock-icon">🔒</div>
-          </div>
-        </div>
-      )}
     </>
   );
 };

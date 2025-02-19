@@ -197,9 +197,12 @@ class Chronos(object):
     def _switch_season(self, mode):
         """Switch season mode."""
         try:
-            # Turn off all devices
-            self.edge_server._switch_state("off", relay_only=False)
-            # Turn on/off valves
+            # Send season-switch command to all device relays
+            for device in self.devices:
+                self.edge_server._switch_state(
+                    "switch-season", relay_only=False, is_season_switch=True
+                )
+            # Additionally, toggle the season valves
             if mode == Mode.WAITING_SWITCH_TO_WINTER.value:
                 self.winter_valve.turn_on()
                 self.summer_valve.turn_off()

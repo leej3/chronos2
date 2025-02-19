@@ -126,13 +126,13 @@ class EdgeServer:
         return self._handle_response(response)
 
     @catch_connection_error
-    def _switch_state(self, command, relay_only=False):
+    def _switch_state(self, command, relay_only=False, is_season_switch=False):
         response = requests.post(
             f"{self.url}/switch_state",
             json={
                 "command": command,
                 "relay_only": relay_only,
-                "is_season_switch": command == "switch-season",
+                "is_season_switch": is_season_switch,
             },
         )
         return self._handle_response(response)
