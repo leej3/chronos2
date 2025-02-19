@@ -559,19 +559,18 @@ def test_set_temperature_limits_failure(client, mock_modbus_device):
         "/temperature_limits", json={"min_setpoint": 75.0, "max_setpoint": 105.0}
     )
     assert response.status_code == 500
-    assert "Failed to set temperature limits" in response.json()["detail"]
+    assert "Failed to set temperature limits" in response.json().get("detail", "")
 
 
-def test_set_temperature_limits_connection_error(client, mock_modbus_device):
-    """Test connection error when setting temperature limits."""
-    mock_modbus_device.set_temperature_limits.side_effect = ModbusException(
-        "Connection failed"
-    )
-    response = client.post(
-        "/temperature_limits", json={"min_setpoint": 75.0, "max_setpoint": 105.0}
-    )
-    assert response.status_code == 503
-    assert "Connection failed" in response.json()["detail"]
+def test_set_temperature_limits_connection_failure(client, mock_modbus_device):
+    """Test connection failure when setting temperature limits."""
+    with patch("chronos.app.create_modbus_connection") as mock_create:
+        mock_create.side_effect = ModbusException("Connection failed")
+        response = client.post(
+            "/temperature_limits", json={"min_setpoint": 75.0, "max_setpoint": 105.0}
+        )
+        assert response.status_code == 503
+        assert "Unable to connect to Modbus device" in response.json().get("detail", "")
 
 
 def test_set_boiler_setpoint_read_only(client, mock_modbus_device):

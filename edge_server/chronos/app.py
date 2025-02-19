@@ -455,17 +455,32 @@ async def set_temperature_limits(limits: SetpointLimitsUpdate):
         limits.validate_range()
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
+
     if MOCK_DEVICES:
         return {"message": "Temperature limits updated successfully"}
+
+    # First try to establish connection
     try:
-        with create_modbus_connection() as device:
-            success = device.set_temperature_limits(
+        device = create_modbus_connection()
+    except (ModbusException, OSError) as e:
+        raise HTTPException(
+            status_code=503, detail=f"Unable to connect to Modbus device: {str(e)}"
+        )
+
+    # Then try to set the temperature limits
+    try:
+        with device as connected_device:
+            success = connected_device.set_temperature_limits(
                 limits.min_setpoint, limits.max_setpoint
             )
             if not success:
                 raise HTTPException(
                     status_code=500, detail="Failed to set temperature limits"
                 )
+            return {"message": "Temperature limits updated successfully"}
+    except HTTPException:
+        raise  # Re-raise HTTP exceptions (like the 500 we just raised)
     except Exception as e:
-        raise HTTPException(status_code=503, detail=str(e))
-    return {"message": "Temperature limits updated successfully"}
+        raise HTTPException(
+            status_code=500, detail=f"Error while setting temperature limits: {str(e)}"
+        )
