@@ -17,6 +17,7 @@ class SwitchStateRequest(BaseModel):
     command: str
     relay_only: bool = False
     is_season_switch: bool = False
+    device_id: int = 0
 
     @validator("command")
     def validate_command(cls, v):

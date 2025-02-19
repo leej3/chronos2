@@ -126,13 +126,15 @@ class EdgeServer:
         return self._handle_response(response)
 
     @catch_connection_error
-    def _switch_state(self, command, relay_only=False, is_season_switch=False):
-        response = requests.post(
-            f"{self.url}/switch_state",
-            json={
-                "command": command,
-                "relay_only": relay_only,
-                "is_season_switch": is_season_switch,
-            },
-        )
+    def _switch_state(
+        self, command, relay_only=False, is_season_switch=False, device_id=None
+    ):
+        payload = {
+            "command": command,
+            "relay_only": relay_only,
+            "is_season_switch": is_season_switch,
+        }
+        if device_id is not None:
+            payload["device_id"] = device_id
+        response = requests.post(f"{self.url}/switch_state", json=payload)
         return self._handle_response(response)

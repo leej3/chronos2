@@ -272,7 +272,10 @@ async def switch_state(data: SwitchStateRequest):
     """Switch state of a device."""
     if MOCK_DEVICES:
         return True
-    return DEVICES[0].switch_state(data.command, data.relay_only)
+
+    # Use the device_id from the request, default is 0
+    device_index = data.device_id
+    return DEVICES[device_index].switch_state(data.command, data.relay_only)
 
 
 @app.get("/device_state", response_model=DeviceModel)
