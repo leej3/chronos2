@@ -13,25 +13,28 @@ const SeasonSwitch = () => {
   const dispatch = useDispatch();
   const season = useSelector((state) => state.chronos.season);
   const readOnlyMode = useSelector((state) => state.chronos.read_only_mode);
-  const reduxLockoutInfo = useSelector((state) => state.chronos.lockoutInfo);
   const [lockoutInfo, setLockoutInfo] = useState(null);
   const [countdown, setCountdown] = useState(null);
   const [switchDirection, setSwitchDirection] = useState(null);
   const [alertColor, setAlertColor] = useState('danger');
   const [alertMessage, setAlertMessage] = useState('');
+  const unlockTime = useSelector((state) => state.chronos.unlock_time);
 
   useEffect(() => {
-    if (reduxLockoutInfo) {
-      const unlockTime = new Date(reduxLockoutInfo.unlockTime);
+    if (unlockTime) {
+      const unlockTimeDate = parseISO(unlockTime);
       const now = new Date();
-      if (unlockTime > now) {
+      if (unlockTimeDate > now) {
         setLockoutInfo({
-          lockoutTime: reduxLockoutInfo.lockoutTime,
-          unlockTime: unlockTime,
+          unlockTime: unlockTimeDate,
         });
+      } else {
+        setLockoutInfo(null);
       }
+    } else {
+      setLockoutInfo(null);
     }
-  }, [reduxLockoutInfo, season]);
+  }, [unlockTime]);
 
   useEffect(() => {
     let timer;
@@ -75,12 +78,13 @@ const SeasonSwitch = () => {
         dispatch(setSystemStatus('ONLINE'));
         toast.success(response.data.message);
 
-        const unlockTime = parseISO(response.data.unlock_time);
-        const newLockoutInfo = {
-          lockoutTime: response.data.mode_switch_lockout_time,
-          unlockTime: unlockTime,
-        };
-        setLockoutInfo(newLockoutInfo);
+        if (response.data.unlock_time) {
+          const unlockTime = parseISO(response.data.unlock_time);
+          setLockoutInfo({
+            unlockTime: unlockTime,
+          });
+          setSwitchDirection(null);
+        }
       }
     } catch (error) {
       dispatch(setSystemStatus('OFFLINE'));
@@ -183,10 +187,8 @@ const SeasonSwitch = () => {
       {lockoutInfo && (
         <div className="season-switch-overlay">
           <div className="switch-message">
-            <h3>
-              Switching to {season === 'toWinter' ? 'Winter' : 'Summer'} Mode
-            </h3>
-            <p>Time remaining: {countdown}</p>
+            <h3>System Locked</h3>
+            <p>Time remaining until next switch: {countdown}</p>
             <div className="lock-icon">🔒</div>
           </div>
         </div>

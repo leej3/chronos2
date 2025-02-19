@@ -8,9 +8,10 @@ from src.core.utils.constant import MANUAL_AUTO, MANUAL_OFF, MANUAL_ON, OFF, ON
 class Device(object):
     TYPE = "device"
 
-    def __init__(self):
-        self.device_repository = DeviceRepository()
+    def __init__(self, table_class_name=None):
+        self.device_repository = DeviceRepository(table_class_name)
         self.edge_server = EdgeServer()
+        self.table_class_name = table_class_name
 
     def _switch_state(self, command, relay_only=False):
         return self.edge_server._switch_state(command, relay_only)
@@ -37,17 +38,19 @@ class Device(object):
 
     def turn_on(self, relay_only=False):
         self._switch_state("on", relay_only=relay_only)
-        switched_timestamp = False
-        if not (relay_only):
+
+        if not relay_only and self.TYPE == "boiler":
             switched_timestamp = datetime.now()
             self._update_value_in_db(switched_timestamp=switched_timestamp)
 
     def turn_off(self, relay_only=False):
         self._switch_state("off", relay_only=relay_only)
-        now = False
-        if not relay_only:
-            now = datetime.now()
-            self._update_value_in_db(timestamp=now, switched_timestamp=now)
+
+        if not relay_only and self.TYPE == "boiler":
+            switched_timestamp = datetime.now()
+            self._update_value_in_db(
+                timestamp=switched_timestamp, switched_timestamp=switched_timestamp
+            )
 
     def _get_property_from_db(self, *args, **kwargs):
         return self.device_repository._get_property_from_db(*args, **kwargs)

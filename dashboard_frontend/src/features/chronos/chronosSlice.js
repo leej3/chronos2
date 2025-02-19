@@ -39,23 +39,7 @@ export const chronosSlice = createSlice({
         state.status = 'succeeded';
         state.systemStatus = data.status ? 'ONLINE' : 'OFFLINE';
         state.error = null;
-
-        if (data.results?.lockout_info) {
-          const unlockTime = new Date(data.results.lockout_info.unlock_time);
-          const now = new Date();
-          if (unlockTime > now) {
-            state.lockoutInfo = {
-              modeSwitchTimestamp:
-                data.results.lockout_info.mode_switch_timestamp,
-              lockoutTime: data.results.lockout_info.mode_switch_lockout_time,
-              unlockTime: data.results.lockout_info.unlock_time,
-            };
-          } else {
-            state.lockoutInfo = null;
-          }
-        } else {
-          state.lockoutInfo = null;
-        }
+        state.unlock_time = data.results?.unlock_time;
       })
       .addCase(fetchData.rejected, (state, action) => {
         state.status = 'failed';

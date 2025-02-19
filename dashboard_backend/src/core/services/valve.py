@@ -1,4 +1,6 @@
+from src.core.repositories.device_repository import DeviceRepository
 from src.core.services.device import Device
+from src.core.services.edge_server import EdgeServer
 from src.core.utils.constant import Relay
 
 
@@ -9,6 +11,8 @@ class Valve(Device):
         else:
             self.relay_number = Relay["{}_VALVE".format(season.upper())]
             self.table_class_name = "{}Valve".format(season.capitalize())
+            self.device_repository = DeviceRepository(self.table_class_name)
+            self.edge_server = EdgeServer()
 
     def __getattr__(self, name):
         if name in ("save_status", "restore_status"):

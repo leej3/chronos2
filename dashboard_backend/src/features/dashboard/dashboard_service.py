@@ -27,20 +27,10 @@ class DashboardService:
         mode_switch_timestamp = self.setting_repository._get_property_from_db(
             "mode_switch_timestamp"
         )
-        current_time = datetime.now()
 
-        lockout_info = None
-        if mode_switch_timestamp:
-            unlock_time = mode_switch_timestamp + timedelta(
-                minutes=settings.mode_switch_lockout_time
-            )
-            if current_time < unlock_time:
-                lockout_info = {
-                    "mode_switch_timestamp": mode_switch_timestamp.isoformat(),
-                    "mode_switch_lockout_time": settings.mode_switch_lockout_time,
-                    "unlock_time": unlock_time.isoformat(),
-                }
-
+        unlock_time = mode_switch_timestamp + timedelta(
+            minutes=settings.mode_switch_lockout_time
+        )
         edge_server_data = self.edge_server.get_data()
         # edge_server_data["devices"][0]["state"] = True
         results = {
@@ -64,7 +54,7 @@ class DashboardService:
                 else 0
             ),
             "wind_chill_avg": getattr(history, "avg_outside_temp", 0),
-            "lockout_info": lockout_info,
+            "unlock_time": unlock_time.isoformat(),
         }
 
         efficiency = self.calculate_efficiency()
@@ -271,17 +261,31 @@ class DashboardService:
         return reponse
 
     def switch_season_mode(self, season_value: int):
-        mode_values = [mode.value for mode in Mode]
+        """
+        Args:
+            season_value (int): The season value to switch to. SUMMER (0) or WINTER (1)
+
+        Step to switch seasion:
+        1. Change mode to WAITING_SWITCH_TO_WINTER or WAITING_SWITCH_TO_SUMMER:
+            - Turn off all devices
+            - Turn on/off valves (summer or winter)
+            - Add job to switch season after <mode_switch_lockout_time> minutes. <mode_switch_lockout_time> will be set in user's setting
+        3. Run the job to switch season after <mode_switch_lockout_time> minutes:
+            - Restore devices states
+            - Switch devices
+            - Change mode to SUMMER or WINTER
+        """
+
+        mode_values = [Mode.WINTER.value, Mode.SUMMER.value]
         if season_value not in mode_values:
             raise HTTPException(
                 status_code=400, detail=f"Invalid season value: {season_value}"
             )
 
-        self.chronos._switch_season(season_value)
-
-        # TODO Update Edge Server mode
-        # raise Exception("Test error for season mode switch")
-        # self.edge_server.set_mode(season_value)
+        if season_value == Mode.WINTER.value:
+            self.chronos._switch_season(Mode.WAITING_SWITCH_TO_WINTER.value)
+        else:
+            self.chronos._switch_season(Mode.WAITING_SWITCH_TO_SUMMER.value)
 
         current_time = datetime.now()
 

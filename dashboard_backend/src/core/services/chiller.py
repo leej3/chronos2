@@ -1,4 +1,3 @@
-from src.core.repositories.device_repository import DeviceRepository
 from src.core.repositories.history_repository import HistoryRepository
 from src.core.repositories.setting_repository import SettingRepository
 from src.core.services.device import Device
@@ -17,7 +16,7 @@ class Chiller(Device):
         self.table_class_name = f"Chiller{number}"
         self.history_repository = HistoryRepository()
         self.setting_repository = SettingRepository()
-        self.device_repository = DeviceRepository(self.table_class_name)
+        super().__init__(table_class_name=self.table_class_name)
 
     @property
     def setpoint(self):
