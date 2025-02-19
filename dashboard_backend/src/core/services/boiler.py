@@ -1,15 +1,16 @@
 from src.core.repositories.history_repository import HistoryRepository
 from src.core.repositories.setting_repository import SettingRepository
+from src.core.services.device import Device
 from src.core.utils.constant import Relay
 
 
-class Boiler:
+class Boiler(Device):
     TYPE = "boiler"
 
     def __init__(self):
+        super().__init__("Boiler")
         self.number = 0
-        self.relay_number = Relay.BOILER
-        self.table_class_name = "Boiler"
+        self.relay_number = Relay.BOILER.value
         self.history_repository = HistoryRepository()
         self.setting_repository = SettingRepository()
 

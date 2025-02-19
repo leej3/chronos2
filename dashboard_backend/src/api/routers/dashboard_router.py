@@ -4,8 +4,8 @@ from typing import Annotated
 from fastapi import APIRouter, Request, Security
 from fastapi.responses import JSONResponse, StreamingResponse
 from src.api.dependencies import get_current_user
-from src.api.dto.dashboard import UpdateDeviceState, UpdateSettings
-from src.core.common.exceptions import EdgeServerError
+from src.api.dto.dashboard import SwitchSeason, UpdateDeviceState, UpdateSettings
+from src.core.common.exceptions import ConnectToEdgeServerError, EdgeServerError
 from src.core.services.chronos import Chronos
 from src.core.services.edge_server import EdgeServer
 from src.features.auth.jwt_handler import UserToken
@@ -22,11 +22,16 @@ def get_edge_server():
     return EdgeServer()
 
 
+def get_dashboard_service():
+    return DashboardService()
+
+
 @router.get("/")
 def dashboard_data(
     request: Request,
     current_user: Annotated[UserToken, Security(get_current_user)],
     edge_server: Annotated[EdgeServer, Security(get_edge_server)],
+    dashboard_service: Annotated[DashboardService, Security(get_dashboard_service)],
 ):
     data = dashboard_service.get_data()
     return JSONResponse(content=data)
@@ -38,8 +43,13 @@ def update_state(
     current_user: Annotated[UserToken, Security(get_current_user)],
     edge_server: Annotated[EdgeServer, Security(get_edge_server)],
 ):
-    edge_server.update_device_state(id=data.id, state=data.state)
-    return JSONResponse(content={"message": "Updated state successfully"})
+    try:
+        edge_server.update_device_state(id=data.id, state=data.state)
+        return JSONResponse(content={"message": "Updated state successfully"})
+    except ConnectToEdgeServerError:
+        return JSONResponse(
+            content={"detail": "Could not connect to edge server"}, status_code=403
+        )
 
 
 @router.get("/download_log")
@@ -131,6 +141,9 @@ async def update_settings(
             content={"detail": f"Error updating settings: {str(e)}"},
             status_code=400,
         )
+    # Update for winter
+    # data = dashboard_service.update_settings(data)
+    # return JSONResponse(content=data)
 
 
 @router.get("/boiler_stats")
@@ -177,3 +190,14 @@ async def temperature_limits(
     """Get the valid temperature range for the boiler from the edge server."""
     data = edge_server.get_temperature_limits()
     return JSONResponse(content=data)
+
+
+@router.post("/switch-season")
+async def switch_season(
+    data: SwitchSeason,
+    current_user: Annotated[UserToken, Security(get_current_user)],
+    dashboard_service: Annotated[DashboardService, Security(get_dashboard_service)],
+    edge_server: Annotated[EdgeServer, Security(get_edge_server)],
+):
+    result = dashboard_service.switch_season_mode(data.season_value)
+    return JSONResponse(content=result, status_code=200)

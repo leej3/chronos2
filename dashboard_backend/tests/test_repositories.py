@@ -1,5 +1,6 @@
 import os
 import sys
+from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -103,3 +104,14 @@ def test_get_last_settings(mock_session):
     repo = SettingRepository()
     settings = repo.get_last_settings()
     assert settings.id == 1
+
+
+def test_update_mode_with_timestamp(mock_session):
+    repo = SettingRepository()
+
+    repo._update_property_in_db("mode", 0)
+
+    current_time = datetime.now()
+    repo._update_property_in_db("mode_switch_timestamp", current_time.isoformat())
+    time = repo._get_property_from_db("mode_switch_timestamp")
+    assert current_time == time

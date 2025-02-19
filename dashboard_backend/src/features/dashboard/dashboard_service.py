@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 
+from fastapi import HTTPException
 from sqlalchemy import desc, or_
 from sqlalchemy.sql import func
 from src.core.configs.database import session_scope
@@ -8,7 +9,7 @@ from src.core.repositories.history_repository import HistoryRepository
 from src.core.repositories.setting_repository import SettingRepository
 from src.core.services.chronos import Chronos
 from src.core.services.edge_server import EdgeServer
-from src.core.utils.constant import EFFICIENCY_HOUR
+from src.core.utils.constant import EFFICIENCY_HOUR, Mode
 
 
 class DashboardService:
@@ -22,6 +23,14 @@ class DashboardService:
         history = self.history_repository.get_last_history()
         settings = self.setting_repository.get_last_settings()
 
+        # Get mode switch timestamp and calculate remaining lockout time
+        mode_switch_timestamp = self.setting_repository._get_property_from_db(
+            "mode_switch_timestamp"
+        )
+
+        unlock_time = mode_switch_timestamp + timedelta(
+            minutes=settings.mode_switch_lockout_time
+        )
         edge_server_data = self.edge_server.get_data()
         # edge_server_data["devices"][0]["state"] = True
         results = {
@@ -45,6 +54,7 @@ class DashboardService:
                 else 0
             ),
             "wind_chill_avg": getattr(history, "avg_outside_temp", 0),
+            "unlock_time": unlock_time.isoformat(),
         }
 
         efficiency = self.calculate_efficiency()
@@ -236,3 +246,59 @@ class DashboardService:
 
     def get_boiler_stats(self):
         return self.edge_server.get_data_boiler_stats()
+
+    def update_settings(self, data):
+        mode = self.setting_repository._get_property_from_db("mode")
+        if mode == 0:
+            point = data.setpoint_offset_winter
+        else:
+            point = data.setpoint_offset_summer
+
+        reponse = self.edge_server.boiler_set_setpoint(point)
+        for key, value in data.dict().items():
+            if value is not None:
+                setattr(self.chronos, key, value)
+        return reponse
+
+    def switch_season_mode(self, season_value: int):
+        """
+        Args:
+            season_value (int): The season value to switch to. SUMMER (0) or WINTER (1)
+
+        Step to switch seasion:
+        1. Change mode to WAITING_SWITCH_TO_WINTER or WAITING_SWITCH_TO_SUMMER:
+            - Turn off all devices
+            - Turn on/off valves (summer or winter)
+            - Add job to switch season after <mode_switch_lockout_time> minutes. <mode_switch_lockout_time> will be set in user's setting
+        3. Run the job to switch season after <mode_switch_lockout_time> minutes:
+            - Restore devices states
+            - Switch devices
+            - Change mode to SUMMER or WINTER
+        """
+
+        mode_values = [Mode.WINTER.value, Mode.SUMMER.value]
+        if season_value not in mode_values:
+            raise HTTPException(
+                status_code=400, detail=f"Invalid season value: {season_value}"
+            )
+
+        if season_value == Mode.WINTER.value:
+            self.chronos._switch_season(Mode.WAITING_SWITCH_TO_WINTER.value)
+        else:
+            self.chronos._switch_season(Mode.WAITING_SWITCH_TO_SUMMER.value)
+
+        current_time = datetime.now()
+
+        settings = self.setting_repository.get_last_settings()
+
+        unlock_time = current_time + timedelta(
+            minutes=settings.mode_switch_lockout_time
+        )
+
+        return {
+            "status": "success",
+            "mode": season_value,
+            "mode_switch_timestamp": current_time.isoformat(),
+            "mode_switch_lockout_time": self.chronos.mode_switch_lockout_time,
+            "unlock_time": unlock_time.isoformat(),
+        }

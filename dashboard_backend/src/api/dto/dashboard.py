@@ -3,6 +3,10 @@ from typing import Optional
 from pydantic import BaseModel, Field, validator
 
 
+class SwitchSeason(BaseModel):
+    season_value: int
+
+
 class UpdateDeviceState(BaseModel):
     id: int
     state: bool
