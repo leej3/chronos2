@@ -6,6 +6,7 @@ import { toast } from 'react-toastify';
 import { format, parseISO } from 'date-fns';
 import { setSeason, setSystemStatus } from '../../features/state/seasonSlice';
 import { switchSeason } from '../../api/switchSeason';
+import { CAlert } from '@coreui/react';
 import './SeasonSwitch.css';
 
 const SeasonSwitch = () => {
@@ -16,6 +17,8 @@ const SeasonSwitch = () => {
   const [lockoutInfo, setLockoutInfo] = useState(null);
   const [countdown, setCountdown] = useState(null);
   const [switchDirection, setSwitchDirection] = useState(null);
+  const [alertColor, setAlertColor] = useState('danger');
+  const [alertMessage, setAlertMessage] = useState('');
 
   useEffect(() => {
     if (reduxLockoutInfo) {
@@ -57,7 +60,8 @@ const SeasonSwitch = () => {
 
   const handleSeasonChange = async (newSeason) => {
     if (readOnlyMode) {
-      toast.error('Read only mode is enabled');
+      setAlertColor('warning');
+      setAlertMessage('You are in read only mode');
       return;
     }
     try {
@@ -87,6 +91,25 @@ const SeasonSwitch = () => {
 
   return (
     <>
+      {alertMessage && (
+        <CAlert
+          className="mb-0 text-center"
+          color={alertColor}
+          dismissible
+          onClose={() => {
+            setAlertMessage('');
+            setAlertColor('danger');
+          }}
+        >
+          {alertColor === 'warning' ? (
+            alertMessage
+          ) : (
+            <>
+              <strong>Error!</strong> {alertMessage}
+            </>
+          )}
+        </CAlert>
+      )}
       <div className="season-toggle-header">
         <CTooltip
           content={

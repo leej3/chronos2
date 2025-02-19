@@ -142,9 +142,9 @@ const AppHeader = () => {
           </CCol>
 
           <CCol xs={6} md={6}>
-            <div className="d-flex flex-column flex-md-row justify-content-md-end h-100">
+            <div className="d-flex flex-column flex-md-row justify-content-md-end h-100 ">
               {mockDevices && (
-                <div className="mock-devices-alert me-md-3 text-danger">
+                <div className="mock-devices-alert me-md-3 text-danger mb-0">
                   <CIcon
                     icon={cilFactorySlash}
                     className="me-1 me-sm-2"
@@ -152,6 +152,18 @@ const AppHeader = () => {
                   />
                   <span className="text-nowrap" style={{ fontSize: '0.9rem' }}>
                     Mock Devices Mode
+                  </span>
+                </div>
+              )}
+              {readOnlyMode && (
+                <div className="mock-devices-alert me-md-3 text-warning mb-0">
+                  <CIcon
+                    icon={cilLockLocked}
+                    className="me-1 me-sm-2"
+                    style={{ width: '0.9rem' }}
+                  />
+                  <span className="text-nowrap" style={{ fontSize: '0.9rem' }}>
+                    Read Only Mode
                   </span>
                 </div>
               )}

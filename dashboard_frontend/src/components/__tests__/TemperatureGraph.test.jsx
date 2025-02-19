@@ -39,7 +39,6 @@ describe('TemperatureGraph', () => {
     await act(async () => {
       render(<TemperatureGraph />);
     });
-    console.log(screen.debug());
     expect(
       screen.getByText(/Inlet\/Outlet Temperature History/i),
     ).toBeInTheDocument();

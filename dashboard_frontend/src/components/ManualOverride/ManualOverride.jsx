@@ -28,8 +28,6 @@ const ManualOverride = ({ data }) => {
   const [alertColor, setAlertColor] = useState('danger');
   // const [socket, setSocket] = useState(null);
 
-  console.log('Read only mode state:', readOnlyMode);
-
   useEffect(() => {
     if (!data?.devices) return;
 
@@ -65,7 +63,6 @@ const ManualOverride = ({ data }) => {
     }
 
     setAlertColor('danger');
-    console.log(device, newState);
 
     const deviceName = device.charAt(0).toUpperCase() + device.slice(1);
     const statusText = newState ? 'ON' : 'OFF';
@@ -168,11 +165,20 @@ const ManualOverride = ({ data }) => {
               <div className="p-3">
                 {alertMessage && (
                   <CAlert
-                    color="danger"
+                    color={alertColor}
                     dismissible
-                    onClose={() => setAlertMessage('')}
+                    onClose={() => {
+                      setAlertMessage('');
+                      setAlertColor('danger');
+                    }}
                   >
-                    <strong>Error!</strong> {alertMessage}
+                    {alertColor === 'warning' ? (
+                      alertMessage
+                    ) : (
+                      <>
+                        <strong>Error!</strong> {alertMessage}
+                      </>
+                    )}
                   </CAlert>
                 )}
                 <CRow className="g-3 mx-0">
