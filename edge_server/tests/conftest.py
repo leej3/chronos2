@@ -134,12 +134,16 @@ def device(mock_modbus_client):
 
 
 @pytest.fixture
-def mock_modbus_device():
+def mock_modbus_device(monkeypatch):
     """Mock ModbusDevice for testing."""
-    mock_device = MagicMock()
+    mock_device = MagicMock(spec=ModbusDevice)
     mock_device.is_connected.return_value = True
 
-    # Set default return values for commonly used methods
+    # Add mock client
+    mock_client = MagicMock()
+    mock_client.is_socket_open.return_value = True
+    mock_device.client = mock_client
+
     mock_device.read_boiler_data.return_value = {
         "system_supply_temp": 154.4,
         "outlet_temp": 158.0,
@@ -147,46 +151,46 @@ def mock_modbus_device():
         "flue_temp": 176.0,
         "cascade_current_power": 50.0,
         "lead_firing_rate": 75.0,
-        "water_flow_rate": 10.0,
         "pump_status": True,
         "flame_status": True,
     }
-
     mock_device.read_operating_status.return_value = {
         "operating_mode": 3,
         "operating_mode_str": "Central Heat",
         "cascade_mode": 0,
         "cascade_mode_str": "Single Boiler",
-        "current_setpoint": 158.0,
+        "current_setpoint": 90.0,
     }
-
     mock_device.set_boiler_setpoint.return_value = True
+    mock_device.get_temperature_limits.return_value = {
+        "min_setpoint": 75.0,
+        "max_setpoint": 105.0,
+    }
+    mock_device.set_temperature_limits.return_value = True
 
-    # Mock the context manager
-    with (
-        patch("chronos.devices.ModbusDevice") as mock_device_class,
-        patch("chronos.devices.create_modbus_connection") as mock_create,
-    ):
-        # Configure ModbusDevice mock
-        mock_device_class.return_value = mock_device
+    # Create a context manager mock that returns our mock_device
+    mock_context = MagicMock()
+    mock_context.__enter__ = lambda _: mock_device
+    mock_context.__exit__ = lambda *args: None
 
-        # Configure the context manager mock
-        mock_create.return_value.__enter__.return_value = mock_device
-        mock_create.return_value.__exit__.return_value = None
-
-        yield mock_device
+    # Patch the create_modbus_connection function to return our mock context
+    monkeypatch.setattr("chronos.app.create_modbus_connection", lambda: mock_context)
+    return mock_device
 
 
 # SerialDevice fixtures
 @pytest.fixture
-def mock_serial_devices():
-    """Mock all serial devices."""
-    with patch("chronos.devices.SerialDevice") as mock:
-        mock_instances = [MagicMock() for _ in range(5)]
-        mock.side_effect = mock_instances
-        for inst in mock_instances:
-            inst.state = False
-        yield mock_instances
+def mock_serial_devices(monkeypatch):
+    """Mock serial devices for testing."""
+    mock_devices = []
+    for i in range(5):
+        device = MagicMock()
+        device.id = i
+        device.state = True
+        mock_devices.append(device)
+
+    monkeypatch.setattr("chronos.app.DEVICES", mock_devices)
+    return mock_devices
 
 
 @pytest.fixture
@@ -197,30 +201,35 @@ def device_serial():
 
 # Temperature sensor fixture
 @pytest.fixture
-def mock_temperature_sensor():
-    """Mock temperature sensor readings."""
-    with patch("chronos.devices.read_temperature_sensor") as mock:
-        mock.return_value = 72.5  # Default test temperature in °F
-        yield mock
+def mock_temperature_sensor(monkeypatch):
+    """Mock temperature sensor for testing."""
+
+    def mock_read_temp(*args, **kwargs):
+        return 75.0
+
+    monkeypatch.setattr("chronos.app.safe_read_temperature", mock_read_temp)
 
 
 # Log file fixture
 @pytest.fixture
 def mock_log_file():
     """Create a temporary log file for testing."""
-    with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
-        f.write("Test log content\n")
-        temp_path = f.name
-
-    # Mock the config to use our temporary file
-    original_path = cfg.files.log_path
-    cfg.files.log_path = temp_path
-
-    yield temp_path
-
-    # Cleanup
-    cfg.files.log_path = original_path
+    with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
+        temp_file.write("Test log content")
+        temp_file.flush()
+        cfg.files.log_path = temp_file.name
+        yield temp_file.name
     try:
-        os.unlink(temp_path)
+        os.unlink(temp_file.name)
     except OSError:
         pass
+
+
+@pytest.fixture(autouse=True)
+def reset_config():
+    """Reset configuration before each test."""
+    original_mock_devices = cfg.MOCK_DEVICES
+    original_read_only = cfg.READ_ONLY_MODE
+    yield
+    cfg.MOCK_DEVICES = original_mock_devices
+    cfg.READ_ONLY_MODE = original_read_only

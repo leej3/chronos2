@@ -11,6 +11,7 @@ env-*
 !.env.deployment
 
 # Build and development
+*.log
 .DS_Store
 .venv
 __pycache__

@@ -7,61 +7,54 @@ import { format, parseISO } from 'date-fns';
 import { switchSeason } from '../../api/switchSeason';
 import { fetchData } from '../../features/chronos/chronosSlice';
 import './SeasonSwitch.css';
+import { SEASON_MODE } from '../../utils/constant';
 
 const SeasonSwitch = () => {
   const dispatch = useDispatch();
   const season = useSelector((state) => state.chronos.season);
   const readOnlyMode = useSelector((state) => state.chronos.read_only_mode);
   const unlockTime = useSelector((state) => state.chronos.unlock_time);
+
   const [countdown, setCountdown] = useState(null);
   const [switchDirection, setSwitchDirection] = useState(null);
-  const [alertColor, setAlertColor] = useState('danger');
-  const [alertMessage, setAlertMessage] = useState('');
+  const [alertState, setAlertState] = useState({ color: '', message: '' });
   const [isAnimating, setIsAnimating] = useState(false);
 
   useEffect(() => {
-    let timer;
-    if (unlockTime) {
-      const updateCountdown = () => {
-        const unlockTimeDate = parseISO(unlockTime);
-        const now = new Date();
-        const diff = unlockTimeDate.getTime() - now.getTime();
-
-        if (diff <= 0) {
-          setCountdown(null);
-          setSwitchDirection(null);
-          setIsAnimating(false);
-          clearInterval(timer);
-        } else {
-          const minutes = Math.floor(diff / 1000 / 60);
-          const seconds = Math.floor((diff / 1000) % 60);
-          setCountdown(`${minutes}:${seconds.toString().padStart(2, '0')}`);
-        }
-      };
-
-      updateCountdown();
-      timer = setInterval(updateCountdown, 1000);
-    } else {
-      setCountdown(null);
-      setSwitchDirection(null);
-      setIsAnimating(false);
-    }
-
-    return () => {
-      if (timer) clearInterval(timer);
-    };
-  }, [unlockTime]);
-
-  const handleSeasonChange = async (newSeason) => {
-    if (readOnlyMode) {
-      setAlertColor('warning');
-      setAlertMessage('You are in read only mode');
+    if (!unlockTime) {
+      resetStates();
       return;
     }
 
+    const updateCountdown = () => {
+      const timeRemaining =
+        parseISO(unlockTime).getTime() - new Date().getTime();
+
+      if (timeRemaining <= 0) {
+        resetStates();
+        return;
+      }
+
+      const minutes = Math.floor(timeRemaining / 1000 / 60);
+      const seconds = Math.floor((timeRemaining / 1000) % 60);
+      setCountdown(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+    };
+
+    const timer = setInterval(updateCountdown, 1000);
+    updateCountdown();
+
+    return () => clearInterval(timer);
+  }, [unlockTime]);
+
+  const resetStates = () => {
+    setCountdown(null);
+    setSwitchDirection(null);
+    setIsAnimating(false);
+  };
+
+  const handleSeasonChange = async (newSeason) => {
     if (readOnlyMode) {
-      setAlertColor('warning');
-      setAlertMessage('You are in read only mode');
+      setAlertState({ color: 'warning', message: 'You are in read only mode' });
       return;
     }
 
@@ -69,75 +62,96 @@ const SeasonSwitch = () => {
 
     try {
       const seasonValue = newSeason === 'Winter' ? 0 : 1;
-      setSwitchDirection(newSeason === 'Winter' ? 'toWinter' : 'toSummer');
+      setSwitchDirection(`to${newSeason}`);
       setIsAnimating(true);
 
       await switchSeason(seasonValue);
       dispatch(fetchData());
     } catch (error) {
-      setSwitchDirection(null);
-      setIsAnimating(false);
+      resetStates();
     }
   };
 
   const getSeasonClassName = (seasonType) => {
-    const baseClass = 'season-icon';
-    const classes = [
-      baseClass,
-      season === (seasonType === 'Winter' ? 0 : 1) ? 'active disabled' : '',
+    const isActive = season === (seasonType === 'Winter' ? 0 : 1);
+    return [
+      'season-icon',
+      isActive ? 'active disabled' : '',
       unlockTime ? 'locked' : '',
       switchDirection === `to${seasonType}`
         ? `switching-${seasonType.toLowerCase()}`
         : '',
-    ];
-    return classes.filter(Boolean).join(' ');
+    ]
+      .filter(Boolean)
+      .join(' ');
   };
+
+  const getSeasonImage = (seasonType) => {
+    const isWinter = seasonType === 'Winter';
+    const isWinterMode =
+      season === SEASON_MODE.WINTER ||
+      season === SEASON_MODE.WAITING_SWITCH_TO_SUMMER ||
+      season === SEASON_MODE.SWITCHING_TO_SUMMER;
+
+    return `/images/Icons/WinterSummer/${
+      (isWinter && isWinterMode) || (!isWinter && !isWinterMode)
+        ? `${isWinter ? 'W' : 'S'}On`
+        : `${isWinter ? 'W' : 'S'}Off`
+    }.png`;
+  };
+
+  const getTooltipContent = (seasonType) => {
+    if (unlockTime && countdown) return `Locked - ${countdown} remaining`;
+    const isCurrentSeason = season === (seasonType === 'Winter' ? 0 : 1);
+    return isCurrentSeason
+      ? `Currently in ${seasonType} mode`
+      : `Switch to ${seasonType} mode`;
+  };
+
+  const renderSeasonButton = (seasonType) => (
+    <CTooltip content={getTooltipContent(seasonType)} placement="bottom">
+      <div
+        className={getSeasonClassName(seasonType)}
+        onClick={() => {
+          const canSwitch =
+            !unlockTime &&
+            !isAnimating &&
+            season !== (seasonType === 'Winter' ? 0 : 1);
+          if (canSwitch) handleSeasonChange(seasonType);
+        }}
+      >
+        <img
+          src={getSeasonImage(seasonType)}
+          alt={seasonType}
+          className="season-icon-img"
+        />
+        <span>{seasonType}</span>
+      </div>
+    </CTooltip>
+  );
 
   return (
     <>
-      {alertMessage && (
+      {alertState.message && (
         <CAlert
           className="m-0 text-center"
-          color={alertColor}
+          color={alertState.color}
           dismissible
-          onClose={() => setAlertMessage('')}
+          onClose={() => setAlertState({ color: '', message: '' })}
         >
-          <strong>{alertColor === 'danger' ? 'Error!' : 'Warning!'}</strong>{' '}
-          {alertMessage}
+          <strong>
+            {alertState.color === 'danger' ? 'Error!' : 'Warning!'}
+          </strong>{' '}
+          {alertState.message}
         </CAlert>
       )}
-      <div className="season-toggle-header">
-        <CTooltip
-          content={
-            unlockTime && countdown
-              ? `Locked - ${countdown} remaining`
-              : season === 0
-              ? 'Currently in Winter mode'
-              : 'Switch to Winter mode'
-          }
-          placement="bottom"
-        >
-          <div
-            className={getSeasonClassName('Winter')}
-            onClick={() =>
-              !unlockTime &&
-              !isAnimating &&
-              season !== 0 &&
-              handleSeasonChange('Winter')
-            }
-          >
-            <img
-              src={`/images/Icons/WinterSummer/${
-                season === 0 || season === 3 || season === 5 ? 'WOn' : 'WOff'
-              }.png`}
-              alt="Winter"
-              className="season-icon-img"
-            />
-            <span>Winter</span>
-          </div>
-        </CTooltip>
 
-        {season === 0 || season === 3 || season === 5 ? (
+      <div className="season-toggle-header">
+        {renderSeasonButton('Winter')}
+
+        {season === SEASON_MODE.WINTER ||
+        season === SEASON_MODE.WAITING_SWITCH_TO_SUMMER ||
+        season === SEASON_MODE.SWITCHING_TO_SUMMER ? (
           <BsArrowRight
             className={`arrow-icon ${switchDirection ? 'switching' : ''}`}
           />
@@ -147,35 +161,7 @@ const SeasonSwitch = () => {
           />
         )}
 
-        <CTooltip
-          content={
-            unlockTime && countdown
-              ? `Locked - ${countdown} remaining`
-              : season === 1
-              ? 'Currently in Summer mode'
-              : 'Switch to Summer mode'
-          }
-          placement="bottom"
-        >
-          <div
-            className={getSeasonClassName('Summer')}
-            onClick={() =>
-              !unlockTime &&
-              !isAnimating &&
-              season !== 1 &&
-              handleSeasonChange('Summer')
-            }
-          >
-            <img
-              src={`/images/Icons/WinterSummer/${
-                season === 1 || season === 2 || season === 4 ? 'SOn' : 'SOff'
-              }.png`}
-              alt="Summer"
-              className="season-icon-img"
-            />
-            <span>Summer</span>
-          </div>
-        </CTooltip>
+        {renderSeasonButton('Summer')}
       </div>
 
       {unlockTime && countdown && (

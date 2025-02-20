@@ -167,7 +167,7 @@ const ManualOverride = ({ data }) => {
         <CTooltip
           content={
             isDisabled
-              ? `${deviceName} not available in ${season} mode`
+              ? `${deviceName} is currently locked at this time`
               : 'Click to switch between ON and OFF'
           }
           placement="top"

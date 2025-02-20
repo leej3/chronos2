@@ -12,3 +12,12 @@ export const getDeviceId = (device) => DEVICES[device];
 
 export const REFRESH_TIME = 5;
 export const RETRY_TIME = 10;
+
+export const SEASON_MODE = {
+  WINTER: 0,
+  SUMMER: 1,
+  WAITING_SWITCH_TO_WINTER: 2,
+  WAITING_SWITCH_TO_SUMMER: 3,
+  SWITCHING_TO_WINTER: 4,
+  SWITCHING_TO_SUMMER: 5,
+};
