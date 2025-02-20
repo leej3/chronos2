@@ -31,6 +31,7 @@ it('should render and toggle device states', async () => {
     },
     chronos: {
       read_only_mode: false,
+      season: 0,
     },
   });
 
@@ -46,12 +47,10 @@ it('should render and toggle device states', async () => {
             { id: 5, state: true },
           ],
         }}
-        season="Summer"
       />
     </Provider>,
   );
 
-  expect(screen.getByText('Manual Override')).toBeInTheDocument();
   expect(screen.getByText('Boiler')).toBeInTheDocument();
   expect(screen.getByText('Chiller1')).toBeInTheDocument();
 

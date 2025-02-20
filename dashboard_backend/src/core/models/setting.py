@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from sqlalchemy import INTEGER, REAL, Column, DateTime
 
 from .base import Base
@@ -16,6 +14,6 @@ class Settings(Base):
     tolerance = Column(REAL, default=0, nullable=False)
     mode_change_delta_temp = Column(INTEGER, default=0, nullable=False)
     cascade_time = Column(INTEGER, default=0, nullable=False)
-    mode = Column(INTEGER, default=1, nullable=False)
-    mode_switch_timestamp = Column(DateTime, default=datetime.now, nullable=False)
+    mode = Column(INTEGER, default=0, nullable=False)
+    mode_switch_timestamp = Column(DateTime, nullable=True)
     mode_switch_lockout_time = Column(INTEGER, default=2, nullable=False)

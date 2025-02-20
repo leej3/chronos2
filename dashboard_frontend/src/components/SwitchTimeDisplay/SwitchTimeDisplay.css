@@ -1,0 +1,36 @@
+.switch-time-container {
+  padding: 10px;
+}
+
+.switch-time-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 12px;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+}
+
+.switch-time-label {
+  font-weight: 500;
+}
+
+.switch-time-value {
+  font-size: 1.1em;
+  background-color: #e9ecef;
+  padding: 4px 8px;
+  border-radius: 3px;
+}
+
+.switch-time-grid {
+  padding: 0.5rem;
+}
+
+.switch-time-grid > div {
+  padding: 0.25rem 0;
+}
+
+.switch-time-grid span {
+  font-size: 1.1em;
+}

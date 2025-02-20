@@ -1,14 +1,14 @@
-.bgr {
+.card {
   background-color: #1a1a1a;
   border-radius: 16px;
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
   text-align: center;
-  border: 2px solid #6c7a96;
-  padding: 16px; /* Add px to avoid errors */
 }
-
-/* Default for large screens */
+.container-fluid {
+  padding: 0 2%;
+}
 .item {
+  background-color: #212631;
   border: 0;
   padding: 0;
   margin-right: 10%;
@@ -24,10 +24,6 @@
 }
 
 @media (max-width: 480px) {
-  .bgr {
-    padding: 12px;
-  }
-
   .item {
     width: 100%;
     margin: 0 auto;
@@ -106,4 +102,49 @@
   margin-top: 1rem;
   font-size: 1.2rem;
   color: #666;
+}
+
+.chronous-title {
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.temp-value {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #17a2b8;
+  margin-top: 4px;
+}
+
+.temp-label {
+  margin-top: 8px;
+  font-size: 16px;
+  color: #f0f0f0;
+  font-weight: 700;
+  flex-shrink: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+@media (max-width: 768px) {
+  .temp-value {
+    font-size: 0.9rem;
+  }
+  .temp-label {
+    font-size: 1rem;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1200px) {
+  .temp-value {
+    font-size: 1rem;
+  }
+  .temp-label {
+    font-size: 1rem;
+  }
+}
+
+.content-container-mobile {
+  padding: 4px;
 }

@@ -8,7 +8,7 @@
     "build": "vite build",
     "eslint": "eslint . --fix",
     "start": "vite preview --host 0.0.0.0",
-    "test": "node --no-deprecation ./node_modules/.bin/jest --config jest.config.cjs",
+    "test": "jest",
     "prettier": "prettier . --write",
     "lint": "npm run prettier && npm run eslint"
   },
@@ -20,6 +20,8 @@
     "@vitejs/plugin-react": "^4.3.4",
     "axios": "^1.5.0",
     "babel-plugin-transform-import-meta": "^2.2.1",
+    "date-fns": "^4.1.0",
+    "date-fns-tz": "^3.2.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-icons": "^5.3.0",

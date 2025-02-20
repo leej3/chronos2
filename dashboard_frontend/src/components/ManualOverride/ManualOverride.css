@@ -1,0 +1,61 @@
+.manual-override {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.device-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 100px;
+}
+
+.device-name {
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+  font-weight: 500;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.device-control {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.device-control.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  position: relative;
+}
+
+.device-control.disabled::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: transparent;
+  cursor: not-allowed;
+  z-index: 1;
+}
+
+.device-control.disabled * {
+  cursor: not-allowed;
+}
+
+.device-switch {
+  cursor: pointer;
+}
+
+.device-switch:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.form-switch.disabled .form-check-input:checked {
+  background-color: #6c757d;
+  border-color: #6c757d;
+}
