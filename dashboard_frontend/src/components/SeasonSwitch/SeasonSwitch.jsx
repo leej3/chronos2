@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BsArrowRight, BsArrowLeft } from 'react-icons/bs';
-import { CTooltip } from '@coreui/react';
+import { CTooltip, CAlert } from '@coreui/react';
 import { useSelector, useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
 import { format, parseISO } from 'date-fns';
@@ -12,9 +12,12 @@ const SeasonSwitch = () => {
   const dispatch = useDispatch();
   const season = useSelector((state) => state.chronos.season);
   const reduxLockoutInfo = useSelector((state) => state.chronos.lockoutInfo);
+  const readOnlyMode = useSelector((state) => state.chronos.read_only_mode);
   const [lockoutInfo, setLockoutInfo] = useState(null);
   const [countdown, setCountdown] = useState(null);
   const [switchDirection, setSwitchDirection] = useState(null);
+  const [alertMessage, setAlertMessage] = useState(null);
+  const [alertColor, setAlertColor] = useState(null);
 
   useEffect(() => {
     if (reduxLockoutInfo) {
@@ -56,6 +59,12 @@ const SeasonSwitch = () => {
 
   const handleSeasonChange = async (newSeason) => {
     try {
+      if (readOnlyMode) {
+        setAlertColor('warning');
+        setAlertMessage('You are in read only mode');
+        return;
+      }
+
       const seasonValue = newSeason === 'Winter' ? 0 : 1;
       setSwitchDirection(newSeason === 'Winter' ? 'toWinter' : 'toSummer');
 
@@ -82,6 +91,17 @@ const SeasonSwitch = () => {
 
   return (
     <>
+      {alertMessage && (
+        <CAlert
+          className="m-0 text-center"
+          color={alertColor}
+          dismissible
+          onClose={() => setAlertMessage('')}
+        >
+          <strong>{alertColor === 'danger' ? 'Error!' : 'Warning!'}</strong>{' '}
+          {alertMessage}
+        </CAlert>
+      )}
       <div className="season-toggle-header">
         <CTooltip
           content={

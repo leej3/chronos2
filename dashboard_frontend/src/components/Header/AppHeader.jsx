@@ -23,8 +23,6 @@ const AppHeader = () => {
   const season = useSelector((state) => state.chronos.season);
   const data = useSelector((state) => state.chronos.data);
 
-  const outdoorTemp = data?.results?.outside_temp || 'N/A';
-  const avgTemp = data?.efficiency?.average_temperature_difference || 'N/A';
   // Get mockDevices state from Redux store
   const mockDevices = useSelector((state) => state.chronos.mock_devices);
   const readOnlyMode = useSelector((state) => state.chronos.read_only_mode);

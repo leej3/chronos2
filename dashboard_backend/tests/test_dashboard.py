@@ -1,6 +1,6 @@
 import os
 import sys
-import time
+from datetime import datetime, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
@@ -149,8 +149,8 @@ def test_chart_data(client):
 def test_update_settings(client, mock_edge_server):
     settings_data = {
         "tolerance": 1,
-        "setpoint_min": 1,
-        "setpoint_max": 10,
+        "setpoint_min": 75,  # Within valid range
+        "setpoint_max": 105,  # Within valid range
         "setpoint_offset_summer": 140,
         "setpoint_offset_winter": 130.0,
         "mode_change_delta_temp": 3,
@@ -171,5 +171,42 @@ def test_update_settings(client, mock_edge_server):
     response = client.post("/api/update_settings", json=settings_data)
     assert response.status_code == 403
     assert response.json() == {
-        "message": f"Temperature setpoint set to {settings_data['setpoint_offset_winter']}°F"
+        "detail": "Operation not permitted: system is in read-only mode"
     }
+
+
+def test_switch_season(client, mock_dashboard_service, mock_switch_season_response):
+    # Setup mock
+    mock_dashboard_service.switch_season_mode.return_value = mock_switch_season_response
+
+    # Test switching to Winter mode
+    response = client.post("/api/switch-season", json={"season_value": 0})
+    assert response.status_code == 200
+    assert response.json()["status"] == "success"
+    assert response.json()["mode"] == 0
+    assert "unlock_time" in response.json()
+    assert "mode_switch_lockout_time" in response.json()
+
+    # Test invalid season value
+    response = client.post("/api/switch-season", json={"season_value": 3})
+    assert response.status_code == 400
+    assert "error" in response.json()["status"]
+
+
+def test_get_data_with_lockout(client, mock_dashboard_service):
+    current_time = datetime.now()
+    mock_response = {
+        "results": {
+            "mode": 0,
+            "lockout_info": {
+                "mode_switch_timestamp": current_time.isoformat(),
+                "mode_switch_lockout_time": 2,
+                "unlock_time": (current_time + timedelta(minutes=2)).isoformat(),
+            },
+        }
+    }
+    mock_dashboard_service.get_data.return_value = mock_response
+
+    response = client.get("/api/")
+    assert response.status_code == 200
+    assert "lockout_info" in response.json()["results"]

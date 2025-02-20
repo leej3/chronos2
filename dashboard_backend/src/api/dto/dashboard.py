@@ -7,10 +7,6 @@ class SwitchSeason(BaseModel):
     season_value: int
 
 
-class SwitchSeason(BaseModel):
-    season_value: int
-
-
 class UpdateDeviceState(BaseModel):
     id: int
     state: bool

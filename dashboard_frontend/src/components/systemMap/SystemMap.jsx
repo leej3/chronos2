@@ -1,11 +1,11 @@
 import React, { memo } from 'react';
-import { CRow, CCol, CCard, CCardBody, CButton } from '@coreui/react';
+import { CRow, CCol, CCard, CCardBody } from '@coreui/react';
 import { useSelector } from 'react-redux';
 
 import { formatTemperature } from '../../utils/tranform';
 import './SystemMap.css';
 
-const SystemMap = ({ homedata, season, boiler }) => {
+const SystemMap = memo(({ homedata, season, boiler }) => {
   const { sensors } = homedata || {};
   const {
     cascade_current_power,
@@ -106,18 +106,6 @@ const SystemMap = ({ homedata, season, boiler }) => {
                     </span>
                   </div>
                 </div>
-              </CCol>
-            </CRow>
-            <CRow className="d-flex justify-content-end d-lg-none">
-              <CCol xs="auto" className="px-1 mt-2">
-                <CButton
-                  color="primary"
-                  className="mb-2 mt-2"
-                  onClick={openModal}
-                  block="true"
-                >
-                  Manual Override
-                </CButton>
               </CCol>
             </CRow>
           </CCardBody>
@@ -246,6 +234,6 @@ const SystemMap = ({ homedata, season, boiler }) => {
   );
 
   return <>{season === 0 ? renderWinterView() : renderSummerView()}</>;
-};
+});
 
 export default SystemMap;
