@@ -59,6 +59,12 @@ const SeasonSwitch = () => {
       return;
     }
 
+    if (readOnlyMode) {
+      setAlertColor('warning');
+      setAlertMessage('You are in read only mode');
+      return;
+    }
+
     if (isAnimating) return;
 
     try {
@@ -67,14 +73,10 @@ const SeasonSwitch = () => {
       setIsAnimating(true);
 
       await switchSeason(seasonValue);
-
-      setSwitchDirection(null);
-      setIsAnimating(false);
       dispatch(fetchData());
     } catch (error) {
       setSwitchDirection(null);
       setIsAnimating(false);
-      toast.error(error?.message || 'Failed to switch season');
     }
   };
 
@@ -110,8 +112,8 @@ const SeasonSwitch = () => {
             unlockTime && countdown
               ? `Locked - ${countdown} remaining`
               : season === 0
-              ? 'Currently in Winter mode'
-              : 'Switch to Winter mode'
+                ? 'Currently in Winter mode'
+                : 'Switch to Winter mode'
           }
           placement="bottom"
         >
@@ -150,8 +152,8 @@ const SeasonSwitch = () => {
             unlockTime && countdown
               ? `Locked - ${countdown} remaining`
               : season === 1
-              ? 'Currently in Summer mode'
-              : 'Switch to Summer mode'
+                ? 'Currently in Summer mode'
+                : 'Switch to Summer mode'
           }
           placement="bottom"
         >

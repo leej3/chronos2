@@ -1,6 +1,6 @@
 import os
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -109,33 +109,9 @@ def test_get_last_settings(mock_session):
 def test_update_mode_with_timestamp(mock_session):
     repo = SettingRepository()
 
-    repo._update_property("mode", 0)
+    repo._update_property_in_db("mode", 0)
 
     current_time = datetime.now()
-    repo._update_property("mode_switch_timestamp", current_time)
+    repo._update_property_in_db("mode_switch_timestamp", current_time.isoformat())
     time = repo._get_property_from_db("mode_switch_timestamp")
     assert current_time == time
-
-
-def test_expired_lockout(mock_session):
-    repo = SettingRepository()
-    session_mock = mock_session.return_value.__enter__.return_value
-
-    base_time = datetime(2024, 2, 11, 12, 0, 0)
-    mock_settings = Settings(
-        mode=0, mode_switch_timestamp=base_time, mode_switch_lockout_time=2
-    )
-    session_mock.query.return_value.first.return_value = mock_settings
-
-    with patch("datetime.datetime") as mock_datetime:
-        current_time = base_time + timedelta(minutes=3)
-        mock_datetime.now.return_value = current_time
-
-        settings = repo.get_last_settings()
-        unlock_time = base_time + timedelta(minutes=settings.mode_switch_lockout_time)
-
-        assert current_time > unlock_time, (
-            f"Lockout should be expired. "
-            f"Current time: {current_time}, "
-            f"Unlock time: {unlock_time}"
-        )

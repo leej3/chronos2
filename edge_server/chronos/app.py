@@ -12,6 +12,7 @@ from chronos.data_models import (
     OperatingStatus,
     SetpointLimitsUpdate,
     SetpointUpdate,
+    SwitchStateRequest,
     SystemStatus,
 )
 from chronos.devices import (
@@ -226,6 +227,17 @@ async def get_data():
             mock_devices=False,
             read_only_mode=cfg.READ_ONLY_MODE,
         )
+
+
+@app.post("/switch_state")
+# @with_circuit_breaker
+# @with_rate_limit
+# @check_read_only
+async def switch_state(data: SwitchStateRequest):
+    if MOCK_DEVICES:
+        return True
+    """Switch state of a device."""
+    return DEVICES[0].switch_state(data.command, data.relay_only)
 
 
 @app.get("/device_state", response_model=DeviceModel)

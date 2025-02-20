@@ -9,7 +9,7 @@ from src.core.repositories.history_repository import HistoryRepository
 from src.core.repositories.setting_repository import SettingRepository
 from src.core.services.chronos import Chronos
 from src.core.services.edge_server import EdgeServer
-from src.core.utils.constant import EFFICIENCY_HOUR, SUMMER, WINTER
+from src.core.utils.constant import EFFICIENCY_HOUR, Mode
 
 
 class DashboardService:
@@ -280,40 +280,44 @@ class DashboardService:
         return self.edge_server.boiler_set_setpoint(temperature)
 
     def switch_season_mode(self, season_value: int):
-        try:
-            if season_value not in [WINTER, SUMMER]:
-                raise ValueError(f"Invalid season value: {season_value}")
+        """
+        Args:
+            season_value (int): The season value to switch to. SUMMER (0) or WINTER (1)
 
-            # TODO Update Edge Server mode
-            # raise Exception("Test error for season mode switch")
-            # self.edge_server.set_mode(season_value)
+        Step to switch seasion:
+        1. Change mode to WAITING_SWITCH_TO_WINTER or WAITING_SWITCH_TO_SUMMER:
+            - Turn off all devices
+            - Turn on/off valves (summer or winter)
+            - Add job to switch season after <mode_switch_lockout_time> minutes. <mode_switch_lockout_time> will be set in user's setting
+        2. Run the job to switch season after <mode_switch_lockout_time> minutes:
+            - Restore devices states
+            - Switch devices
+            - Change mode to SUMMER or WINTER
+        """
 
-            current_time = datetime.now(UTC)
-            self.setting_repository._update_property("mode", season_value)
-            self.setting_repository._update_property(
-                "mode_switch_timestamp", current_time
+        mode_values = [Mode.WINTER.value, Mode.SUMMER.value]
+        if season_value not in mode_values:
+            raise HTTPException(
+                status_code=400, detail=f"Invalid season value: {season_value}"
             )
 
-            settings = self.setting_repository.get_last_settings()
+        if season_value == Mode.WINTER.value:
+            self.chronos._switch_season(Mode.WAITING_SWITCH_TO_WINTER.value)
+        else:
+            self.chronos._switch_season(Mode.WAITING_SWITCH_TO_SUMMER.value)
 
-            message = (
-                "Switched to Winter mode successfully"
-                if season_value == WINTER
-                else "Switched to Summer mode successfully"
-            )
+        current_time = datetime.now()
 
-            unlock_time = current_time + timedelta(
-                minutes=settings.mode_switch_lockout_time
-            )
+        settings = self.setting_repository.get_last_settings()
 
-            return {
-                "message": message,
-                "status": "success",
-                "mode": season_value,
-                "mode_switch_timestamp": current_time.isoformat(),
-                "mode_switch_lockout_time": settings.mode_switch_lockout_time,
-                "unlock_time": unlock_time.isoformat(),
-            }
+        unlock_time = current_time + timedelta(
+            minutes=settings.mode_switch_lockout_time
+        )
 
-        except Exception as e:
-            raise Exception(f"Failed to switch season mode: {str(e)}")
+        return {
+            "status": "success",
+            "mode": season_value,
+            "mode_switch_timestamp": current_time.isoformat(),
+            "mode_switch_lockout_time": self.chronos.mode_switch_lockout_time,
+            "unlock_time": unlock_time.isoformat(),
+        }
