@@ -79,11 +79,6 @@ config_dict = {
             "max_setpoint_limit": 4,
             "last_lockout": 5,
             "system_supply_temp": 6,
-            "model_id": 7,
-            "firmware_version": 8,
-            "hardware_version": 9,
-            "last_lockout_code": 10,
-            "last_blockout_code": 11,
         },
         "input": {
             "alarm": 0,

@@ -202,68 +202,6 @@ def test_get_boiler_operating_status_mock(client, mock_modbus_device):
     assert data["current_setpoint"] == 158.0
 
 
-def test_get_boiler_model_info_mock(client, mock_modbus_device):
-    """Test getting boiler model information with mocked device."""
-    mock_modbus_device.read_model_info.return_value = {
-        "model_id": 1,
-        "model_name": "FTXL 85",
-        "firmware_version": "1.2",
-        "hardware_version": "3.4",
-    }
-
-    response = client.get("/boiler_info")
-    assert response.status_code == 200
-    data = response.json()
-    assert data["model_id"] == 1
-    assert data["model_name"] == "FTXL 85"
-    assert data["firmware_version"] == "1.2"
-    assert data["hardware_version"] == "3.4"
-
-
-def test_get_boiler_model_info_error(client, mock_modbus_device):
-    """Test error handling when getting boiler model info."""
-    mock_modbus_device.read_model_info.return_value = {}
-    with patch(
-        "chronos.app.mock_model_info", side_effect=Exception("Connection failed")
-    ):
-        response = client.get("/boiler_info")
-        assert response.status_code == 500
-        assert "Failed to read model info" in response.json()["detail"]
-
-
-def test_get_boiler_error_history_mock(client, mock_modbus_device):
-    """Test getting boiler error history with mocked device."""
-    mock_modbus_device.read_error_history.return_value = {
-        "last_lockout_code": 3,
-        "last_lockout_str": "Low Water",
-        "last_blockout_code": 8,
-        "last_blockout_str": "Sensor Failure",
-    }
-    with patch("chronos.app.history_none", return_value=False):
-        response = client.get("/boiler_errors")
-        assert response.status_code == 200
-        data = response.json()
-        assert data["last_lockout_code"] == 3
-        assert "Low Water" in data["last_lockout_str"]
-        assert data["last_blockout_code"] == 8
-        assert "Sensor Failure" in data["last_blockout_str"]
-
-
-def test_get_boiler_error_history_no_errors(client, mock_modbus_device):
-    """Test getting boiler error history when no errors exist."""
-    mock_modbus_device.read_error_history.return_value = {}
-    with patch("chronos.app.history_none", return_value=True):
-        response = client.get("/boiler_errors")
-        assert response.status_code == 200
-        data = response.json()
-        assert data == {
-            "last_lockout_code": None,
-            "last_lockout_str": None,
-            "last_blockout_code": None,
-            "last_blockout_str": None,
-        }
-
-
 def test_set_boiler_setpoint_failure(client, mock_modbus_device):
     """Test failure when setting boiler setpoint."""
     mock_modbus_device.set_boiler_setpoint.return_value = False
@@ -347,40 +285,6 @@ def test_set_boiler_setpoint_hardware(client):
         final_status = client.get("/boiler_status")
         assert final_status.status_code == 200
         assert abs(final_status.json()["current_setpoint"] - original_setpoint) < 2.0
-
-
-@pytest.mark.skipif(not is_modbus_connected(), reason="No modbus connection available")
-def test_get_boiler_error_history_hardware(client):
-    """Test getting error history with real hardware."""
-    response = client.get("/boiler_errors")
-    assert response.status_code == 200
-    data = response.json()
-    # Verify the structure of the response
-    if "last_lockout_code" in data:
-        assert "last_lockout_str" in data
-    if "last_blockout_code" in data:
-        assert "last_blockout_str" in data
-
-
-@pytest.mark.skipif(not is_modbus_connected(), reason="No modbus connection available")
-def test_get_boiler_model_info_hardware(client):
-    """Test getting model info with real hardware."""
-    response = client.get("/boiler_info")
-    assert response.status_code == 200
-    data = response.json()
-    # Verify the structure and basic validation of the response
-    assert "model_id" in data
-    assert "model_name" in data
-    assert "firmware_version" in data
-    assert "hardware_version" in data
-    # Model ID should be a positive integer
-    assert isinstance(data["model_id"], int)
-    assert data["model_id"] > 0
-    # Version strings should follow x.y format
-    assert all(
-        len(v.split(".")) == 2
-        for v in [data["firmware_version"], data["hardware_version"]]
-    )
 
 
 # Test error cases with real hardware (if available)
@@ -489,16 +393,6 @@ def test_complete_boiler_flow(client, mock_modbus_device):
         assert response.status_code == 200
         new_status = response.json()
         assert abs(new_status["current_setpoint"] - new_temp) < 2.0
-
-        # 5. Get model info
-        response = client.get("/boiler_info")
-        assert response.status_code == 200
-        model_info = response.json()
-        assert model_info["model_id"] > 0
-
-        # 6. Check error history
-        response = client.get("/boiler_errors")
-        assert response.status_code == 200
     finally:
         # Update mock device's operating status back to original setpoint
         mock_modbus_device.read_operating_status.return_value = {

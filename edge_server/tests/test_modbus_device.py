@@ -34,11 +34,6 @@ MOCK_CONFIG = {
         "7": "Sensor Failure",
         "8": "Fan Speed Error",
     },
-    "model_ids": {
-        "1": "FTXL 85",
-        "2": "FTXL 105",
-        "3": "FTXL 125",
-    },
 }
 
 # Test data based on real hardware observations
@@ -81,7 +76,6 @@ def mock_config():
                         "min_setpoint": 0x40003,
                         "max_setpoint": 0x40004,
                         "last_lockout": 0x40005,
-                        "model_id": 0x40006,
                     },
                 )()
                 self.input = type(
@@ -98,7 +92,6 @@ def mock_config():
         mock_cfg.modbus.operating_modes = MOCK_CONFIG["operating_modes"]
         mock_cfg.modbus.cascade_modes = MOCK_CONFIG["cascade_modes"]
         mock_cfg.modbus.error_codes = MOCK_CONFIG["error_codes"]
-        mock_cfg.modbus.model_ids = MOCK_CONFIG["model_ids"]
         yield mock_cfg
 
 
@@ -110,7 +103,6 @@ def mock_modbus_device(mock_modbus_client, mock_config):
     device.operating_modes = MOCK_CONFIG["operating_modes"]
     device.cascade_modes = MOCK_CONFIG["cascade_modes"]
     device.error_codes = MOCK_CONFIG["error_codes"]
-    device.model_ids = MOCK_CONFIG["model_ids"]
     return device
 
 
@@ -242,43 +234,6 @@ def test_read_operating_status_success(device, mock_modbus_client):
     assert status["cascade_mode"] == 1
     assert status["cascade_mode_str"] == "Manager"
     assert status["current_setpoint"] == round((9.0 / 5.0) * (150 / 10.0) + 32.0, 1)
-
-
-def test_read_error_history_success(device, mock_modbus_client):
-    """Test successful reading of error history."""
-    # Mock register response for lockout and blockout codes
-    mock_modbus_client.return_value.read_holding_registers.return_value = MagicMock(
-        isError=lambda: False,
-        registers=[
-            3,
-            8,
-        ],  # Lockout code 3 (Low Water), Blockout code 8 (Fan Speed Error)
-    )
-
-    history = device.read_error_history()
-    assert history["last_lockout_code"] == 3
-    assert history["last_lockout_str"] == "Low Water"
-    assert history["last_blockout_code"] == 8
-    assert history["last_blockout_str"] == "Fan Speed Error"
-
-
-def test_read_model_info_success(device, mock_modbus_client):
-    """Test successful reading of model information."""
-    # Mock register response for model info
-    mock_modbus_client.return_value.read_holding_registers.return_value = MagicMock(
-        isError=lambda: False,
-        registers=[
-            1,  # Model ID (FTXL 85)
-            0x0102,  # Firmware version (1.2)
-            0x0304,  # Hardware version (3.4)
-        ],
-    )
-
-    info = device.read_model_info()
-    assert info["model_id"] == 1
-    assert info["model_name"] == "FTXL 85"
-    assert info["firmware_version"] == "1.2"
-    assert info["hardware_version"] == "3.4"
 
 
 @pytest.mark.parametrize(
@@ -432,9 +387,7 @@ def test_read_boiler_data(mock_modbus_device, registers, expected):
     mock_modbus_device.client.read_holding_registers.return_value.registers = registers[
         "holding"
     ]
-    mock_modbus_device.client.read_holding_registers.return_value.isError.return_value = (
-        False
-    )
+    mock_modbus_device.client.read_holding_registers.return_value.isError.return_value = False
 
     mock_modbus_device.client.read_input_registers.return_value.registers = registers[
         "input"
@@ -448,9 +401,9 @@ def test_read_boiler_data(mock_modbus_device, registers, expected):
 
     # Verify all expected values
     for key, value in expected.items():
-        assert (
-            result[key] == value
-        ), f"Mismatch for {key}: expected {value}, got {result[key]}"
+        assert result[key] == value, (
+            f"Mismatch for {key}: expected {value}, got {result[key]}"
+        )
 
 
 def test_read_boiler_data_retry_success(mock_modbus_device):
@@ -502,9 +455,9 @@ def test_temperature_conversion_edge_cases(
 
     result = device.read_boiler_data()
     assert result is not None
-    assert (
-        abs(result["system_supply_temp"] - expected_fahrenheit) < 0.1
-    ), f"Expected {expected_fahrenheit}°F but got {result['system_supply_temp']}°F"
+    assert abs(result["system_supply_temp"] - expected_fahrenheit) < 0.1, (
+        f"Expected {expected_fahrenheit}°F but got {result['system_supply_temp']}°F"
+    )
 
 
 def test_read_boiler_data_temperature_ramp(device, mock_modbus_client):
@@ -567,20 +520,20 @@ def test_read_boiler_data_temperature_ramp(device, mock_modbus_client):
         temp_change = (
             readings[i + 1]["system_supply_temp"] - readings[i]["system_supply_temp"]
         )
-        assert (
-            abs(temp_change) <= 5.0
-        ), f"Temperature changed too rapidly: {abs(temp_change)}°F"
+        assert abs(temp_change) <= 5.0, (
+            f"Temperature changed too rapidly: {abs(temp_change)}°F"
+        )
 
         # Verify relationships between temperatures
-        assert (
-            readings[i]["outlet_temp"] > readings[i]["system_supply_temp"]
-        ), "Outlet should be warmer than supply"
-        assert (
-            readings[i]["inlet_temp"] < readings[i]["system_supply_temp"]
-        ), "Inlet should be cooler than supply"
-        assert (
-            readings[i]["flue_temp"] > readings[i]["outlet_temp"]
-        ), "Flue should be warmest"
+        assert readings[i]["outlet_temp"] > readings[i]["system_supply_temp"], (
+            "Outlet should be warmer than supply"
+        )
+        assert readings[i]["inlet_temp"] < readings[i]["system_supply_temp"], (
+            "Inlet should be cooler than supply"
+        )
+        assert readings[i]["flue_temp"] > readings[i]["outlet_temp"], (
+            "Flue should be warmest"
+        )
 
 
 def test_read_boiler_data_with_delays(device, mock_modbus_client):

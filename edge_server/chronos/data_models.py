@@ -51,32 +51,6 @@ class OperatingStatus(BaseModel):
     )
 
 
-class ErrorHistory(BaseModel):
-    """Last known error codes from the boiler."""
-
-    last_lockout_code: Optional[int] = Field(
-        None, description="Last lockout error code"
-    )
-    last_lockout_str: Optional[str] = Field(
-        None, description="Last lockout error description"
-    )
-    last_blockout_code: Optional[int] = Field(
-        None, description="Last blockout error code"
-    )
-    last_blockout_str: Optional[str] = Field(
-        None, description="Last blockout error description"
-    )
-
-
-class ModelInfo(BaseModel):
-    """Boiler model and version information."""
-
-    model_id: int = Field(..., description="Boiler model ID")
-    model_name: str = Field(..., description="Boiler model name")
-    firmware_version: str = Field(..., description="Firmware version")
-    hardware_version: str = Field(..., description="Hardware version")
-
-
 class SetpointUpdate(BaseModel):
     """Temperature setpoint update."""
 

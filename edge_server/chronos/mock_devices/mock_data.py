@@ -49,36 +49,5 @@ def mock_operating_status():
     }
 
 
-def mock_error_history():
-    return {
-        "last_lockout_code": 3,
-        "last_lockout_str": "Low Water",
-        "last_blockout_code": 8,
-        "last_blockout_str": "Sensor Failure",
-    }
-
-
-def mock_error_history_none():
-    return {
-        "last_lockout_code": None,
-        "last_lockout_str": None,
-        "last_blockout_code": None,
-        "last_blockout_str": None,
-    }
-
-
-def history_none():
-    return True
-
-
-def mock_model_info():
-    return {
-        "model_id": 1,
-        "model_name": "FTXL 85",
-        "firmware_version": "1.2",
-        "hardware_version": "3.4",
-    }
-
-
 def mock_point_update():
     return True

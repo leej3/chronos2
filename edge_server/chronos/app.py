@@ -9,8 +9,6 @@ from chronos.config import cfg
 from chronos.data_models import (
     BoilerStats,
     DeviceModel,
-    ErrorHistory,
-    ModelInfo,
     OperatingStatus,
     SetpointLimitsUpdate,
     SetpointUpdate,
@@ -23,12 +21,8 @@ from chronos.devices import (
     safe_read_temperature,
 )
 from chronos.mock_devices.mock_data import (
-    history_none,
     mock_boiler_stats,
     mock_devices_data,
-    mock_error_history,
-    mock_error_history_none,
-    mock_model_info,
     mock_operating_status,
     mock_point_update,
     mock_sensors,
@@ -307,68 +301,6 @@ async def get_boiler_status():
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Failed to read operating status: {str(e)}"
-        )
-
-
-@app.get("/boiler_errors", response_model=ErrorHistory)
-@with_circuit_breaker
-async def get_boiler_errors():
-    """Get boiler error history."""
-    if MOCK_DEVICES:
-        try:
-            history = history_none()
-            if history:
-                return ErrorHistory(**mock_error_history_none())
-            return ErrorHistory(**mock_error_history())
-        except ModbusException as e:
-            raise HTTPException(status_code=500, detail=str(e))
-        except Exception as e:
-            raise HTTPException(
-                status_code=500, detail=f"Failed to read error history: {str(e)}"
-            )
-    try:
-        with create_modbus_connection() as device:
-            history = device.read_error_history()
-            if not history:
-                history = {
-                    "last_lockout_code": None,
-                    "last_lockout_str": None,
-                    "last_blockout_code": None,
-                    "last_blockout_str": None,
-                }
-            return ErrorHistory(**history)
-    except ModbusException as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to read error history: {str(e)}"
-        )
-
-
-@app.get("/boiler_info", response_model=ModelInfo)
-@with_circuit_breaker
-async def get_boiler_info():
-    """Get boiler model information."""
-    if MOCK_DEVICES:
-        try:
-            return ModelInfo(**mock_model_info())
-        except ModbusException as e:
-            raise HTTPException(status_code=500, detail=str(e))
-        except Exception as e:
-            raise HTTPException(
-                status_code=500, detail=f"Failed to read model info: {str(e)}"
-            )
-    try:
-        with create_modbus_connection() as device:
-            info = device.read_model_info()
-            if not info:
-                raise HTTPException(status_code=500, detail="Failed to read model info")
-            return ModelInfo(**info)
-    except ModbusException as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to read model info: {str(e)}"
         )
 
 
