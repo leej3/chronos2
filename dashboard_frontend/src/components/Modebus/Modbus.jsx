@@ -70,7 +70,7 @@ const Modbus = ({ boiler }) => {
       <CCol sm="12">
         <div className="season-group">
           <CFormLabel className="form-label">
-            <strong>Cascade Power:</strong>{' '}
+            <strong>Cascade Current Power:</strong>{' '}
             <span>{`${cascade_current_power} %`}</span>
           </CFormLabel>
         </div>
@@ -119,12 +119,13 @@ const Modbus = ({ boiler }) => {
   return (
     <div className="modbus">
       <CDropdown className="d-md-none">
-        <CDropdownToggle color="secondary">Menu</CDropdownToggle>
+        <CDropdownToggle color="primary">Select Tab</CDropdownToggle>
         <CDropdownMenu>
           {menuItems.map((item) => (
             <CDropdownItem
               key={item.tab}
               onClick={() => setActiveTab(item.tab)}
+              active={activeTab === item.tab}
             >
               {item.label}
             </CDropdownItem>
@@ -132,9 +133,9 @@ const Modbus = ({ boiler }) => {
         </CDropdownMenu>
       </CDropdown>
 
-      <CNav variant="tabs" role="tablist" className="d-none d-md-flex">
+      <CNav variant="tabs" className="d-none d-md-flex">
         {menuItems.map((item) => (
-          <CNavItem key={item.tab} className="col-3">
+          <CNavItem key={item.tab}>
             <CNavLink
               active={activeTab === item.tab}
               onClick={() => setActiveTab(item.tab)}

@@ -68,13 +68,9 @@ class DashboardService:
 
         efficiency = self.calculate_efficiency()
         boiler_status = self.edge_server.get_boiler_status()
-        boiler_errors = self.edge_server.get_boiler_errors()
-        boiler_info = self.edge_server.get_boiler_info()
         boiler_stats = self.edge_server.get_data_boiler_stats()
         boiler = {
             "status": boiler_status,
-            "errors": boiler_errors,
-            "info": boiler_info,
             "stats": boiler_stats,
         }
         efficiency["cascade_fire_rate_avg"] = round(

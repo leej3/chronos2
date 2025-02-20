@@ -154,24 +154,6 @@ async def boiler_status(
     return JSONResponse(content=data)
 
 
-@router.get("/boiler_errors")
-async def boiler_errors(
-    current_user: Annotated[UserToken, Security(get_current_user)],
-    edge_server: Annotated[EdgeServer, Security(get_edge_server)],
-):
-    data = edge_server.get_boiler_errors()
-    return JSONResponse(content=data)
-
-
-@router.get("/boiler_info")
-async def boiler_info(
-    current_user: Annotated[UserToken, Security(get_current_user)],
-    edge_server: Annotated[EdgeServer, Security(get_edge_server)],
-):
-    data = edge_server.get_boiler_info()
-    return JSONResponse(content=data)
-
-
 @router.get("/temperature_limits")
 async def temperature_limits(
     current_user: Annotated[UserToken, Security(get_current_user)],
