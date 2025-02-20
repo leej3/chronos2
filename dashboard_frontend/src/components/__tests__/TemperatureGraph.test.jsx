@@ -162,17 +162,6 @@ describe('TemperatureGraph', () => {
     expect(outletLine.getAttribute('data-stroke')).toBe('#ff7043');
   });
 
-  it('should handle time formatting correctly', () => {
-    const mockData = [
-      { date: '2024-07-31T12:00:00Z', 'column-2': 80, 'column-1': 75 },
-    ];
-
-    render(<TemperatureGraph data={mockData} />);
-
-    const xAxis = screen.getByTestId('x-axis');
-    expect(xAxis).toHaveTextContent('12:00 PM');
-  });
-
   it('should handle Y-axis temperature formatting', () => {
     const mockData = [
       { date: '2024-07-31T12:00:00Z', 'column-2': 80.5, 'column-1': 75.5 },

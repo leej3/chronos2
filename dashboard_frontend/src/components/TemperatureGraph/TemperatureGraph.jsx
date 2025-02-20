@@ -38,23 +38,23 @@ const TemperatureGraph = ({ data }) => {
     return [Math.floor(min - padding), Math.ceil(max + padding)];
   };
 
+  const convertToUnixChicago = (dateStr) =>
+    Math.floor(
+      new Date(
+        new Date(dateStr).toLocaleString('en-US', {
+          timeZone: 'America/Chicago',
+        }),
+      ).getTime() / 1000,
+    );
+
   useEffect(() => {
     if (data) {
       try {
         const mappedData = data.map((entry) => ({
-          date: new Date(entry.date).toLocaleString('en-US', {
-            timeZone: 'America/Chicago',
-            year: 'numeric',
-            month: 'numeric',
-            day: 'numeric',
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true,
-          }),
+          date: convertToUnixChicago(entry.date),
           inlet: formatNumber(entry['column-2'], 1),
           outlet: formatNumber(entry['column-1'], 1),
         }));
-
         setChartData(mappedData);
         setIsLoading(false);
         setError(null);
@@ -192,106 +192,86 @@ const TemperatureGraph = ({ data }) => {
             <p>{error}</p>
           </div>
         )}
-        <>
-          {!isLoading && !error && chartData.length > 0 && (
-            <>
-              <ResponsiveContainer width="100%" height={chartHeight}>
-                <LineChart
-                  data={getFilteredData(chartData)}
-                  margin={{
-                    top: 20,
-                    right: 30,
-                    left: window.innerWidth < 768 ? 20 : 30,
-                    bottom: 30,
-                  }}
+        {!isLoading && !error && chartData.length > 0 && (
+          <>
+            <ResponsiveContainer width="100%" height={chartHeight}>
+              <LineChart data={getFilteredData(chartData)}>
+                <CartesianGrid stroke="#4c5c77" strokeDasharray="3 3" />
+                <XAxis
+                  dataKey="date"
+                  stroke="#dddddd"
+                  tick={{ fill: '#dddddd', fontSize: 12, fontWeight: 'bold' }}
+                  angle={0}
+                  textAnchor="middle"
+                  height={60}
+                  tickFormatter={(val) =>
+                    new Date(val * 1000).toLocaleTimeString('en-US', {
+                      timeZone: 'America/Chicago',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: false,
+                    })
+                  }
+                  interval="preserveStartEnd"
+                  type="number"
+                  domain={['dataMin', 'dataMax']}
+                  allowDataOverflow
+                  padding={{ left: 30, right: 30 }}
+                  ticks={chartData
+                    .map((d) => d.date)
+                    .filter((timestamp) => {
+                      const minutes = new Date(timestamp * 1000).getMinutes();
+                      return minutes % 5 === 0;
+                    })}
+                />
+                <YAxis
+                  stroke="#dddddd"
+                  tick={{ fill: '#dddddd', fontSize: 12, fontWeight: 'bold' }}
+                  tickFormatter={(tick) => parseFloat(tick.toFixed(1))}
+                  domain={findYAxisDomain(chartData)}
+                  padding={{ top: 30, bottom: 30 }}
                 >
-                  <CartesianGrid stroke="#4c5c77" strokeDasharray="3 3" />
-                  <XAxis
-                    dataKey="date"
-                    stroke="#dddddd"
-                    tick={{
-                      fill: '#dddddd',
-                      fontSize: getResponsiveFontSize(),
-                      fontWeight: 'bold',
-                    }}
-                    tickFormatter={(tick) => {
-                      const [, time] = tick.split(', ');
-                      return time;
-                    }}
-                    angle={window.innerWidth < 768 ? -45 : 0}
-                    textAnchor={window.innerWidth < 768 ? 'end' : 'middle'}
-                    height={window.innerWidth < 768 ? 60 : 50}
-                    interval={interval}
-                    padding={{ left: 20, right: 20 }}
+                  <Label
+                    value="Temperature (°F)"
+                    angle={-90}
+                    position="insideLeft"
+                    fill="#dddddd"
+                    style={{ textAnchor: 'middle', fontSize: 18 }}
                   />
-                  <YAxis
-                    stroke="#dddddd"
-                    tick={{
-                      fill: '#dddddd',
-                      fontSize: getResponsiveFontSize(),
-                      fontWeight: 'bold',
-                    }}
-                    tickFormatter={(tick) => parseFloat(tick.toFixed(1))}
-                    domain={findYAxisDomain(data)}
-                    padding={{ top: 20, bottom: 20 }}
-                    width={60}
-                  >
-                    <Label
-                      value="Temperature (°F)"
-                      angle={-90}
-                      position="insideLeft"
-                      fill="#dddddd"
-                      style={{
-                        textAnchor: 'middle',
-                        fontSize: window.innerWidth < 768 ? 18 : 18,
-                        fontWeight: 'bold',
-                        dy: -35,
-                      }}
-                    />
-                  </YAxis>
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend
-                    verticalAlign="top"
-                    align="right"
-                    wrapperStyle={{
-                      fontSize: getResponsiveFontSize(),
-                      fill: '#dddddd',
-                    }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="inlet"
-                    stroke="#ffca28"
-                    strokeWidth={2}
-                    dot={{
-                      r: window.innerWidth < 768 ? 2.5 : 3.5,
-                      strokeWidth: 1,
-                    }}
-                    activeDot={{ r: 6 }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="outlet"
-                    stroke="#ff7043"
-                    strokeWidth={2}
-                    dot={{
-                      r: window.innerWidth < 768 ? 2.5 : 3.5,
-                      strokeWidth: 1,
-                    }}
-                    activeDot={{ r: 6 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-              <button
-                className="download-button m-2"
-                onClick={downloadCSV}
-                disabled={isLoading || chartData.length === 0}
-              >
-                Download logs csv
-              </button>
-            </>
-          )}
-        </>
+                </YAxis>
+                <Tooltip content={<CustomTooltip />} />
+                <Legend
+                  verticalAlign="top"
+                  align="right"
+                  wrapperStyle={{ fill: '#dddddd' }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="inlet"
+                  stroke="#ffca28"
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 5 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="outlet"
+                  stroke="#ff7043"
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 5 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+            <button
+              className="download-button"
+              onClick={downloadCSV}
+              disabled={isLoading || chartData.length === 0}
+            >
+              Download logs csv
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
