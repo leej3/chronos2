@@ -203,13 +203,11 @@ def test_set_boiler_setpoint_success(device, mock_modbus_client):
     assert success is True
 
     # Verify both writes occurred:
-    # 1. Write mode 4 (manual operation) to register 40001
-    # 2. Write setpoint percentage to register 40003
+    # 1. Write mode 4 (manual operation) to register 0
+    # 2. Write setpoint percentage to register 2
     assert mock_modbus_client.return_value.write_register.call_count == 2
-    mock_modbus_client.return_value.write_register.assert_any_call(0x40000, 4)  # Mode
-    mock_modbus_client.return_value.write_register.assert_any_call(
-        0x40002, 54
-    )  # Setpoint
+    mock_modbus_client.return_value.write_register.assert_any_call(0, 4)  # Mode
+    mock_modbus_client.return_value.write_register.assert_any_call(2, 54)  # Setpoint
 
 
 def test_set_boiler_setpoint_invalid_range(device, mock_modbus_client):
@@ -434,7 +432,9 @@ def test_read_boiler_data(mock_modbus_device, registers, expected):
     mock_modbus_device.client.read_holding_registers.return_value.registers = registers[
         "holding"
     ]
-    mock_modbus_device.client.read_holding_registers.return_value.isError.return_value = False
+    mock_modbus_device.client.read_holding_registers.return_value.isError.return_value = (
+        False
+    )
 
     mock_modbus_device.client.read_input_registers.return_value.registers = registers[
         "input"
@@ -448,9 +448,9 @@ def test_read_boiler_data(mock_modbus_device, registers, expected):
 
     # Verify all expected values
     for key, value in expected.items():
-        assert result[key] == value, (
-            f"Mismatch for {key}: expected {value}, got {result[key]}"
-        )
+        assert (
+            result[key] == value
+        ), f"Mismatch for {key}: expected {value}, got {result[key]}"
 
 
 def test_read_boiler_data_retry_success(mock_modbus_device):
@@ -502,9 +502,9 @@ def test_temperature_conversion_edge_cases(
 
     result = device.read_boiler_data()
     assert result is not None
-    assert abs(result["system_supply_temp"] - expected_fahrenheit) < 0.1, (
-        f"Expected {expected_fahrenheit}°F but got {result['system_supply_temp']}°F"
-    )
+    assert (
+        abs(result["system_supply_temp"] - expected_fahrenheit) < 0.1
+    ), f"Expected {expected_fahrenheit}°F but got {result['system_supply_temp']}°F"
 
 
 def test_read_boiler_data_temperature_ramp(device, mock_modbus_client):
@@ -567,20 +567,20 @@ def test_read_boiler_data_temperature_ramp(device, mock_modbus_client):
         temp_change = (
             readings[i + 1]["system_supply_temp"] - readings[i]["system_supply_temp"]
         )
-        assert abs(temp_change) <= 5.0, (
-            f"Temperature changed too rapidly: {abs(temp_change)}°F"
-        )
+        assert (
+            abs(temp_change) <= 5.0
+        ), f"Temperature changed too rapidly: {abs(temp_change)}°F"
 
         # Verify relationships between temperatures
-        assert readings[i]["outlet_temp"] > readings[i]["system_supply_temp"], (
-            "Outlet should be warmer than supply"
-        )
-        assert readings[i]["inlet_temp"] < readings[i]["system_supply_temp"], (
-            "Inlet should be cooler than supply"
-        )
-        assert readings[i]["flue_temp"] > readings[i]["outlet_temp"], (
-            "Flue should be warmest"
-        )
+        assert (
+            readings[i]["outlet_temp"] > readings[i]["system_supply_temp"]
+        ), "Outlet should be warmer than supply"
+        assert (
+            readings[i]["inlet_temp"] < readings[i]["system_supply_temp"]
+        ), "Inlet should be cooler than supply"
+        assert (
+            readings[i]["flue_temp"] > readings[i]["outlet_temp"]
+        ), "Flue should be warmest"
 
 
 def test_read_boiler_data_with_delays(device, mock_modbus_client):
@@ -704,11 +704,11 @@ def test_setpoint_change_state_sequence(device, mock_modbus_client):
     assert len(states) == 2, "Expected exactly two state changes"
 
     # First state change should be to manual mode
-    assert states[0]["register"] == 0x40000  # Operating mode register
+    assert states[0]["register"] == 0  # Operating mode register
     assert states[0]["value"] == 4  # Manual operation mode
 
     # Second state change should be setpoint
-    assert states[1]["register"] == 0x40002  # Setpoint register
+    assert states[1]["register"] == 2  # Setpoint register
     assert states[1]["value"] == expected_percentage
 
     # Verify timing between operations

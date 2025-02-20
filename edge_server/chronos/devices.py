@@ -253,7 +253,7 @@ class ModbusDevice:
 
                 # Read input registers block (status through firing rate)
                 i_result = self._read_input_register(
-                    self.registers.input.alarm, count=9
+                    3, count=9  # Start from address 3 to match working implementation
                 )
 
                 # Convert temperatures exactly as in C code
