@@ -295,10 +295,12 @@ async def get_boiler_status():
         )
 
 
-@app.post("/boiler_set_setpoint")
+@app.post("/boiler_set_setpoint", dependencies=[Depends(ensure_not_read_only)])
 @with_circuit_breaker
 @with_rate_limit
-async def set_setpoint(data: SetpointUpdate):
+async def set_setpoint(
+    data: SetpointUpdate,
+):
     if MOCK_DEVICES:
         try:
             mock_point_update()

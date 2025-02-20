@@ -68,7 +68,6 @@ def test_get_data_with_sensor_error(
         assert response.status_code == 200
 
         data = response.json()
-        print("data", data)
         assert isinstance(data["sensors"], dict)
         assert isinstance(data["sensors"], dict)
         assert data["status"] is False
@@ -190,20 +189,38 @@ def test_get_boiler_operating_status_mock(client, mock_modbus_device):
         "operating_mode_str": "Central Heat",
         "cascade_mode": 0,
         "cascade_mode_str": "Single Boiler",
-        "current_setpoint": 158.0,
+        "current_setpoint": 90.0,
     }
-
     response = client.get("/boiler_status")
+
     assert response.status_code == 200
     data = response.json()
     assert data["operating_mode"] == 3
     assert data["operating_mode_str"] == "Central Heat"
-    assert data["current_setpoint"] == 158.0
+    assert data["current_setpoint"] == 90.0
 
 
-def test_set_boiler_setpoint_failure(client, mock_modbus_device):
+def test_set_boiler_setpoint_failure(client, mock_modbus_device, monkeypatch):
     """Test failure when setting boiler setpoint."""
+    from unittest.mock import MagicMock
+
+    from chronos.app import circuit_breaker
+
+    # Reset circuit breaker state
+    circuit_breaker.failure_count = 0
+    circuit_breaker.is_open = False
+    # Create a context manager mock that returns our mock_modbus_device
+    mock_context = MagicMock()
+    mock_context.__enter__ = lambda _: mock_modbus_device
+    mock_context.__exit__ = lambda *args: None
+
+    # Mock the initial connection check
+    mock_modbus_device.client.is_socket_open.return_value = True
     mock_modbus_device.set_boiler_setpoint.return_value = False
+
+    monkeypatch.setattr(cfg, "MOCK_DEVICES", False)
+    monkeypatch.setattr("chronos.app.create_modbus_connection", lambda: mock_context)
+
     response = client.post("/boiler_set_setpoint", json={"temperature": 90.0})
     assert response.status_code == 500
     assert "Failed to set temperature" in response.json()["detail"]
@@ -352,7 +369,7 @@ def test_error_handling_scenarios(
         assert "Service temporarily unavailable" in response.json()["detail"]
 
 
-@pytest.mark.integration
+@pytest.mark.skipif(not is_modbus_connected(), reason="No modbus connection available")
 def test_complete_boiler_flow(client, mock_modbus_device):
     """Test the complete flow of boiler operations."""
     # 1. Get initial stats
@@ -445,9 +462,27 @@ def test_set_temperature_limits_validation(client):
     assert response.status_code == 422
 
 
-def test_set_temperature_limits_failure(client, mock_modbus_device):
+def test_set_temperature_limits_failure(client, mock_modbus_device, monkeypatch):
     """Test failure when setting temperature limits."""
+    from unittest.mock import MagicMock
+
+    from chronos.app import circuit_breaker
+
+    # Reset circuit breaker state
+    circuit_breaker.failure_count = 0
+    circuit_breaker.is_open = False
+
+    # Create a context manager mock that returns our mock_modbus_device
+    mock_context = MagicMock()
+    mock_context.__enter__ = lambda _: mock_modbus_device
+    mock_context.__exit__ = lambda *args: None
+
+    # Mock the initial connection check
+    mock_modbus_device.client.is_socket_open.return_value = True
     mock_modbus_device.set_temperature_limits.return_value = False
+
+    monkeypatch.setattr("chronos.app.create_modbus_connection", lambda: mock_context)
+
     response = client.post(
         "/temperature_limits", json={"min_setpoint": 75.0, "max_setpoint": 105.0}
     )
@@ -455,22 +490,45 @@ def test_set_temperature_limits_failure(client, mock_modbus_device):
     assert "Failed to set temperature limits" in response.json()["detail"]
 
 
-def test_set_temperature_limits_connection_error(client, mock_modbus_device):
+def test_set_temperature_limits_connection_error(
+    client, mock_modbus_device, monkeypatch
+):
     """Test connection error when setting temperature limits."""
+    from unittest.mock import MagicMock
+
+    from chronos.app import circuit_breaker
+    from chronos.config import cfg
+
+    # Reset circuit breaker state
+    circuit_breaker.failure_count = 0
+    circuit_breaker.is_open = False
+
+    # Create a context manager mock that returns our mock_modbus_device
+    mock_context = MagicMock()
+    mock_context.__enter__ = lambda _: mock_modbus_device
+    mock_context.__exit__ = lambda *args: None
+
+    # Mock the initial connection check
+    mock_modbus_device.client.is_socket_open.return_value = True
     mock_modbus_device.set_temperature_limits.side_effect = ModbusException(
         "Connection failed"
     )
+
+    monkeypatch.setattr(cfg, "MOCK_DEVICES", False)
+    monkeypatch.setattr("chronos.app.create_modbus_connection", lambda: mock_context)
+
     response = client.post(
         "/temperature_limits", json={"min_setpoint": 75.0, "max_setpoint": 105.0}
     )
     assert response.status_code == 503
-    assert "Connection failed" in response.json()["detail"]
+    assert "Modbus Error: Connection failed" in response.json()["detail"]
 
 
-def test_set_boiler_setpoint_read_only(client, mock_modbus_device):
+@pytest.mark.integration
+def test_set_boiler_setpoint_read_only(client, mock_modbus_device, monkeypatch):
     """Test that setting boiler setpoint is blocked in read-only mode."""
     # Enable read-only mode
-    cfg.READ_ONLY_MODE = True
+    monkeypatch.setattr(cfg, "READ_ONLY_MODE", True)
     try:
         response = client.post("/boiler_set_setpoint", json={"temperature": 90.0})
         assert response.status_code == 403
@@ -479,8 +537,8 @@ def test_set_boiler_setpoint_read_only(client, mock_modbus_device):
             in response.json()["detail"]
         )
     finally:
-        # Reset read-only mode to its original state
-        cfg.READ_ONLY_MODE = False
+        # Reset read-only mode to its original state4
+        monkeypatch.setattr(cfg, "READ_ONLY_MODE", False)
 
 
 def test_set_temperature_limits_read_only(client, mock_modbus_device):

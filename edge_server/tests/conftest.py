@@ -136,45 +136,48 @@ def device(mock_modbus_client):
 @pytest.fixture
 def mock_modbus_device():
     """Mock ModbusDevice for testing."""
-    mock_device = MagicMock()
-    mock_device.is_connected.return_value = True
+    # Mock the ModbusSerialClient first
+    with patch("chronos.devices.ModbusSerialClient") as mock_serial_client:
+        # Configure the mock client
+        mock_client = MagicMock()
+        mock_client.connect.return_value = True
+        mock_client.is_socket_open.return_value = True
+        mock_serial_client.return_value = mock_client
 
-    # Set default return values for commonly used methods
-    mock_device.read_boiler_data.return_value = {
-        "system_supply_temp": 154.4,
-        "outlet_temp": 158.0,
-        "inlet_temp": 149.0,
-        "flue_temp": 176.0,
-        "cascade_current_power": 50.0,
-        "lead_firing_rate": 75.0,
-        "water_flow_rate": 10.0,
-        "pump_status": True,
-        "flame_status": True,
-    }
+        # Create the mock device
+        mock_device = MagicMock()
+        mock_device.is_connected.return_value = True
+        mock_device.client = mock_client
 
-    mock_device.read_operating_status.return_value = {
-        "operating_mode": 3,
-        "operating_mode_str": "Central Heat",
-        "cascade_mode": 0,
-        "cascade_mode_str": "Single Boiler",
-        "current_setpoint": 158.0,
-    }
+        # Set default return values for commonly used methods
+        mock_device.read_boiler_data.return_value = {
+            "system_supply_temp": 154.4,
+            "outlet_temp": 158.0,
+            "inlet_temp": 149.0,
+            "flue_temp": 176.0,
+            "cascade_current_power": 50.0,
+            "lead_firing_rate": 75.0,
+            "water_flow_rate": 10.0,
+            "pump_status": True,
+            "flame_status": True,
+        }
 
-    mock_device.set_boiler_setpoint.return_value = True
+        mock_device.set_boiler_setpoint.return_value = True
 
-    # Mock the context manager
-    with (
-        patch("chronos.devices.ModbusDevice") as mock_device_class,
-        patch("chronos.devices.create_modbus_connection") as mock_create,
-    ):
-        # Configure ModbusDevice mock
-        mock_device_class.return_value = mock_device
+        # Mock the context manager
+        mock_context = MagicMock()
+        mock_context.__enter__ = lambda _: mock_device
+        mock_context.__exit__ = lambda *args: None
 
-        # Configure the context manager mock
-        mock_create.return_value.__enter__.return_value = mock_device
-        mock_create.return_value.__exit__.return_value = None
+        with patch("chronos.devices.ModbusDevice") as mock_device_class:
+            # Configure ModbusDevice mock
+            mock_device_class.return_value = mock_device
 
-        yield mock_device
+            # Configure the context manager mock
+            mock_device_class.return_value.__enter__ = lambda _: mock_device
+            mock_device_class.return_value.__exit__ = lambda *args: None
+
+            yield mock_device
 
 
 # SerialDevice fixtures
