@@ -17,6 +17,10 @@ jest.mock('../../utils/constant', () => ({
   API_BASE_URL: jest.fn(() => 1),
 }));
 
+jest.mock('../../api/updateBoilerSetpoint', () => ({
+  getTemperatureLimits: jest.fn(),
+}));
+
 jest.mock('../UserSettings/UserSettings.css', () => {});
 jest.mock('../SeasonSwitch/SeasonSwitch.css', () => {});
 

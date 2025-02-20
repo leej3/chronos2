@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { getFormattedChicagoTime } from '../../utils/dateUtils';
 
 import { cilFactorySlash, cilLockLocked } from '@coreui/icons';
 import CIcon from '@coreui/icons-react';
@@ -19,17 +18,16 @@ import './AppHeader.css';
 
 const AppHeader = () => {
   const headerRef = useRef();
-  const [currentTime, setCurrentTime] = useState('');
-  // const { colorMode, setColorMode } = useColorModes(
-  //   'coreui-free-react-admin-template-theme'
-  // );
+  const systemStatus = useSelector((state) => state.chronos.systemStatus);
+  const season = useSelector((state) => state.chronos.season);
+  const data = useSelector((state) => state.chronos.data);
 
+  const outdoorTemp = data?.results?.outside_temp || 'N/A';
+  const avgTemp = data?.efficiency?.average_temperature_difference || 'N/A';
   // Get mockDevices state from Redux store
   const mockDevices = useSelector((state) => state.chronos.mock_devices);
   const readOnlyMode = useSelector((state) => state.chronos.read_only_mode);
 
-  const outdoorTemp = data?.results?.outside_temp || 'N/A';
-  const avgTemp = data?.efficiency?.average_temperature_difference || 'N/A';
   useEffect(() => {
     document.addEventListener('scroll', () => {
       headerRef.current?.classList.toggle(
@@ -64,8 +62,9 @@ const AppHeader = () => {
               >
                 <span className="text-white-50 me-1 me-sm-2">SYSTEM</span>
                 <span
-                  className={`${systemStatus === 'ONLINE' ? 'text-success' : 'text-danger'
-                    } d-flex align-items-center`}
+                  className={`${
+                    systemStatus === 'ONLINE' ? 'text-success' : 'text-danger'
+                  } d-flex align-items-center`}
                 >
                   <span
                     className="d-inline-block rounded-circle me-1"
@@ -82,20 +81,29 @@ const AppHeader = () => {
             </div>
           </CHeaderBrand>
 
-          <CHeaderNav className="d-flex flex-wrap align-items-center gap-2 gap-sm-3">
-            <CNavItem>
-              <CNavLink href="#" className="d-flex align-items-center p-0">
-                <CIcon
-                  icon={cilClock}
-                  className="me-1 me-sm-2"
-                  style={{ width: '0.9rem' }}
-                />
-                <span className="text-nowrap" style={{ fontSize: '0.9rem' }}>
-                  {currentTime}
-                </span>
-              </CNavLink>
-            </CNavItem>
-          )}
+          <CHeaderNav className="d-flex flex-wrap align-items-center ">
+            {mockDevices && (
+              <CNavItem>
+                <CNavLink
+                  href="#"
+                  className="d-flex align-items-center text-danger p-0"
+                >
+                  <CIcon
+                    icon={cilFactorySlash}
+                    className="me-1 me-sm-2"
+                    style={{ width: '0.9rem' }}
+                  />
+                  <span className="text-nowrap" style={{ fontSize: '0.9rem' }}>
+                    Mock Devices Mode
+                  </span>
+                  <img
+                    className="me-1 me-sm-2 ms-2"
+                    src={getSeasonIcon()}
+                    alt={`${season === 1 ? 'Summer' : 'Winter'} mode`}
+                  />
+                </CNavLink>
+              </CNavItem>
+            )}
             {readOnlyMode && (
               <CNavItem>
                 <CNavLink
@@ -108,6 +116,70 @@ const AppHeader = () => {
               </CNavItem>
             )}
           </CHeaderNav>
+        </div>
+        <CRow className="g-0 w-100  d-lg-none">
+          <CCol xs={6} md={6} className="mb-2 mb-md-0">
+            <div className="d-flex align-items-center mb-1 ">
+              <img
+                src={getSeasonIcon()}
+                alt={`${season === 1 ? 'Summer' : 'Winter'} mode`}
+              />
+              <div
+                className={`ms-1 d-flex align-items-center ${
+                  systemStatus === 'ONLINE' ? 'text-success' : 'text-danger'
+                } status-indicator`}
+              >
+                <span
+                  className={`status-dot ${
+                    systemStatus === 'ONLINE'
+                      ? 'status-dot-online'
+                      : 'status-dot-offline'
+                  }`}
+                />
+                <span>{systemStatus}</span>
+              </div>
+            </div>
+          </CCol>
+
+          <CCol xs={6} md={6}>
+            <div className="d-flex flex-column flex-md-row justify-content-md-end h-100">
+              {mockDevices && (
+                <div className="mock-devices-alert me-md-3 text-danger m-0">
+                  <CIcon
+                    icon={cilFactorySlash}
+                    className="me-1 me-sm-2"
+                    style={{ width: '0.9rem' }}
+                  />
+                  <span className="text-nowrap" style={{ fontSize: '0.9rem' }}>
+                    Mock Devices Mode
+                  </span>
+                </div>
+              )}
+              {readOnlyMode && (
+                <div className="mock-devices-alert me-md-3 text-warning m-0">
+                  <CIcon
+                    icon={cilLockLocked}
+                    className="me-1 me-sm-2"
+                    style={{ width: '0.9rem' }}
+                  />
+                  <span className="text-nowrap" style={{ fontSize: '0.9rem' }}>
+                    Read Only Mode
+                  </span>
+                </div>
+              )}
+              <div className="d-flex flex-column flex-md-row">
+                <div className="temperature-container d-flex align-items-center">
+                  <span className="temperature-label">Avg (96hrs):</span>
+                  <span className="temperature-value">{avgTemp}°F</span>
+                </div>
+                <div className="d-flex align-items-center">
+                  <span className="temperature-label">Outdoor:</span>
+                  <span className="temperature-value">{outdoorTemp}°F</span>
+                </div>
+              </div>
+            </div>
+          </CCol>
+        </CRow>
       </CContainer>
     </CHeader>
   );
