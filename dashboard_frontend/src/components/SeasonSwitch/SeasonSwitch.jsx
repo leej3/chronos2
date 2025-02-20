@@ -4,33 +4,36 @@ import { CTooltip, CAlert } from '@coreui/react';
 import { useSelector, useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
 import { format, parseISO } from 'date-fns';
-import { setSeason, setSystemStatus } from '../../features/state/seasonSlice';
+import { setSeason } from '../../features/chronos/chronosSlice';
 import { switchSeason } from '../../api/switchSeason';
 import './SeasonSwitch.css';
 
 const SeasonSwitch = () => {
   const dispatch = useDispatch();
   const season = useSelector((state) => state.chronos.season);
-  const reduxLockoutInfo = useSelector((state) => state.chronos.lockoutInfo);
   const readOnlyMode = useSelector((state) => state.chronos.read_only_mode);
   const [lockoutInfo, setLockoutInfo] = useState(null);
   const [countdown, setCountdown] = useState(null);
   const [switchDirection, setSwitchDirection] = useState(null);
-  const [alertMessage, setAlertMessage] = useState(null);
-  const [alertColor, setAlertColor] = useState(null);
+  const [alertColor, setAlertColor] = useState('danger');
+  const [alertMessage, setAlertMessage] = useState('');
+  const unlockTime = useSelector((state) => state.chronos.unlock_time);
 
   useEffect(() => {
-    if (reduxLockoutInfo) {
-      const unlockTime = new Date(reduxLockoutInfo.unlockTime);
+    if (unlockTime) {
+      const unlockTimeDate = parseISO(unlockTime);
       const now = new Date();
-      if (unlockTime > now) {
+      if (unlockTimeDate > now) {
         setLockoutInfo({
-          lockoutTime: reduxLockoutInfo.lockoutTime,
-          unlockTime: unlockTime,
+          unlockTime: unlockTimeDate,
         });
+      } else {
+        setLockoutInfo(null);
       }
+    } else {
+      setLockoutInfo(null);
     }
-  }, [reduxLockoutInfo, season]);
+  }, [unlockTime]);
 
   useEffect(() => {
     let timer;
@@ -58,6 +61,11 @@ const SeasonSwitch = () => {
   }, [lockoutInfo]);
 
   const handleSeasonChange = async (newSeason) => {
+    if (readOnlyMode) {
+      setAlertColor('warning');
+      setAlertMessage('You are in read only mode');
+      return;
+    }
     try {
       if (readOnlyMode) {
         setAlertColor('warning');
@@ -72,15 +80,15 @@ const SeasonSwitch = () => {
 
       if (response?.data?.status === 'success') {
         dispatch(setSeason(newSeason));
-        dispatch(setSystemStatus('ONLINE'));
         toast.success(response.data.message);
 
-        const unlockTime = parseISO(response.data.unlock_time);
-        const newLockoutInfo = {
-          lockoutTime: response.data.mode_switch_lockout_time,
-          unlockTime: unlockTime,
-        };
-        setLockoutInfo(newLockoutInfo);
+        if (response.data.unlock_time) {
+          const unlockTime = parseISO(response.data.unlock_time);
+          setLockoutInfo({
+            unlockTime: unlockTime,
+          });
+          setSwitchDirection(null);
+        }
       }
     } catch (error) {
       dispatch(setSystemStatus('OFFLINE'));
@@ -175,10 +183,8 @@ const SeasonSwitch = () => {
       {lockoutInfo && (
         <div className="season-switch-overlay">
           <div className="switch-message">
-            <h3>
-              Switching to {season === 'toWinter' ? 'Winter' : 'Summer'} Mode
-            </h3>
-            <p>Time remaining: {countdown}</p>
+            <h3>System Locked</h3>
+            <p>Time remaining until next switch: {countdown}</p>
             <div className="lock-icon">🔒</div>
           </div>
         </div>

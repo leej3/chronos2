@@ -46,6 +46,10 @@ describe('UserSettings Component', () => {
       chronos: {
         season: 1,
         lockoutInfo: null,
+        unlock_time: null,
+      },
+      manualOverride: {
+        manual_override: false,
       },
     };
 
@@ -72,7 +76,10 @@ describe('UserSettings Component', () => {
     const state = {
       chronos: {
         season: 1,
-        lockoutInfo: null,
+        unlock_time: null,
+      },
+      manualOverride: {
+        manual_override: false,
       },
     };
 

@@ -198,15 +198,16 @@ def test_get_data_with_lockout(client, mock_dashboard_service):
     mock_response = {
         "results": {
             "mode": 0,
-            "lockout_info": {
-                "mode_switch_timestamp": current_time.isoformat(),
-                "mode_switch_lockout_time": 2,
-                "unlock_time": (current_time + timedelta(minutes=2)).isoformat(),
-            },
+            "unlock_time": (current_time + timedelta(minutes=2)).isoformat(),
         }
     }
     mock_dashboard_service.get_data.return_value = mock_response
 
     response = client.get("/api/")
     assert response.status_code == 200
-    assert "lockout_info" in response.json()["results"]
+    assert "unlock_time" in response.json()["results"]
+    assert response.json()["results"]["mode"] == 0
+    assert (
+        response.json()["results"]["unlock_time"]
+        < (current_time + timedelta(minutes=2)).isoformat()
+    )

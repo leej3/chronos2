@@ -27,19 +27,10 @@ class DashboardService:
         mode_switch_timestamp = self.setting_repository._get_property_from_db(
             "mode_switch_timestamp"
         )
-        current_time = datetime.now()
 
-        lockout_info = None
-        if mode_switch_timestamp:
-            unlock_time = mode_switch_timestamp + timedelta(
-                minutes=settings.mode_switch_lockout_time
-            )
-            if current_time < unlock_time:
-                lockout_info = {
-                    "mode_switch_timestamp": mode_switch_timestamp.isoformat(),
-                    "mode_switch_lockout_time": settings.mode_switch_lockout_time,
-                    "unlock_time": unlock_time.isoformat(),
-                }
+        unlock_time = mode_switch_timestamp + timedelta(
+            minutes=settings.mode_switch_lockout_time
+        )
 
         edge_server_data = self.edge_server.get_data()
         # edge_server_data["devices"][0]["state"] = True
@@ -64,7 +55,7 @@ class DashboardService:
                 else 0
             ),
             "wind_chill_avg": getattr(history, "avg_outside_temp", 0),
-            "lockout_info": lockout_info,
+            "unlock_time": unlock_time.isoformat(),
         }
 
         efficiency = self.calculate_efficiency()
