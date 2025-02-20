@@ -34,7 +34,6 @@ class BoilerStats(BaseModel):
     lead_firing_rate: float = Field(
         ..., description="Lead boiler firing rate percentage"
     )
-    water_flow_rate: float = Field(..., description="Water flow rate in GPM")
     pump_status: bool = Field(..., description="Pump running status")
     flame_status: bool = Field(..., description="Flame detection status")
 

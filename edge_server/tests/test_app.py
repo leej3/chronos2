@@ -125,7 +125,6 @@ def test_get_boiler_stats_mock(client, mock_modbus_device):
         "flue_temp": 176.0,
         "cascade_current_power": 50.0,
         "lead_firing_rate": 75.0,
-        "water_flow_rate": 10.0,
         "pump_status": True,
         "flame_status": True,
     }
