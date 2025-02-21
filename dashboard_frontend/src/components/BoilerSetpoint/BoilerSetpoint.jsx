@@ -9,6 +9,7 @@ import {
   CCol,
   CRow,
 } from '@coreui/react';
+import { useSelector } from 'react-redux';
 
 import {
   updateBoilerSetpoint,
@@ -17,12 +18,14 @@ import {
 
 const BoilerSetpoint = () => {
   const [temperature, setTemperature] = useState('');
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
   const [limits, setLimits] = useState({
     hard_limits: { min_setpoint: 70, max_setpoint: 110 },
     soft_limits: { min_setpoint: 70, max_setpoint: 110 },
   });
+  const [alertMessage, setAlertMessage] = useState('');
+  const readOnlyMode = useSelector((state) => state.chronos.read_only_mode);
+  const [alertColor, setAlertColor] = useState('danger');
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,6 +36,10 @@ const BoilerSetpoint = () => {
       } catch (err) {
         console.error('Failed to fetch temperature limits:', err);
         setError('Failed to fetch temperature limits. Using default range.');
+        setAlertColor('danger');
+        setAlertMessage(
+          'Failed to fetch temperature limits. Using default range.',
+        );
       } finally {
         setLoading(false);
       }
@@ -43,12 +50,17 @@ const BoilerSetpoint = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(null);
-    setSuccess(false);
+
+    if (readOnlyMode) {
+      setAlertColor('warning');
+      setAlertMessage('You are in read only mode');
+      return;
+    }
 
     const temp = parseFloat(temperature);
     if (isNaN(temp)) {
-      setError('Temperature must be a number');
+      setAlertColor('danger');
+      setAlertMessage('Temperature must be a number');
       return;
     }
 
@@ -56,7 +68,8 @@ const BoilerSetpoint = () => {
       temp < limits.hard_limits.min_setpoint ||
       temp > limits.hard_limits.max_setpoint
     ) {
-      setError(
+      setAlertColor('danger');
+      setAlertMessage(
         `Temperature must be between ${limits.hard_limits.min_setpoint}°F and ${limits.hard_limits.max_setpoint}°F`,
       );
       return;
@@ -77,10 +90,11 @@ const BoilerSetpoint = () => {
 
     try {
       await updateBoilerSetpoint(temp);
-      setSuccess(true);
-      setTemperature('');
+      setAlertColor('success');
+      setAlertMessage('Temperature updated successfully!');
     } catch (err) {
-      setError(err.message || 'Failed to update temperature');
+      setAlertColor('danger');
+      setAlertMessage(err.message || 'Failed to update temperature');
     }
   };
 
@@ -116,14 +130,19 @@ const BoilerSetpoint = () => {
           </CCol>
         </CRow>
       </CForm>
-      {error && (
-        <CAlert color="danger" className="mt-3">
-          {error}
-        </CAlert>
-      )}
-      {success && (
-        <CAlert color="success" className="mt-3">
-          Temperature updated successfully!
+      {alertMessage && (
+        <CAlert
+          color={alertColor}
+          className=""
+          dismissible
+          onClose={() => setAlertMessage('')}
+        >
+          <strong>
+            {alertColor === 'danger' && 'Error!'}
+            {alertColor === 'warning' && 'Warning!'}
+            {alertColor === 'success' && 'Success!'}
+          </strong>{' '}
+          {alertMessage}
         </CAlert>
       )}
     </div>
