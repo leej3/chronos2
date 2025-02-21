@@ -19,7 +19,10 @@ const BoilerSetpoint = () => {
   const [temperature, setTemperature] = useState('');
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
-  const [limits, setLimits] = useState({ min_setpoint: 70, max_setpoint: 110 });
+  const [limits, setLimits] = useState({
+    hard_limits: { min_setpoint: 70, max_setpoint: 110 },
+    soft_limits: { min_setpoint: 70, max_setpoint: 110 },
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -49,11 +52,27 @@ const BoilerSetpoint = () => {
       return;
     }
 
-    if (temp < limits.min_setpoint || temp > limits.max_setpoint) {
+    if (
+      temp < limits.hard_limits.min_setpoint ||
+      temp > limits.hard_limits.max_setpoint
+    ) {
       setError(
-        `Temperature must be between ${limits.min_setpoint}°F and ${limits.max_setpoint}°F`,
+        `Temperature must be between ${limits.hard_limits.min_setpoint}°F and ${limits.hard_limits.max_setpoint}°F`,
       );
       return;
+    }
+
+    if (
+      temp < limits.soft_limits.min_setpoint ||
+      temp > limits.soft_limits.max_setpoint
+    ) {
+      if (
+        !window.confirm(
+          `Warning: Temperature is outside recommended range (${limits.soft_limits.min_setpoint}°F - ${limits.soft_limits.max_setpoint}°F). Continue?`,
+        )
+      ) {
+        return;
+      }
     }
 
     try {
@@ -71,25 +90,31 @@ const BoilerSetpoint = () => {
 
   return (
     <div>
-      <h2>Update Boiler Setpoint</h2>
+      <h2 className="chronous-title text-center mb-0">
+        Update Boiler Setpoint
+      </h2>
       <CForm onSubmit={handleSubmit}>
-        <CRow className="mb-3">
+        <CRow>
+          <CFormLabel className="temp-label text-start">
+            Temperature (°F)
+          </CFormLabel>
           <CCol>
-            <CFormLabel>Temperature (°F)</CFormLabel>
             <CFormInput
               type="number"
               step="0.1"
               value={temperature}
               onChange={(e) => setTemperature(e.target.value)}
-              placeholder={`Enter temperature (${limits.min_setpoint}-${limits.max_setpoint}°F)`}
-              min={limits.min_setpoint}
-              max={limits.max_setpoint}
+              placeholder={`Enter temperature (${limits.soft_limits.min_setpoint}-${limits.soft_limits.max_setpoint}°F)`}
+              min={limits.hard_limits.min_setpoint}
+              max={limits.hard_limits.max_setpoint}
             />
           </CCol>
+          <CCol xs="12" className="text-end mt-3">
+            <CButton type="submit" color="primary" className="update-btn m-2">
+              Update
+            </CButton>
+          </CCol>
         </CRow>
-        <CButton type="submit" color="primary" className="mt-3">
-          Update Temperature
-        </CButton>
       </CForm>
       {error && (
         <CAlert color="danger" className="mt-3">

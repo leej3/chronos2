@@ -3,6 +3,9 @@
 }
 .modbus .season-group {
   margin-bottom: 10px;
+  text-align: start;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
 .modbus .season-group .form-label {

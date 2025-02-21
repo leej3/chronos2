@@ -1,6 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 
-import { CFormLabel, CCol, CRow, CCard, CCardBody } from '@coreui/react';
+import {
+  CFormLabel,
+  CCol,
+  CRow,
+  CCard,
+  CCardBody,
+  CDropdown,
+  CDropdownToggle,
+  CDropdownMenu,
+  CDropdownItem,
+  CNav,
+  CNavItem,
+  CNavLink,
+  CTabs,
+  CTabContent,
+  CTabPane,
+} from '@coreui/react';
 
 import { formatNumber } from '../../utils/tranform';
 import BoilerSetpoint from '../BoilerSetpoint/BoilerSetpoint';
@@ -48,38 +64,40 @@ const Modbus = ({ boiler }) => {
       <CCol sm="12">
         <div className="season-group">
           <CFormLabel className="form-label">
-            <strong>System Supply Temp:</strong>{' '}
-            <span>{`${system_supply_temp} °F`}</span>
+            <span className="temp-label">System Supply Temp:</span>{' '}
+            <span className="temp-value">{`${system_supply_temp} °F`}</span>
           </CFormLabel>
         </div>
       </CCol>
       <CCol sm="12">
         <div className="season-group">
           <CFormLabel className="form-label">
-            <strong>Outlet Temp:</strong> <span>{`${outlet_temp} °F`}</span>
+            <span className="temp-label">Outlet Temp:</span>{' '}
+            <span className="temp-value">{`${outlet_temp} °F`}</span>
           </CFormLabel>
         </div>
       </CCol>
       <CCol sm="12">
         <div className="season-group">
           <CFormLabel className="form-label">
-            <strong>Inlet Temp:</strong> <span>{`${inlet_temp} °F`}</span>
+            <span className="temp-label">Inlet Temp:</span>{' '}
+            <span className="temp-value">{`${inlet_temp} °F`}</span>
           </CFormLabel>
         </div>
       </CCol>
       <CCol sm="12">
         <div className="season-group">
           <CFormLabel className="form-label">
-            <strong>Cascade Current Power:</strong>{' '}
-            <span>{`${cascade_current_power} %`}</span>
+            <span className="temp-label">Cascade Current Power:</span>{' '}
+            <span className="temp-value">{`${cascade_current_power} %`}</span>
           </CFormLabel>
         </div>
       </CCol>
       <CCol sm="12">
         <div className="season-group">
           <CFormLabel className="form-label">
-            <strong>Lead Firing Rate:</strong>{' '}
-            <span>{`${lead_firing_rate} %`}</span>
+            <span className="temp-label">Lead Firing Rate:</span>{' '}
+            <span className="temp-value">{`${lead_firing_rate} %`}</span>
           </CFormLabel>
         </div>
       </CCol>
@@ -91,27 +109,31 @@ const Modbus = ({ boiler }) => {
       <CCol sm="12">
         <div className="season-group">
           <CFormLabel className="form-label">
-            <strong>Operating Mode:</strong> <span>{operating_mode}</span>
+            <span className="temp-label">Operating Mode:</span>{' '}
+            <span className="temp-value">{operating_mode}</span>
           </CFormLabel>
         </div>
       </CCol>
       <CCol sm="12">
         <div className="season-group">
           <CFormLabel className="form-label">
-            <strong>Cascade Mode:</strong> <span>{cascade_mode}</span>
+            <span className="temp-label">Cascade Mode:</span>{' '}
+            <span className="temp-value">{cascade_mode}</span>
           </CFormLabel>
         </div>
       </CCol>
       <CCol sm="12">
         <div className="season-group">
           <CFormLabel className="form-label">
-            <strong>Current Setpoint:</strong>{' '}
-            <span>{`${current_setpoint} °F`}</span>
+            <span className="temp-label">Current Setpoint:</span>{' '}
+            <span className="temp-value">{`${current_setpoint} °F`}</span>
           </CFormLabel>
         </div>
       </CCol>
-      <CCol sm="12" className="mt-4">
-        <BoilerSetpoint currentSetpoint={current_setpoint} />
+      <CCol sm="12">
+        <div className="season-group">
+          <BoilerSetpoint currentSetpoint={current_setpoint} />
+        </div>
       </CCol>
     </CRow>
   );
@@ -146,7 +168,7 @@ const Modbus = ({ boiler }) => {
         ))}
       </CNav>
 
-      <CTabContent>
+      <CTabContent className="m-0 p-0">
         <CTabPane visible={activeTab === 'statsTab'}>
           {renderStatsTab()}
         </CTabPane>
