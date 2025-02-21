@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 
+from fastapi import HTTPException
 from sqlalchemy import desc, or_
 from sqlalchemy.sql import func
 from src.core.configs.database import session_scope
@@ -68,13 +69,9 @@ class DashboardService:
 
         efficiency = self.calculate_efficiency()
         boiler_status = self.edge_server.get_boiler_status()
-        boiler_errors = self.edge_server.get_boiler_errors()
-        boiler_info = self.edge_server.get_boiler_info()
         boiler_stats = self.edge_server.get_data_boiler_stats()
         boiler = {
             "status": boiler_status,
-            "errors": boiler_errors,
-            "info": boiler_info,
             "stats": boiler_stats,
         }
         efficiency["cascade_fire_rate_avg"] = round(
@@ -268,6 +265,28 @@ class DashboardService:
             if value is not None:
                 setattr(self.chronos, key, value)
         return reponse
+
+    def boiler_set_setpoint(self, temperature: float):
+        limits = self.edge_server.get_temperature_limits()
+        hard_limits = limits["hard_limits"]
+        soft_limits = limits["soft_limits"]
+        if (
+            temperature < hard_limits["min_setpoint"]
+            or temperature > hard_limits["max_setpoint"]
+        ):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Temperature must be between {hard_limits['min_setpoint']}°F and {hard_limits['max_setpoint']}°F",
+            )
+        if (
+            temperature < soft_limits["min_setpoint"]
+            or temperature > soft_limits["max_setpoint"]
+        ):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Temperature must be between {soft_limits['min_setpoint']}°F and {soft_limits['max_setpoint']}°F",
+            )
+        return self.edge_server.boiler_set_setpoint(temperature)
 
     def switch_season_mode(self, season_value: int):
         try:

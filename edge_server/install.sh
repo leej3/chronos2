@@ -26,7 +26,7 @@ INSTALL_DIR="/opt/chronos"
 SERVICE_NAME="chronos-edge"
 PI_USER="${PI_USER:-pi}"
 SERVICE_GROUP="dialout"
-READ_ONLY_MODE="${READ_ONLY_MODE:-false}"
+READ_ONLY_MODE="${READ_ONLY_MODE:-true}"
 
 echo "Installing Chronos edge server..."
 echo "Read-only mode: ${READ_ONLY_MODE}"

@@ -4,7 +4,12 @@ from typing import Annotated
 from fastapi import APIRouter, Request, Security
 from fastapi.responses import JSONResponse, StreamingResponse
 from src.api.dependencies import get_current_user
-from src.api.dto.dashboard import SwitchSeason, UpdateDeviceState, UpdateSettings
+from src.api.dto.dashboard import (
+    SetpointUpdate,
+    SwitchSeason,
+    UpdateDeviceState,
+    UpdateSettings,
+)
 from src.core.common.exceptions import EdgeServerError
 from src.core.services.chronos import Chronos
 from src.core.services.edge_server import EdgeServer
@@ -154,24 +159,6 @@ async def boiler_status(
     return JSONResponse(content=data)
 
 
-@router.get("/boiler_errors")
-async def boiler_errors(
-    current_user: Annotated[UserToken, Security(get_current_user)],
-    edge_server: Annotated[EdgeServer, Security(get_edge_server)],
-):
-    data = edge_server.get_boiler_errors()
-    return JSONResponse(content=data)
-
-
-@router.get("/boiler_info")
-async def boiler_info(
-    current_user: Annotated[UserToken, Security(get_current_user)],
-    edge_server: Annotated[EdgeServer, Security(get_edge_server)],
-):
-    data = edge_server.get_boiler_info()
-    return JSONResponse(content=data)
-
-
 @router.get("/temperature_limits")
 async def temperature_limits(
     current_user: Annotated[UserToken, Security(get_current_user)],
@@ -179,6 +166,16 @@ async def temperature_limits(
 ):
     """Get the valid temperature range for the boiler from the edge server."""
     data = edge_server.get_temperature_limits()
+    return JSONResponse(content=data)
+
+
+@router.post("/boiler_set_setpoint")
+async def boiler_set_setpoint(
+    data: SetpointUpdate,
+    current_user: Annotated[UserToken, Security(get_current_user)],
+    edge_server: Annotated[EdgeServer, Security(get_edge_server)],
+):
+    data = dashboard_service.boiler_set_setpoint(data.temperature)
     return JSONResponse(content=data)
 
 

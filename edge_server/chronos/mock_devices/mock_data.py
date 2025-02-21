@@ -26,7 +26,6 @@ def mock_boiler_stats():
         "flue_temp": 176.0,
         "cascade_current_power": 50.0,
         "lead_firing_rate": 75.0,
-        "water_flow_rate": 10.0,
         "pump_status": True,
         "flame_status": True,
     }
@@ -46,37 +45,6 @@ def mock_operating_status():
         "cascade_mode": 0,
         "cascade_mode_str": "Single Boiler",
         "current_setpoint": 90.0,
-    }
-
-
-def mock_error_history():
-    return {
-        "last_lockout_code": 3,
-        "last_lockout_str": "Low Water",
-        "last_blockout_code": 8,
-        "last_blockout_str": "Sensor Failure",
-    }
-
-
-def mock_error_history_none():
-    return {
-        "last_lockout_code": None,
-        "last_lockout_str": None,
-        "last_blockout_code": None,
-        "last_blockout_str": None,
-    }
-
-
-def history_none():
-    return True
-
-
-def mock_model_info():
-    return {
-        "model_id": 1,
-        "model_name": "FTXL 85",
-        "firmware_version": "1.2",
-        "hardware_version": "3.4",
     }
 
 

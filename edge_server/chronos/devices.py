@@ -98,7 +98,6 @@ class ModbusDevice:
                 min_setpoint_limit=cfg.registers.holding.min_setpoint_limit,
                 max_setpoint_limit=cfg.registers.holding.max_setpoint_limit,
                 last_lockout=cfg.registers.holding.last_lockout,
-                model_id=cfg.registers.holding.model_id,
                 system_supply_temp=cfg.registers.holding.system_supply_temp,
             ),
             input=SimpleNamespace(
@@ -142,19 +141,6 @@ class ModbusDevice:
             "6": "Flame Circuit Error",
             "7": "Sensor Failure",
             "8": "Fan Speed Error",
-        }
-
-        # Updated model IDs
-        self.model_ids = {
-            "1": "FTXL 85",
-            "2": "FTXL 105",
-            "3": "FTXL 125",
-            "4": "FTXL 150",
-            "5": "FTXL 185",
-            "6": "FTXL 220",
-            "7": "FTXL 260",
-            "8": "FTXL 300",
-            "9": "FTXL 399",
         }
 
         self._connect()
@@ -253,7 +239,8 @@ class ModbusDevice:
 
                 # Read input registers block (status through firing rate)
                 i_result = self._read_input_register(
-                    self.registers.input.alarm, count=9
+                    3,
+                    count=9,  # Start from address 3 to match working implementation
                 )
 
                 # Convert temperatures exactly as in C code
@@ -417,63 +404,6 @@ class ModbusDevice:
             }
         except (ModbusException, OSError, AttributeError, IndexError) as e:
             logger.error(f"Failed to read operating status: {str(e)}")
-            return None
-
-    def read_error_history(self):
-        """Read error history including last lockout and blockout codes."""
-        try:
-            # Read last lockout and blockout codes
-            error_regs = self._read_holding_register(
-                self.registers.holding.last_lockout, count=2
-            )
-
-            error_history = {}
-
-            # Process lockout code
-            lockout_code = error_regs[0]
-            error_history["last_lockout_code"] = lockout_code
-            error_history["last_lockout_str"] = self.error_codes.get(
-                str(lockout_code), f"Unknown ({lockout_code})"
-            )
-
-            # Process blockout code
-            blockout_code = error_regs[1]
-            error_history["last_blockout_code"] = blockout_code
-            error_history["last_blockout_str"] = self.error_codes.get(
-                str(blockout_code), f"Unknown ({blockout_code})"
-            )
-
-            return error_history
-        except (ModbusException, OSError, AttributeError, IndexError) as e:
-            logger.error(f"Failed to read error history: {str(e)}")
-            return None
-
-    def read_model_info(self):
-        """Read boiler model information and firmware versions."""
-        try:
-            # Read model ID and version information
-            info_regs = self._read_holding_register(
-                self.registers.holding.model_id, count=3
-            )
-
-            model_info = {}
-
-            # Process model ID
-            model_id = info_regs[0]
-            model_info["model_id"] = model_id
-            model_info["model_name"] = self.model_ids.get(
-                str(model_id), f"Unknown Model ({model_id})"
-            )
-
-            # Process firmware and hardware versions
-            fw_version = info_regs[1]
-            hw_version = info_regs[2]
-            model_info["firmware_version"] = f"{fw_version >> 8}.{fw_version & 0xFF}"
-            model_info["hardware_version"] = f"{hw_version >> 8}.{hw_version & 0xFF}"
-
-            return model_info
-        except (ModbusException, OSError, AttributeError, IndexError) as e:
-            logger.error(f"Failed to read model info: {str(e)}")
             return None
 
     def get_temperature_limits(self) -> dict:

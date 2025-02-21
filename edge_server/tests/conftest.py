@@ -160,20 +160,6 @@ def mock_modbus_device():
         "current_setpoint": 158.0,
     }
 
-    mock_device.read_model_info.return_value = {
-        "model_id": 1,
-        "model_name": "FTXL 85",
-        "firmware_version": "1.2",
-        "hardware_version": "3.4",
-    }
-
-    mock_device.read_error_history.return_value = {
-        "last_lockout_code": 3,
-        "last_lockout_str": "Low Water",
-        "last_blockout_code": 8,
-        "last_blockout_str": "Sensor Failure",
-    }
-
     mock_device.set_boiler_setpoint.return_value = True
 
     # Mock the context manager

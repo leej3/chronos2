@@ -3,6 +3,10 @@ from typing import Optional
 from pydantic import BaseModel, Field, validator
 
 
+class SetpointUpdate(BaseModel):
+    temperature: float
+
+
 class SwitchSeason(BaseModel):
     season_value: int
 

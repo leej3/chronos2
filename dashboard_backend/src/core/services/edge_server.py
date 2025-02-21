@@ -88,18 +88,6 @@ class EdgeServer:
         return self._handle_response(response)
 
     @catch_connection_error
-    def get_boiler_errors(self):
-        """Get boiler errors."""
-        response = requests.get(f"{self.url}/boiler_errors")
-        return self._handle_response(response)
-
-    @catch_connection_error
-    def get_boiler_info(self):
-        """Get boiler information."""
-        response = requests.get(f"{self.url}/boiler_info")
-        return self._handle_response(response)
-
-    @catch_connection_error
     def get_temperature_limits(self):
         """Get temperature limits."""
         response = requests.get(f"{self.url}/temperature_limits")

@@ -34,11 +34,6 @@ MOCK_CONFIG = {
         "7": "Sensor Failure",
         "8": "Fan Speed Error",
     },
-    "model_ids": {
-        "1": "FTXL 85",
-        "2": "FTXL 105",
-        "3": "FTXL 125",
-    },
 }
 
 # Test data based on real hardware observations
@@ -81,7 +76,6 @@ def mock_config():
                         "min_setpoint": 0x40003,
                         "max_setpoint": 0x40004,
                         "last_lockout": 0x40005,
-                        "model_id": 0x40006,
                     },
                 )()
                 self.input = type(
@@ -98,7 +92,6 @@ def mock_config():
         mock_cfg.modbus.operating_modes = MOCK_CONFIG["operating_modes"]
         mock_cfg.modbus.cascade_modes = MOCK_CONFIG["cascade_modes"]
         mock_cfg.modbus.error_codes = MOCK_CONFIG["error_codes"]
-        mock_cfg.modbus.model_ids = MOCK_CONFIG["model_ids"]
         yield mock_cfg
 
 
@@ -110,7 +103,6 @@ def mock_modbus_device(mock_modbus_client, mock_config):
     device.operating_modes = MOCK_CONFIG["operating_modes"]
     device.cascade_modes = MOCK_CONFIG["cascade_modes"]
     device.error_codes = MOCK_CONFIG["error_codes"]
-    device.model_ids = MOCK_CONFIG["model_ids"]
     return device
 
 
@@ -203,13 +195,11 @@ def test_set_boiler_setpoint_success(device, mock_modbus_client):
     assert success is True
 
     # Verify both writes occurred:
-    # 1. Write mode 4 (manual operation) to register 40001
-    # 2. Write setpoint percentage to register 40003
+    # 1. Write mode 4 (manual operation) to register 0
+    # 2. Write setpoint percentage to register 2
     assert mock_modbus_client.return_value.write_register.call_count == 2
-    mock_modbus_client.return_value.write_register.assert_any_call(0x40000, 4)  # Mode
-    mock_modbus_client.return_value.write_register.assert_any_call(
-        0x40002, 54
-    )  # Setpoint
+    mock_modbus_client.return_value.write_register.assert_any_call(0, 4)  # Mode
+    mock_modbus_client.return_value.write_register.assert_any_call(2, 54)  # Setpoint
 
 
 def test_set_boiler_setpoint_invalid_range(device, mock_modbus_client):
@@ -244,43 +234,6 @@ def test_read_operating_status_success(device, mock_modbus_client):
     assert status["cascade_mode"] == 1
     assert status["cascade_mode_str"] == "Manager"
     assert status["current_setpoint"] == round((9.0 / 5.0) * (150 / 10.0) + 32.0, 1)
-
-
-def test_read_error_history_success(device, mock_modbus_client):
-    """Test successful reading of error history."""
-    # Mock register response for lockout and blockout codes
-    mock_modbus_client.return_value.read_holding_registers.return_value = MagicMock(
-        isError=lambda: False,
-        registers=[
-            3,
-            8,
-        ],  # Lockout code 3 (Low Water), Blockout code 8 (Fan Speed Error)
-    )
-
-    history = device.read_error_history()
-    assert history["last_lockout_code"] == 3
-    assert history["last_lockout_str"] == "Low Water"
-    assert history["last_blockout_code"] == 8
-    assert history["last_blockout_str"] == "Fan Speed Error"
-
-
-def test_read_model_info_success(device, mock_modbus_client):
-    """Test successful reading of model information."""
-    # Mock register response for model info
-    mock_modbus_client.return_value.read_holding_registers.return_value = MagicMock(
-        isError=lambda: False,
-        registers=[
-            1,  # Model ID (FTXL 85)
-            0x0102,  # Firmware version (1.2)
-            0x0304,  # Hardware version (3.4)
-        ],
-    )
-
-    info = device.read_model_info()
-    assert info["model_id"] == 1
-    assert info["model_name"] == "FTXL 85"
-    assert info["firmware_version"] == "1.2"
-    assert info["hardware_version"] == "3.4"
 
 
 @pytest.mark.parametrize(
@@ -704,11 +657,11 @@ def test_setpoint_change_state_sequence(device, mock_modbus_client):
     assert len(states) == 2, "Expected exactly two state changes"
 
     # First state change should be to manual mode
-    assert states[0]["register"] == 0x40000  # Operating mode register
+    assert states[0]["register"] == 0  # Operating mode register
     assert states[0]["value"] == 4  # Manual operation mode
 
     # Second state change should be setpoint
-    assert states[1]["register"] == 0x40002  # Setpoint register
+    assert states[1]["register"] == 2  # Setpoint register
     assert states[1]["value"] == expected_percentage
 
     # Verify timing between operations

@@ -52,19 +52,6 @@ class BoilerReader:
         # Cascade modes
         self.cascade_modes = {"0": "Single Boiler", "1": "Manager", "2": "Member"}
 
-        # Known model IDs
-        self.model_ids = {
-            1: "FTXL 85",
-            2: "FTXL 105",
-            3: "FTXL 125",
-            4: "FTXL 150",
-            5: "FTXL 185",
-            6: "FTXL 220",
-            7: "FTXL 260",
-            8: "FTXL 300",
-            9: "FTXL 399",
-        }
-
     def connect(self):
         """Connect to the boiler."""
         if not self.client.connect():
@@ -192,33 +179,6 @@ class BoilerReader:
                         "Inlet Temp": round(c_to_f(i_result[6] / 10.0), 1),
                         "Flue Temp": round(c_to_f(i_result[7] / 10.0), 1),
                         "Lead Firing Rate": float(i_result[8]),
-                    }
-                )
-
-            # Read additional registers for Model Information (assume registers 40008-40010, i.e. address 7, count=3)
-            model_regs = self.read_register(7, count=3)
-            if model_regs:
-                try:
-                    info.update(
-                        {
-                            "Model ID": model_regs[0],
-                            "Model Name": self.model_ids.get(
-                                model_regs[0], f"Unknown ({model_regs[0]})"
-                            ),
-                            "Firmware Version": f"{model_regs[1] >> 8}.{model_regs[1] & 0xFF}",
-                            "Hardware Version": f"{model_regs[2] >> 8}.{model_regs[2] & 0xFF}",
-                        }
-                    )
-                except Exception as e:
-                    logger.error(f"Error parsing model info: {e}")
-
-            # Read additional registers for Error History (assume registers 40011-40012, i.e. address 10, count=2)
-            error_regs = self.read_register(10, count=2)
-            if error_regs:
-                info.update(
-                    {
-                        "Last Lockout Code": error_regs[0],
-                        "Last Blockout Code": error_regs[1],
                     }
                 )
 
