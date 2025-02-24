@@ -56,7 +56,10 @@ export const chronosSlice = createSlice({
         state.status = 'succeeded';
         state.systemStatus = data.status ? 'ONLINE' : 'OFFLINE';
         state.error = null;
-        state.unlock_time = data.results?.unlock_time;
+        state.unlock_time =
+          new Date(data.results?.unlock_time) > new Date()
+            ? data.results?.unlock_time
+            : null;
       })
       .addCase(fetchData.rejected, (state, action) => {
         state.unlock_time = null;

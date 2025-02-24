@@ -4,7 +4,7 @@ import { CTooltip, CAlert } from '@coreui/react';
 import { useSelector, useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
 import { format, parseISO } from 'date-fns';
-import { setSeason } from '../../features/chronos/chronosSlice';
+import { setUnlockTime } from '../../features/chronos/chronosSlice';
 import { switchSeason } from '../../api/switchSeason';
 import './SeasonSwitch.css';
 
@@ -12,53 +12,46 @@ const SeasonSwitch = () => {
   const dispatch = useDispatch();
   const season = useSelector((state) => state.chronos.season);
   const readOnlyMode = useSelector((state) => state.chronos.read_only_mode);
-  const [lockoutInfo, setLockoutInfo] = useState(null);
+  const unlockTime = useSelector((state) => state.chronos.unlock_time);
   const [countdown, setCountdown] = useState(null);
   const [switchDirection, setSwitchDirection] = useState(null);
   const [alertColor, setAlertColor] = useState('danger');
   const [alertMessage, setAlertMessage] = useState('');
-  const unlockTime = useSelector((state) => state.chronos.unlock_time);
-
-  useEffect(() => {
-    if (unlockTime) {
-      const unlockTimeDate = parseISO(unlockTime);
-      const now = new Date();
-      if (unlockTimeDate > now) {
-        setLockoutInfo({
-          unlockTime: unlockTimeDate,
-        });
-      } else {
-        setLockoutInfo(null);
-      }
-    } else {
-      setLockoutInfo(null);
-    }
-  }, [unlockTime]);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   useEffect(() => {
     let timer;
-    if (lockoutInfo?.unlockTime) {
-      timer = setInterval(() => {
+    if (unlockTime) {
+      const updateCountdown = () => {
+        const unlockTimeDate = parseISO(unlockTime);
         const now = new Date();
-        const diff = lockoutInfo.unlockTime.getTime() - now.getTime();
+        const diff = unlockTimeDate.getTime() - now.getTime();
 
         if (diff <= 0) {
-          setLockoutInfo(null);
-          setSwitchDirection(null);
           setCountdown(null);
+          setSwitchDirection(null);
+          setIsAnimating(false);
+          dispatch(setUnlockTime(null));
           clearInterval(timer);
         } else {
           const minutes = Math.floor(diff / 1000 / 60);
           const seconds = Math.floor((diff / 1000) % 60);
           setCountdown(`${minutes}:${seconds.toString().padStart(2, '0')}`);
         }
-      }, 1000);
+      };
+
+      updateCountdown();
+      timer = setInterval(updateCountdown, 1000);
+    } else {
+      setCountdown(null);
+      setSwitchDirection(null);
+      setIsAnimating(false);
     }
 
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [lockoutInfo]);
+  }, [unlockTime]);
 
   const handleSeasonChange = async (newSeason) => {
     if (readOnlyMode) {
@@ -66,35 +59,37 @@ const SeasonSwitch = () => {
       setAlertMessage('You are in read only mode');
       return;
     }
-    try {
-      if (readOnlyMode) {
-        setAlertColor('warning');
-        setAlertMessage('You are in read only mode');
-        return;
-      }
 
+    if (isAnimating) return;
+
+    try {
       const seasonValue = newSeason === 'Winter' ? 0 : 1;
       setSwitchDirection(newSeason === 'Winter' ? 'toWinter' : 'toSummer');
+      setIsAnimating(true);
 
       const response = await switchSeason(seasonValue);
 
-      if (response?.data?.status === 'success') {
-        dispatch(setSeason(newSeason));
-        toast.success(response.data.message);
-
-        if (response.data.unlock_time) {
-          const unlockTime = parseISO(response.data.unlock_time);
-          setLockoutInfo({
-            unlockTime: unlockTime,
-          });
-          setSwitchDirection(null);
-        }
-      }
-    } catch (error) {
-      dispatch(setSystemStatus('OFFLINE'));
       setSwitchDirection(null);
+      setIsAnimating(false);
+      dispatch(setUnlockTime(response?.data?.unlock_time));
+    } catch (error) {
+      setSwitchDirection(null);
+      setIsAnimating(false);
       toast.error(error?.message || 'Failed to switch season');
     }
+  };
+
+  const getSeasonClassName = (seasonType) => {
+    const baseClass = 'season-icon';
+    const classes = [
+      baseClass,
+      season === (seasonType === 'Winter' ? 0 : 1) ? 'active disabled' : '',
+      unlockTime ? 'locked' : '',
+      switchDirection === `to${seasonType}`
+        ? `switching-${seasonType.toLowerCase()}`
+        : '',
+    ];
+    return classes.filter(Boolean).join(' ');
   };
 
   return (
@@ -113,7 +108,7 @@ const SeasonSwitch = () => {
       <div className="season-toggle-header">
         <CTooltip
           content={
-            lockoutInfo
+            unlockTime && countdown
               ? `Locked - ${countdown} remaining`
               : season === 0
               ? 'Currently in Winter mode'
@@ -122,11 +117,12 @@ const SeasonSwitch = () => {
           placement="bottom"
         >
           <div
-            className={`season-icon ${season === 0 ? 'active disabled' : ''} ${
-              lockoutInfo ? 'locked' : ''
-            }`}
+            className={getSeasonClassName('Winter')}
             onClick={() =>
-              !lockoutInfo && season !== 0 && handleSeasonChange('Winter')
+              !unlockTime &&
+              !isAnimating &&
+              season !== 0 &&
+              handleSeasonChange('Winter')
             }
           >
             <img
@@ -152,7 +148,7 @@ const SeasonSwitch = () => {
 
         <CTooltip
           content={
-            lockoutInfo
+            unlockTime && countdown
               ? `Locked - ${countdown} remaining`
               : season === 1
               ? 'Currently in Summer mode'
@@ -161,11 +157,12 @@ const SeasonSwitch = () => {
           placement="bottom"
         >
           <div
-            className={`season-icon ${season === 1 ? 'active disabled' : ''} ${
-              lockoutInfo ? 'locked' : ''
-            }`}
+            className={getSeasonClassName('Summer')}
             onClick={() =>
-              !lockoutInfo && season !== 1 && handleSeasonChange('Summer')
+              !unlockTime &&
+              !isAnimating &&
+              season !== 1 &&
+              handleSeasonChange('Summer')
             }
           >
             <img
@@ -180,13 +177,11 @@ const SeasonSwitch = () => {
         </CTooltip>
       </div>
 
-      {lockoutInfo && (
-        <div className="season-switch-overlay">
-          <div className="switch-message">
-            <h3>System Locked</h3>
-            <p>Time remaining until next switch: {countdown}</p>
-            <div className="lock-icon">🔒</div>
-          </div>
+      {unlockTime && countdown && (
+        <div className="countdown-message text-center mt-2">
+          <span className="text-warning">
+            System locked - {countdown} remaining
+          </span>
         </div>
       )}
     </>

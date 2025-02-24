@@ -26,6 +26,8 @@ const ManualOverride = ({ data }) => {
   const [alertMessage, setAlertMessage] = useState('');
   const readOnlyMode = useSelector((state) => state.chronos.read_only_mode);
   const [alertColor, setAlertColor] = useState('danger');
+  const unlockTime = useSelector((state) => state.chronos.unlock_time);
+  const [remainingTime, setRemainingTime] = useState('');
   // const [socket, setSocket] = useState(null);
 
   useEffect(() => {
@@ -43,7 +45,42 @@ const ManualOverride = ({ data }) => {
     );
   }, [data]);
 
+  useEffect(() => {
+    if (!unlockTime) {
+      setAlertMessage('');
+      return;
+    }
+
+    const updateRemainingTime = () => {
+      const now = new Date();
+      const unlockDateTime = new Date(unlockTime);
+      const timeDiff = unlockDateTime - now;
+
+      if (timeDiff <= 0) {
+        setAlertMessage('');
+        return;
+      }
+
+      const hours = Math.floor(timeDiff / (1000 * 60 * 60));
+      const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+
+      const timeStr = `${hours}h ${minutes}m ${seconds}s`;
+      setAlertMessage(`System is locked for ${timeStr}`);
+      setAlertColor('warning');
+    };
+
+    updateRemainingTime();
+    const timer = setInterval(updateRemainingTime, 1000);
+
+    return () => clearInterval(timer);
+  }, [unlockTime]);
+
   const isDeviceDisabled = (device) => {
+    if (unlockTime) {
+      return true;
+    }
+
     if (season === 1) {
       return device === 'boiler';
     }

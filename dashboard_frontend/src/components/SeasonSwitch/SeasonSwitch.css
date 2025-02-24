@@ -109,3 +109,13 @@
 .season-icon.locked .season-icon-img {
   opacity: 0.5;
 }
+
+.countdown-message {
+  font-size: 0.875rem;
+  color: #6c757d;
+}
+
+.season-icon.locked {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
