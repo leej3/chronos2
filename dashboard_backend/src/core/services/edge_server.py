@@ -120,3 +120,8 @@ class EdgeServer:
             json={"command": command, "relay_only": relay_only},
         )
         return self._handle_response(response)
+
+    @catch_connection_error
+    def get_all_devices_state(self):
+        response = requests.get(f"{self.url}/get_all_devices_state")
+        return self._handle_response(response)

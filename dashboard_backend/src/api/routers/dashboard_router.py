@@ -47,14 +47,10 @@ def update_state(
     data: UpdateDeviceState,
     current_user: Annotated[UserToken, Security(get_current_user)],
     edge_server: Annotated[EdgeServer, Security(get_edge_server)],
+    dashboard_service: Annotated[DashboardService, Security(get_dashboard_service)],
 ):
-    try:
-        edge_server.update_device_state(id=data.id, state=data.state)
-        return JSONResponse(content={"message": "Updated state successfully"})
-    except ConnectToEdgeServerError:
-        return JSONResponse(
-            content={"detail": "Could not connect to edge server"}, status_code=403
-        )
+    data = dashboard_service.update_device_state(data)
+    return JSONResponse(content=data)
 
 
 @router.get("/download_log")

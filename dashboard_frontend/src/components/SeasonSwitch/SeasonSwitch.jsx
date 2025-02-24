@@ -112,8 +112,8 @@ const SeasonSwitch = () => {
             unlockTime && countdown
               ? `Locked - ${countdown} remaining`
               : season === 0
-                ? 'Currently in Winter mode'
-                : 'Switch to Winter mode'
+              ? 'Currently in Winter mode'
+              : 'Switch to Winter mode'
           }
           placement="bottom"
         >
@@ -128,7 +128,7 @@ const SeasonSwitch = () => {
           >
             <img
               src={`/images/Icons/WinterSummer/${
-                season === 0 ? 'WOn' : 'WOff'
+                season === 0 || season === 3 || season === 5 ? 'WOn' : 'WOff'
               }.png`}
               alt="Winter"
               className="season-icon-img"
@@ -137,7 +137,7 @@ const SeasonSwitch = () => {
           </div>
         </CTooltip>
 
-        {season === 0 ? (
+        {season === 0 || season === 3 || season === 5 ? (
           <BsArrowRight
             className={`arrow-icon ${switchDirection ? 'switching' : ''}`}
           />
@@ -152,8 +152,8 @@ const SeasonSwitch = () => {
             unlockTime && countdown
               ? `Locked - ${countdown} remaining`
               : season === 1
-                ? 'Currently in Summer mode'
-                : 'Switch to Summer mode'
+              ? 'Currently in Summer mode'
+              : 'Switch to Summer mode'
           }
           placement="bottom"
         >
@@ -168,7 +168,7 @@ const SeasonSwitch = () => {
           >
             <img
               src={`/images/Icons/WinterSummer/${
-                season === 1 ? 'SOn' : 'SOff'
+                season === 1 || season === 2 || season === 4 ? 'SOn' : 'SOff'
               }.png`}
               alt="Summer"
               className="season-icon-img"

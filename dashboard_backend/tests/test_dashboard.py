@@ -16,7 +16,7 @@ from src.api.routers.dashboard_router import (
     get_edge_server,
     router,
 )
-from src.core.common.exceptions import ConnectToEdgeServerError, EdgeServerError
+from src.core.common.exceptions import EdgeServerError
 from src.core.services.chronos import Chronos
 from src.core.services.device import Device
 from src.core.services.edge_server import EdgeServer
@@ -75,6 +75,38 @@ def mock_edge_server():
         "soft_limits": {"min_setpoint": 70.0, "max_setpoint": 110.0},
     }
     mock._switch_state = MagicMock(spec=EdgeServer._switch_state)
+    mock.get_all_devices_state.return_value = {
+        "0": {
+            "id": 0,
+            "state": True,
+            "switched_timestamp": datetime.now().isoformat(),
+        },
+        "1": {
+            "id": 1,
+            "state": False,
+            "switched_timestamp": datetime.now().isoformat(),
+        },
+        "2": {
+            "id": 2,
+            "state": False,
+            "switched_timestamp": datetime.now().isoformat(),
+        },
+        "3": {
+            "id": 3,
+            "state": False,
+            "switched_timestamp": datetime.now().isoformat(),
+        },
+        "4": {
+            "id": 4,
+            "state": False,
+            "switched_timestamp": datetime.now().isoformat(),
+        },
+    }
+    mock.update_device_state.return_value = {
+        "id": 1,
+        "state": True,
+        "switched_timestamp": datetime.now().isoformat(),
+    }
     return mock
 
 
@@ -130,17 +162,26 @@ def test_dashboard_data(client, mock_dashboard_service, mock_edge_server):
     assert response.json() == data
 
 
-def test_update_device_state(client, mock_edge_server):
-    response = client.post("/api/update_device_state", json={"id": 1, "state": True})
+def test_update_device_state(client, mock_dashboard_service):
+    mock_dashboard_service.update_device_state.return_value = {
+        "id": 0,
+        "state": 1,
+        "switched_timestamp": datetime.now().isoformat(),
+    }
+    response = client.post("/api/update_device_state", json={"id": 0, "state": 1})
     assert response.status_code == 200
-    assert response.json() == {"message": "Updated state successfully"}
+    data = response.json()
+    assert data["id"] == 0
+    assert data["state"] == 1
 
 
-def test_update_device_state_error(client, mock_edge_server):
-    mock_edge_server.update_device_state.side_effect = ConnectToEdgeServerError()
-    response = client.post("/api/update_device_state", json={"id": 2, "state": True})
-    assert response.status_code == 403
-    assert response.json() == {"detail": "Could not connect to edge server"}
+def test_update_device_state_error(client, mock_dashboard_service):
+    mock_dashboard_service.update_device_state.side_effect = HTTPException(
+        status_code=500, detail="Failed to update device state"
+    )
+    response = client.post("/api/update_device_state", json={"id": 2, "state": 1})
+    assert response.status_code == 500
+    assert response.json() == {"detail": "Failed to update device state"}
 
 
 def test_update_settings_success(client, mock_edge_server):
@@ -190,23 +231,4 @@ def test_switch_season_invalid_season_value(client, mock_dashboard_service):
     )
     response = client.post("/api/switch-season", json={"season_value": 6})
     assert response.status_code == 400
-    assert "error" in response.json()["status"]
-
-
-def test_get_data_with_lockout(client, mock_dashboard_service):
-    current_time = datetime.now()
-    mock_response = {
-        "results": {
-            "mode": 0,
-            "unlock_time": (current_time + timedelta(minutes=2)).isoformat(),
-        }
-    }
-
-    response = client.get("/api/")
-    assert response.status_code == 200
-    assert "unlock_time" in response.json()["results"]
-    assert response.json()["results"]["mode"] == 0
-    assert (
-        response.json()["results"]["unlock_time"]
-        < (current_time + timedelta(minutes=2)).isoformat()
-    )
+    assert response.json() == {"detail": "Invalid season value: 6"}

@@ -31,7 +31,7 @@ const SystemMap = memo(({ homedata, season, boiler }) => {
                 <div className="position-relative">
                   <img
                     src={
-                      manualOverride.boiler
+                      manualOverride.boiler.state
                         ? 'images/Icons/Boiler/Boiler-ON.png'
                         : 'images/Icons/Boiler/Boiler-OFF.png'
                     }
@@ -135,7 +135,7 @@ const SystemMap = memo(({ homedata, season, boiler }) => {
                   <CCol xs={6} className="d-flex justify-content-end pe-4">
                     <img
                       src={
-                        manualOverride[`chiller1`]
+                        manualOverride[`chiller1`].state
                           ? 'images/Icons/Boiler/Chiller-ON.png'
                           : 'images/Icons/Boiler/Chiller-OFF.png'
                       }
@@ -146,7 +146,7 @@ const SystemMap = memo(({ homedata, season, boiler }) => {
                   <CCol xs={6} className="d-flex justify-content-start ps-4">
                     <img
                       src={
-                        manualOverride[`chiller2`]
+                        manualOverride[`chiller2`].state
                           ? 'images/Icons/Boiler/Chiller-ON.png'
                           : 'images/Icons/Boiler/Chiller-OFF.png'
                       }
@@ -164,7 +164,7 @@ const SystemMap = memo(({ homedata, season, boiler }) => {
                   <CCol xs={6} className="d-flex justify-content-end pe-4">
                     <img
                       src={
-                        manualOverride[`chiller3`]
+                        manualOverride[`chiller3`].state
                           ? 'images/Icons/Boiler/Chiller-ON.png'
                           : 'images/Icons/Boiler/Chiller-OFF.png'
                       }
@@ -175,7 +175,7 @@ const SystemMap = memo(({ homedata, season, boiler }) => {
                   <CCol xs={6} className="d-flex justify-content-start ps-4">
                     <img
                       src={
-                        manualOverride[`chiller4`]
+                        manualOverride[`chiller4`].state
                           ? 'images/Icons/Boiler/Chiller-ON.png'
                           : 'images/Icons/Boiler/Chiller-OFF.png'
                       }

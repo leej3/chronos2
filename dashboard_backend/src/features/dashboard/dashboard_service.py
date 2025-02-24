@@ -5,11 +5,13 @@ from sqlalchemy import desc, or_
 from sqlalchemy.sql import func
 from src.core.configs.database import session_scope
 from src.core.models import History
+from src.core.repositories.boiler_repository import BoilerRepository
+from src.core.repositories.chiller_repository import ChillerRepository
 from src.core.repositories.history_repository import HistoryRepository
 from src.core.repositories.setting_repository import SettingRepository
 from src.core.services.chronos import Chronos
 from src.core.services.edge_server import EdgeServer
-from src.core.utils.constant import EFFICIENCY_HOUR, Mode
+from src.core.utils.constant import EFFICIENCY_HOUR, Mode, Relay
 
 
 class DashboardService:
@@ -17,20 +19,13 @@ class DashboardService:
         self.chronos = Chronos()
         self.history_repository = HistoryRepository()
         self.setting_repository = SettingRepository()
+        self.boiler_repository = BoilerRepository()
+        self.chiller_repository = ChillerRepository()
         self.edge_server = EdgeServer()
 
     def get_data(self):
         history = self.history_repository.get_last_history()
         settings = self.setting_repository.get_last_settings()
-
-        # Get mode switch timestamp and calculate remaining lockout time
-        mode_switch_timestamp = self.setting_repository._get_property_from_db(
-            "mode_switch_timestamp"
-        )
-
-        unlock_time = mode_switch_timestamp + timedelta(
-            minutes=settings.mode_switch_lockout_time
-        )
 
         edge_server_data = self.edge_server.get_data()
         # edge_server_data["devices"][0]["state"] = True
@@ -55,7 +50,7 @@ class DashboardService:
                 else 0
             ),
             "wind_chill_avg": getattr(history, "avg_outside_temp", 0),
-            "unlock_time": unlock_time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "unlock_time": self.get_unlock_time(),
         }
 
         efficiency = self.calculate_efficiency()
@@ -74,6 +69,7 @@ class DashboardService:
             "results": results,
             "efficiency": efficiency,
             "boiler": boiler,
+            "devices": self.get_all_devices_state(),
         }
 
     def get_chart_data(self):
@@ -321,3 +317,85 @@ class DashboardService:
             "mode_switch_lockout_time": self.chronos.mode_switch_lockout_time,
             "unlock_time": unlock_time.isoformat(),
         }
+
+    def get_all_devices_state(self):
+        # devices = self.edge_server.get_all_devices_state()
+        # for device in devices:
+        #     self.update_device_state_in_db(id=device.id, state=device.state)
+        devices = [
+            {
+                "id": Relay.BOILER.value,
+                "state": self.boiler_repository.get_status(),
+                "switched_timestamp": self.boiler_repository.get_unlock_timestamp().isoformat(),
+            },
+            {
+                "id": Relay.CHILLER1.value,
+                "state": self.chiller_repository.get_chiller_status("Chiller1"),
+                "switched_timestamp": self.chiller_repository.get_unlock_timestamp(
+                    "Chiller1"
+                ).isoformat(),
+            },
+            {
+                "id": Relay.CHILLER2.value,
+                "state": self.chiller_repository.get_chiller_status("Chiller2"),
+                "switched_timestamp": self.chiller_repository.get_unlock_timestamp(
+                    "Chiller2"
+                ).isoformat(),
+            },
+            {
+                "id": Relay.CHILLER3.value,
+                "state": self.chiller_repository.get_chiller_status("Chiller3"),
+                "switched_timestamp": self.chiller_repository.get_unlock_timestamp(
+                    "Chiller3"
+                ).isoformat(),
+            },
+            {
+                "id": Relay.CHILLER4.value,
+                "state": self.chiller_repository.get_chiller_status("Chiller4"),
+                "switched_timestamp": self.chiller_repository.get_unlock_timestamp(
+                    "Chiller4"
+                ).isoformat(),
+            },
+        ]
+
+        return devices
+
+    def update_device_state(self, data):
+        try:
+            device_state = self.edge_server.update_device_state(
+                id=data.id, state=data.state
+            )
+            self.update_device_state_in_db(id=data.id, state=data.state)
+            self.setting_repository._update_property_in_db(
+                "mode_switch_timestamp", datetime.now(UTC)
+            )
+            return device_state
+
+        except Exception as e:
+            raise HTTPException(
+                status_code=500, detail=f"Failed to update device state: {str(e)}"
+            )
+
+    def update_device_state_in_db(self, id: int, state: bool):
+        state = 1 if state else 0
+        if id == Relay.BOILER.value:
+            self.boiler_repository.set_status(state)
+        elif id == Relay.CHILLER1.value:
+            self.chiller_repository.set_chiller_status("Chiller1", state)
+        elif id == Relay.CHILLER2.value:
+            self.chiller_repository.set_chiller_status("Chiller2", state)
+        elif id == Relay.CHILLER3.value:
+            self.chiller_repository.set_chiller_status("Chiller3", state)
+        elif id == Relay.CHILLER4.value:
+            self.chiller_repository.set_chiller_status("Chiller4", state)
+
+    def get_unlock_time(self):
+        mode_switch_timestamp = self.setting_repository._get_property_from_db(
+            "mode_switch_timestamp"
+        )
+        unlock_time = mode_switch_timestamp + timedelta(
+            minutes=self.setting_repository._get_property_from_db(
+                "mode_switch_lockout_time"
+            )
+        )
+        return unlock_time.strftime("%Y-%m-%dT%H:%M:%SZ")

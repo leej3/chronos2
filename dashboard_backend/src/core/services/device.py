@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 from src.core.repositories.device_repository import DeviceRepository
 from src.core.services.edge_server import EdgeServer
@@ -40,14 +40,14 @@ class Device(object):
         self._switch_state("on", relay_only=relay_only)
 
         if not relay_only and self.TYPE == "boiler":
-            switched_timestamp = datetime.now()
+            switched_timestamp = datetime.now(UTC)
             self._update_value_in_db(switched_timestamp=switched_timestamp)
 
     def turn_off(self, relay_only=False):
         self._switch_state("off", relay_only=relay_only)
 
         if not relay_only and self.TYPE == "boiler":
-            switched_timestamp = datetime.now()
+            switched_timestamp = datetime.now(UTC)
             self._update_value_in_db(
                 timestamp=switched_timestamp, switched_timestamp=switched_timestamp
             )

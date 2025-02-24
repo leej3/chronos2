@@ -32,10 +32,10 @@ class ValveSwitchTime(Enum):
 
 class Relay(Enum):
     BOILER = 0
-    CHILLER1 = 2
-    CHILLER2 = 1
-    CHILLER3 = 4
-    CHILLER4 = 3
+    CHILLER1 = 1
+    CHILLER2 = 2
+    CHILLER3 = 3
+    CHILLER4 = 4
     WINTER_VALVE = 5
     SUMMER_VALVE = 6
     LED_BREATHER = 7

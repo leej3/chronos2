@@ -48,13 +48,9 @@ def test_get_data(client, mock_temperature_sensor, mock_serial_devices):
     data = response.json()
 
     assert "sensors" in data
-    assert "devices" in data
     assert isinstance(data["sensors"]["water_out_temp"], (int, float))
     assert isinstance(data["sensors"]["return_temp"], (int, float))
     assert data["mock_devices"] in [True, False]
-    assert isinstance(data["devices"], dict)
-    for key, value in data["devices"].items():
-        assert value in [True, False]
 
 
 def test_get_data_with_sensor_error(
@@ -68,11 +64,8 @@ def test_get_data_with_sensor_error(
         assert response.status_code == 200
 
         data = response.json()
-        print("data", data)
-        assert isinstance(data["sensors"], dict)
         assert isinstance(data["sensors"], dict)
         assert data["status"] is False
-        assert isinstance(data["devices"], dict)
 
 
 def test_get_device_state(client, mock_serial_devices):

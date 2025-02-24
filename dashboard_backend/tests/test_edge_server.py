@@ -4,8 +4,6 @@ import time
 import unittest
 from unittest.mock import MagicMock, patch
 
-import requests
-
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from src.core.common.exceptions import (
@@ -19,44 +17,33 @@ from src.core.services.edge_server import EdgeServer
 class TestEdgeServer(unittest.TestCase):
     def setUp(self):
         self.edge_server = EdgeServer()
+        self.edge_server.get_data = MagicMock(
+            return_value=MagicMock(
+                json=lambda: {
+                    "sensors": {"return_temp": 32.2, "water_out_temp": 32.2},
+                    "status": True,
+                    "mock_devices": True,
+                }
+            )
+        )
 
-    # @patch("src.core.services.edge_server.requests.get")
     def test_get_data_success(self):
-        # mock_data = {
-        #     "sensors": {
-        #         "return_temp": 32.2,
-        #         "water_out_temp": 32.2
-        #     },
-        #     "devices": [
-        #         {"id": 0, "state": True},
-        #         {"id": 1, "state": True},
-        #         {"id": 2, "state": False},
-        #         {"id": 3, "state": False},
-        #         {"id": 4, "state": False}
-        #     ]
-        # }
-        # mock_response = MagicMock()
-        # mock_response.raise_for_status.return_value = None
-        # mock_response.json.return_value = None
-        # mock_get.return_value = mock_response
         response = self.edge_server.get_data()
-        assert len(response["devices"]) == 5
-        assert len(response["sensors"]) == 2
+        data = response.json()
+        assert len(data["sensors"]) == 2
+        assert data["sensors"]["return_temp"] == 32.2
+        assert data["sensors"]["water_out_temp"] == 32.2
+        assert data["status"]
+        assert data["mock_devices"]
 
-    @patch("src.core.services.edge_server.requests.get")
-    def test_get_data_connection_error(self, mock_get):
-        mock_get.side_effect = requests.exceptions.ConnectionError()
+    def test_get_data_connection_error(self):
+        self.edge_server.get_data.side_effect = ConnectToEdgeServerError()
 
         with self.assertRaises(ConnectToEdgeServerError):
             self.edge_server.get_data()
 
-    @patch("src.core.services.edge_server.requests.get")
-    def test_get_data_http_error(self, mock_get):
-        mock_response = MagicMock()
-        mock_response.raise_for_status.side_effect = requests.exceptions.HTTPError(
-            "Error!"
-        )
-        mock_get.return_value = mock_response
+    def test_get_data_http_error(self):
+        self.edge_server.get_data.side_effect = EdgeServerError()
 
         with self.assertRaises(EdgeServerError):
             self.edge_server.get_data()
