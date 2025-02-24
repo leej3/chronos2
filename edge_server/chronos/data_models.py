@@ -7,10 +7,14 @@ from .config import cfg
 
 class SystemStatus(BaseModel):
     sensors: dict
-    devices: dict
     status: bool
     mock_devices: bool = False
     read_only_mode: bool = False
+
+
+class SwitchStateRequest(BaseModel):
+    command: str
+    relay_only: bool = False
 
 
 class DeviceModel(BaseModel):

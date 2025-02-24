@@ -12,6 +12,7 @@ from chronos.data_models import (
     OperatingStatus,
     SetpointLimitsUpdate,
     SetpointUpdate,
+    SwitchStateRequest,
     SystemStatus,
 )
 from chronos.devices import (
@@ -22,7 +23,6 @@ from chronos.devices import (
 )
 from chronos.mock_devices.mock_data import (
     mock_boiler_stats,
-    mock_devices_data,
     mock_operating_status,
     mock_point_update,
     mock_sensors,
@@ -184,11 +184,9 @@ async def get_data():
     if MOCK_DEVICES:
         try:
             sensors = mock_sensors()
-            devices = {device["id"]: device["state"] for device in mock_devices_data()}
             status = True
             return SystemStatus(
                 sensors=sensors,
-                devices=devices,
                 status=status,
                 mock_devices=MOCK_DEVICES,
                 read_only_mode=cfg.READ_ONLY_MODE,
@@ -197,7 +195,6 @@ async def get_data():
             logger.error(f"Error reading data: {e}")
             return SystemStatus(
                 sensors={},
-                devices={},
                 status=False,
                 mock_devices=True,
                 read_only_mode=cfg.READ_ONLY_MODE,
@@ -226,6 +223,26 @@ async def get_data():
             mock_devices=False,
             read_only_mode=cfg.READ_ONLY_MODE,
         )
+
+
+@app.post("/switch_state")
+# @with_circuit_breaker
+# @with_rate_limit
+# @check_read_only
+async def switch_state(data: SwitchStateRequest):
+    if MOCK_DEVICES:
+        return True
+    """Switch state of a device."""
+    return DEVICES[0].switch_state(data.command, data.relay_only)
+
+
+@app.get("/get_all_devices_state", response_model=list[DeviceModel])
+@with_circuit_breaker
+async def get_all_devices_state():
+    if MOCK_DEVICES:
+        return [DeviceModel(id=i, state=True) for i in range(5)]
+
+    return [DeviceModel(id=i, state=DEVICES[i].state) for i in range(5)]
 
 
 @app.get("/device_state", response_model=DeviceModel)

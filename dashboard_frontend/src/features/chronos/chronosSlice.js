@@ -42,17 +42,10 @@ export const chronosSlice = createSlice({
         state.season = data.results.mode;
         state.mock_devices = data.mock_devices;
         state.read_only_mode = data.read_only_mode;
-        const unlock_time = new Date(data.results?.unlock_time);
-        if (unlock_time > new Date()) {
-          state.season = data.results.mode === 1 ? 0 : 1;
-        } else {
-          state.season = data.results.mode;
-        }
         state.lastUpdated = new Date().toISOString();
         state.status = 'succeeded';
         state.systemStatus = data.status ? 'ONLINE' : 'OFFLINE';
         state.error = null;
-
         state.unlock_time =
           data.results?.unlock_time &&
           new Date(data.results.unlock_time).getTime() > new Date().getTime()

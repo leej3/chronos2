@@ -16,6 +16,11 @@ class UpdateDeviceState(BaseModel):
     state: bool
 
 
+class DeviceModel(BaseModel):
+    id: int = Field(..., ge=0, lt=7, description="Device ID (0-4)")
+    state: bool
+
+
 class UpdateSettings(BaseModel):
     """
     tolerance: "",

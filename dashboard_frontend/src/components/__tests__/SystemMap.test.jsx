@@ -24,18 +24,37 @@ const mockStore = (state) => {
 describe('SystemMap component', () => {
   const defaultState = {
     manualOverride: {
-      boiler: false,
-      chiller1: false,
-      chiller2: false,
-      chiller3: false,
-      chiller4: false,
+      boiler: {
+        id: 0,
+        state: true,
+        switched_timestamp: '2024-01-01T00:00:00Z',
+      },
+      chiller1: {
+        id: 1,
+        state: false,
+        switched_timestamp: '2024-01-01T00:00:00Z',
+      },
+      chiller2: {
+        id: 2,
+        state: false,
+        switched_timestamp: '2024-01-01T00:00:00Z',
+      },
+      chiller3: {
+        id: 3,
+        state: false,
+        switched_timestamp: '2024-01-01T00:00:00Z',
+      },
+      chiller4: {
+        id: 4,
+        state: false,
+        switched_timestamp: '2024-01-01T00:00:00Z',
+      },
     },
   };
 
   const defaultHomedata = {
     results: { water_out_temp: 50, return_temp: 40 },
     sensors: { water_out_temp: 50, return_temp: 40 },
-    boiler: { some: 'data' },
   };
 
   it('should render summer view with all chillers', () => {
@@ -61,7 +80,11 @@ describe('SystemMap component', () => {
     const overrideState = {
       manualOverride: {
         ...defaultState.manualOverride,
-        boiler: true,
+        boiler: {
+          ...defaultState.manualOverride.boiler,
+          state: 1,
+          switched_timestamp: '2024-01-01T00:00:00Z',
+        },
       },
     };
 
@@ -72,6 +95,7 @@ describe('SystemMap component', () => {
     );
 
     const boilerImage = screen.getByAltText('Boiler');
+
     expect(boilerImage).toHaveAttribute(
       'src',
       'images/Icons/Boiler/Boiler-ON.png',
@@ -82,8 +106,26 @@ describe('SystemMap component', () => {
     const overrideState = {
       manualOverride: {
         ...defaultState.manualOverride,
-        chiller1: true,
-        chiller2: true,
+        chiller1: {
+          ...defaultState.manualOverride.chiller1,
+          state: 1,
+          switched_timestamp: '2024-01-01T00:00:00Z',
+        },
+        chiller2: {
+          ...defaultState.manualOverride.chiller2,
+          state: 1,
+          switched_timestamp: '2024-01-01T00:00:00Z',
+        },
+        chiller3: {
+          ...defaultState.manualOverride.chiller3,
+          state: 0,
+          switched_timestamp: '2024-01-01T00:00:00Z',
+        },
+        chiller4: {
+          ...defaultState.manualOverride.chiller4,
+          state: 0,
+          switched_timestamp: '2024-01-01T00:00:00Z',
+        },
       },
     };
 

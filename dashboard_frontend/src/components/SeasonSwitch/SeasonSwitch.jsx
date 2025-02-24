@@ -59,6 +59,12 @@ const SeasonSwitch = () => {
       return;
     }
 
+    if (readOnlyMode) {
+      setAlertColor('warning');
+      setAlertMessage('You are in read only mode');
+      return;
+    }
+
     if (isAnimating) return;
 
     try {
@@ -67,14 +73,10 @@ const SeasonSwitch = () => {
       setIsAnimating(true);
 
       await switchSeason(seasonValue);
-
-      setSwitchDirection(null);
-      setIsAnimating(false);
       dispatch(fetchData());
     } catch (error) {
       setSwitchDirection(null);
       setIsAnimating(false);
-      toast.error(error?.message || 'Failed to switch season');
     }
   };
 
@@ -126,7 +128,7 @@ const SeasonSwitch = () => {
           >
             <img
               src={`/images/Icons/WinterSummer/${
-                season === 0 ? 'WOn' : 'WOff'
+                season === 0 || season === 3 || season === 5 ? 'WOn' : 'WOff'
               }.png`}
               alt="Winter"
               className="season-icon-img"
@@ -135,7 +137,7 @@ const SeasonSwitch = () => {
           </div>
         </CTooltip>
 
-        {season === 0 ? (
+        {season === 0 || season === 3 || season === 5 ? (
           <BsArrowRight
             className={`arrow-icon ${switchDirection ? 'switching' : ''}`}
           />
@@ -166,7 +168,7 @@ const SeasonSwitch = () => {
           >
             <img
               src={`/images/Icons/WinterSummer/${
-                season === 1 ? 'SOn' : 'SOff'
+                season === 1 || season === 2 || season === 4 ? 'SOn' : 'SOff'
               }.png`}
               alt="Summer"
               className="season-icon-img"

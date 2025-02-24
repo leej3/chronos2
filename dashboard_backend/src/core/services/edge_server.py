@@ -112,3 +112,16 @@ class EdgeServer:
         logger.info(f"Edge server response status: {response.status_code}")
         logger.info(f"Edge server response body: {response.text}")
         return self._handle_response(response)
+
+    @catch_connection_error
+    def _switch_state(self, command, relay_only=False):
+        response = requests.post(
+            f"{self.url}/switch_state",
+            json={"command": command, "relay_only": relay_only},
+        )
+        return self._handle_response(response)
+
+    @catch_connection_error
+    def get_all_devices_state(self):
+        response = requests.get(f"{self.url}/get_all_devices_state")
+        return self._handle_response(response)

@@ -175,7 +175,7 @@ const ManualOverride = ({ data }) => {
           <div className={`device-control ${isDisabled ? 'disabled' : ''}`}>
             <span className="temp-label">OFF</span>
             <CFormSwitch
-              checked={state[device] === true}
+              checked={state[device].state === 1}
               className="temp-label"
               onChange={(e) =>
                 handleDeviceStateChange(device, e.target.checked)
