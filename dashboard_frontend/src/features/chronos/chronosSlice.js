@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
 import { getDashboardData } from '../../api/getDashboardData';
-
 const initialState = {
   data: null,
   status: 'idle',
@@ -26,9 +25,6 @@ export const chronosSlice = createSlice({
   reducers: {
     setSeason(state, action) {
       state.season = action.payload;
-    },
-    setUnlockTime(state, action) {
-      state.unlock_time = action.payload?.unlockTime;
     },
     setSwitchOverride: (state, action) => {
       state.switch_override = action.payload;
@@ -56,13 +52,15 @@ export const chronosSlice = createSlice({
         state.status = 'succeeded';
         state.systemStatus = data.status ? 'ONLINE' : 'OFFLINE';
         state.error = null;
+
         state.unlock_time =
-          new Date(data.results?.unlock_time) > new Date()
-            ? data.results?.unlock_time
+          data.results?.unlock_time &&
+          new Date(data.results.unlock_time).getTime() > new Date().getTime()
+            ? new Date(data.results.unlock_time).toISOString()
             : null;
       })
+
       .addCase(fetchData.rejected, (state, action) => {
-        state.unlock_time = null;
         state.switch_override = false;
         state.status = 'failed';
         state.systemStatus = 'OFFLINE';
@@ -76,6 +74,5 @@ export const chronosSlice = createSlice({
 // export const getAllData = (state) => state.summerData.data
 // export const getDataError = (state) => state.summerData.error
 // export const getDataStatus = (state) => state.summerData.status
-export const { setSwitchOverride, setUnlockTime, setSeason } =
-  chronosSlice.actions;
+export const { setSwitchOverride, setSeason } = chronosSlice.actions;
 export default chronosSlice.reducer;

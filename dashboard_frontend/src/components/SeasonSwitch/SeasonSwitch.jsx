@@ -4,8 +4,8 @@ import { CTooltip, CAlert } from '@coreui/react';
 import { useSelector, useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
 import { format, parseISO } from 'date-fns';
-import { setUnlockTime } from '../../features/chronos/chronosSlice';
 import { switchSeason } from '../../api/switchSeason';
+import { fetchData } from '../../features/chronos/chronosSlice';
 import './SeasonSwitch.css';
 
 const SeasonSwitch = () => {
@@ -31,7 +31,6 @@ const SeasonSwitch = () => {
           setCountdown(null);
           setSwitchDirection(null);
           setIsAnimating(false);
-          dispatch(setUnlockTime(null));
           clearInterval(timer);
         } else {
           const minutes = Math.floor(diff / 1000 / 60);
@@ -67,11 +66,11 @@ const SeasonSwitch = () => {
       setSwitchDirection(newSeason === 'Winter' ? 'toWinter' : 'toSummer');
       setIsAnimating(true);
 
-      const response = await switchSeason(seasonValue);
+      await switchSeason(seasonValue);
 
       setSwitchDirection(null);
       setIsAnimating(false);
-      dispatch(setUnlockTime(response?.data?.unlock_time));
+      dispatch(fetchData());
     } catch (error) {
       setSwitchDirection(null);
       setIsAnimating(false);

@@ -61,11 +61,10 @@ const ManualOverride = ({ data }) => {
         return;
       }
 
-      const hours = Math.floor(timeDiff / (1000 * 60 * 60));
       const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
 
-      const timeStr = `${hours}h ${minutes}m ${seconds}s`;
+      const timeStr = `${minutes}:${seconds.toString().padStart(2, '0')}`;
       setAlertMessage(`System is locked for ${timeStr}`);
       setAlertColor('warning');
     };
@@ -176,7 +175,7 @@ const ManualOverride = ({ data }) => {
           <div className={`device-control ${isDisabled ? 'disabled' : ''}`}>
             <span className="temp-label">OFF</span>
             <CFormSwitch
-              checked={state[device].state === 1}
+              checked={state[device] === true}
               className="temp-label"
               onChange={(e) =>
                 handleDeviceStateChange(device, e.target.checked)

@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 from fastapi import HTTPException
 from sqlalchemy import desc, or_
@@ -55,7 +55,7 @@ class DashboardService:
                 else 0
             ),
             "wind_chill_avg": getattr(history, "avg_outside_temp", 0),
-            "unlock_time": unlock_time.isoformat(),
+            "unlock_time": unlock_time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         }
 
         efficiency = self.calculate_efficiency()
@@ -288,7 +288,7 @@ class DashboardService:
             # raise Exception("Test error for season mode switch")
             # self.edge_server.set_mode(season_value)
 
-            current_time = datetime.now()
+            current_time = datetime.now(UTC)
             self.setting_repository._update_property("mode", season_value)
             self.setting_repository._update_property(
                 "mode_switch_timestamp", current_time
