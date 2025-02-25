@@ -47,7 +47,7 @@ const LoadingOverlay = ({ remainingTimeRefresh, error, lastUpdated }) => (
 
 const Home = () => {
   const dispatch = useDispatch();
-  const { data, status, error, season, lastUpdated } = useSelector(
+  const { data, status, error, season, lastUpdated, devices } = useSelector(
     (state) => state.chronos,
   );
   const { data: temperatureData, status: temperatureStatus } = useSelector(
@@ -61,7 +61,6 @@ const Home = () => {
   const chartIntervalRef = useRef(null);
   const timeoutRef = useRef(null);
   const unlockTime = useSelector((state) => state.chronos.unlock_time);
-
   const calculateDelay = () => {
     if (unlockTime) {
       const unlockDate = parseISO(unlockTime);
@@ -172,7 +171,7 @@ const Home = () => {
 
           <CCol xs={12} className="mt-3">
             {season === 1 ? (
-              <SwitchTimeDisplay data={null} />
+              <SwitchTimeDisplay devices={devices} />
             ) : (
               <CCard>
                 <CCardBody className="p-0">
@@ -203,7 +202,7 @@ const Home = () => {
             </div>
             <div className="mt-3">
               {season === 1 ? (
-                <SwitchTimeDisplay data={null} />
+                <SwitchTimeDisplay devices={devices} />
               ) : (
                 <CCard className="mb-3">
                   <CCardBody className="p-0">

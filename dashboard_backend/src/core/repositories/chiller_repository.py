@@ -10,7 +10,7 @@ class ChillerRepository:
         self.timestamp = datetime.now()
         self.setting = SettingRepository()
 
-    def _update_value_in_db(self, chiller_name: str, **kwargs):
+    def _update_value_in_db(self, chiller_name: str, param, value, **kwargs):
         model_class = getattr(models, chiller_name)
         to_backup = kwargs.pop("to_backup", False)
         with session_scope() as session:
@@ -19,8 +19,7 @@ class ChillerRepository:
                 .filter(model_class.backup == to_backup)
                 .first()
             )
-            for key, value in kwargs.items():
-                setattr(property_, key, value)
+            setattr(property_, param, value)
 
     def _get_property_from_db(self, chiller_name: str, *args, **kwargs):
         device = getattr(models, chiller_name)

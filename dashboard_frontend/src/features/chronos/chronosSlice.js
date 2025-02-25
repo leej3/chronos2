@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
 import { getDashboardData } from '../../api/getDashboardData';
 const initialState = {
+  devices: [],
   data: null,
   status: 'idle',
   error: null,
@@ -38,6 +39,7 @@ export const chronosSlice = createSlice({
       })
       .addCase(fetchData.fulfilled, (state, action) => {
         const data = action.payload;
+        state.devices = data.devices;
         state.data = data;
         state.season = data.results.mode;
         state.mock_devices = data.mock_devices;

@@ -1,35 +1,22 @@
 import React from 'react';
 import { CCard, CCardBody, CCardHeader, CRow, CCol } from '@coreui/react';
 import './SwitchTimeDisplay.css';
-
-const SwitchTimeDisplay = ({ data }) => {
-  // Thêm dữ liệu mẫu
-  const mockData = {
-    lastSwitch: [
-      { chiller1: 3600 },
-      { chiller2: 7200 },
-      { chiller3: 10800 },
-      { chiller4: 14400 },
-    ],
+import { DEVICES } from '../../utils/constant';
+import { formatDate } from '../../utils/tranform';
+const SwitchTimeDisplay = ({ devices }) => {
+  const getDeviceById = (id) => {
+    return devices?.find((device) => device.id === id);
   };
 
-  const displayData = data || mockData;
-
-  const formatTime = (seconds) => {
-    if (!seconds && seconds !== 0) return 'N/A';
-
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const remainingSeconds = seconds % 60;
-
-    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(
-      2,
-      '0',
-    )}:${String(remainingSeconds).padStart(2, '0')}`;
-  };
+  const lastSwitch = [
+    { chiller1: getDeviceById(DEVICES.chiller1)?.switched_timestamp },
+    { chiller2: getDeviceById(DEVICES.chiller2)?.switched_timestamp },
+    { chiller3: getDeviceById(DEVICES.chiller3)?.switched_timestamp },
+    { chiller4: getDeviceById(DEVICES.chiller4)?.switched_timestamp },
+  ];
 
   const getChillerTime = (chillerNumber) => {
-    const chillerData = displayData?.lastSwitch?.find(
+    const chillerData = lastSwitch?.find(
       (item) => Object.keys(item)[0] === `chiller${chillerNumber}`,
     );
     return chillerData ? Object.values(chillerData)[0] : null;
@@ -48,7 +35,7 @@ const SwitchTimeDisplay = ({ data }) => {
                   className="d-flex justify-content-between align-items-center mb-2"
                 >
                   <strong>Chiller {number}:</strong>
-                  <span>{formatTime(getChillerTime(number))}</span>
+                  <span>{formatDate(getChillerTime(number))}</span>
                 </div>
               ))}
             </div>

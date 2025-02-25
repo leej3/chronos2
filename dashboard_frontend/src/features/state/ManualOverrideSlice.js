@@ -6,27 +6,27 @@ const manualOverrideSlice = createSlice({
     boiler: {
       id: 0,
       state: 'auto',
-      unlock_timestamp: null,
+      lastSwitch: null,
     },
     chiller1: {
       id: 1,
       state: 'auto',
-      unlock_timestamp: null,
+      lastSwitch: null,
     },
     chiller2: {
       id: 2,
       state: 'auto',
-      unlock_timestamp: null,
+      lastSwitch: null,
     },
     chiller3: {
       id: 3,
       state: 'auto',
-      unlock_timestamp: null,
+      lastSwitch: null,
     },
     chiller4: {
       id: 4,
       state: 'auto',
-      unlock_timestamp: null,
+      lastSwitch: null,
     },
   },
   reducers: {
@@ -42,7 +42,7 @@ const manualOverrideSlice = createSlice({
     setUnlockTimestamp: (state, action) => {
       const { name, value } = action.payload;
       if (Object.prototype.hasOwnProperty.call(state, name)) {
-        state[name].unlock_timestamp = value;
+        state[name].lastSwitch = value;
       }
     },
   },
