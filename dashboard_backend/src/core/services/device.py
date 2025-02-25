@@ -13,8 +13,8 @@ class Device(object):
         self.edge_server = EdgeServer()
         self.table_class_name = table_class_name
 
-    def _switch_state(self, command, relay_only=False):
-        return self.edge_server._switch_state(command, relay_only)
+    def _switch_state(self, command, relay_only=False, is_season_switch=False):
+        return self.edge_server._switch_state(command, relay_only, is_season_switch)
 
     # @property
     # def relay_state(self):
@@ -36,15 +36,19 @@ class Device(object):
     #     # TODO: edge server
     #     return False
 
-    def turn_on(self, relay_only=False):
-        self._switch_state("on", relay_only=relay_only)
+    def turn_on(self, relay_only=False, is_season_switch=False):
+        self._switch_state(
+            "on", relay_only=relay_only, is_season_switch=is_season_switch
+        )
 
         if not relay_only and self.TYPE == "boiler":
             switched_timestamp = datetime.now(UTC)
             self._update_value_in_db(switched_timestamp=switched_timestamp)
 
-    def turn_off(self, relay_only=False):
-        self._switch_state("off", relay_only=relay_only)
+    def turn_off(self, relay_only=False, is_season_switch=False):
+        self._switch_state(
+            "off", relay_only=relay_only, is_season_switch=is_season_switch
+        )
 
         if not relay_only and self.TYPE == "boiler":
             switched_timestamp = datetime.now(UTC)
@@ -94,14 +98,14 @@ class Device(object):
         return self._get_property_from_db("manual_override")
 
     @manual_override.setter
-    def manual_override(self, manual_override):
+    def manual_override(self, manual_override, is_season_switch=False):
         if manual_override == MANUAL_ON:
             if self.status != ON:
-                self.turn_on()
+                self.turn_on(is_season_switch=is_season_switch)
             self._update_value_in_db(manual_override=MANUAL_ON)
         elif manual_override == MANUAL_OFF:
             if self.status != OFF:
-                self.turn_off()
+                self.turn_off(is_season_switch=is_season_switch)
             self._update_value_in_db(manual_override=MANUAL_OFF)
         elif manual_override == MANUAL_AUTO:
             self._update_value_in_db(manual_override=MANUAL_AUTO)

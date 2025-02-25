@@ -157,17 +157,17 @@ class Chronos(object):
                 )
                 session.add(parameters)
 
-    def _switch_devices(self):
+    def _switch_devices(self, is_season_switch=False):
         for device in self.devices:
             if device.manual_override == MANUAL_ON:
-                device.turn_on(relay_only=True)
+                device.turn_on(relay_only=True, is_season_switch=is_season_switch)
             elif device.manual_override == MANUAL_OFF:
-                device.turn_off(relay_only=True)
+                device.turn_off(relay_only=True, is_season_switch=is_season_switch)
             elif device.manual_override == MANUAL_AUTO:
                 if device.status == ON:
-                    device.turn_on(relay_only=True)
+                    device.turn_on(relay_only=True, is_season_switch=is_season_switch)
                 elif device.status == OFF:
-                    device.turn_off(relay_only=True)
+                    device.turn_off(relay_only=True, is_season_switch=is_season_switch)
 
     def _save_devices_states(self, mode):
         if mode == Mode.SWITCHING_TO_SUMMER.value:
@@ -183,16 +183,20 @@ class Chronos(object):
             for chiller in self.devices[1:]:
                 chiller.restore_status()
 
-    def turn_off_devices(self, with_valves=False, relay_only=False):
+    def turn_off_devices(
+        self, with_valves=False, relay_only=False, is_season_switch=False
+    ):
         if relay_only:
             for device in self.devices:
-                device.turn_off(relay_only=relay_only)
+                device.turn_off(
+                    relay_only=relay_only, is_season_switch=is_season_switch
+                )
         else:
-            for device in self.devices:
-                device.manual_override = MANUAL_OFF
+            # for device in self.devices:
+            #     device.manual_override = MANUAL_OFF
             if with_valves:
-                self.winter_valve.turn_off()
-                self.summer_valve.turn_off()
+                self.winter_valve.turn_off(is_season_switch=is_season_switch)
+                self.summer_valve.turn_off(is_season_switch=is_season_switch)
 
     def _switch_season(self, mode: int):
         if mode == Mode.WAITING_SWITCH_TO_SUMMER.value:
@@ -200,9 +204,9 @@ class Chronos(object):
             self.mode = Mode.WAITING_SWITCH_TO_SUMMER.value
             self.mode_switch_timestamp = datetime.now()
             self._save_devices_states(mode)
-            self.turn_off_devices()
-            self.summer_valve.turn_on()
-            self.winter_valve.turn_off()
+            self.turn_off_devices(is_season_switch=True)
+            self.summer_valve.turn_on(is_season_switch=True)
+            self.winter_valve.turn_off(is_season_switch=True)
 
             self.scheduler.add_job(
                 self._switch_season,
@@ -217,9 +221,9 @@ class Chronos(object):
             self.mode = Mode.WAITING_SWITCH_TO_WINTER.value
             self.mode_switch_timestamp = datetime.now()
             self._save_devices_states(mode)
-            self.turn_off_devices()
-            self.summer_valve.turn_off()
-            self.winter_valve.turn_on()
+            self.turn_off_devices(is_season_switch=True)
+            self.summer_valve.turn_off(is_season_switch=True)
+            self.winter_valve.turn_on(is_season_switch=True)
 
             self.scheduler.add_job(
                 self._switch_season,
@@ -232,11 +236,11 @@ class Chronos(object):
         elif mode == Mode.SWITCHING_TO_WINTER.value:
             logger.debug("Switched to winter mode")
             self._restore_devices_states(mode)
-            self._switch_devices()
+            self._switch_devices(is_season_switch=True)
             self.mode = Mode.WINTER.value
 
         elif mode == Mode.SWITCHING_TO_SUMMER.value:
             logger.debug("Switched to summer mode")
             self._restore_devices_states(mode)
-            self._switch_devices()
+            self._switch_devices(is_season_switch=True)
             self.mode = Mode.SUMMER.value

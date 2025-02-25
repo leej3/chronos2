@@ -19,8 +19,12 @@ class Valve(Device):
             raise AttributeError("There is no such attribute")
         super(Valve, self).__getattr__(name)
 
-    def turn_on(self, relay_only=False):
-        self._switch_state("on", relay_only=relay_only)
+    def turn_on(self, relay_only=False, is_season_switch=False):
+        self._switch_state(
+            "on", relay_only=relay_only, is_season_switch=is_season_switch
+        )
 
-    def turn_off(self, relay_only=False):
-        self._switch_state("off", relay_only=relay_only)
+    def turn_off(self, relay_only=False, is_season_switch=False):
+        self._switch_state(
+            "off", relay_only=relay_only, is_season_switch=is_season_switch
+        )

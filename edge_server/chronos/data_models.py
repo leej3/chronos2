@@ -15,6 +15,7 @@ class SystemStatus(BaseModel):
 class SwitchStateRequest(BaseModel):
     command: str
     relay_only: bool = False
+    is_season_switch: bool = False
 
 
 class DeviceModel(BaseModel):

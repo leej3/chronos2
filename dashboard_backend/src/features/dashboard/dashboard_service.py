@@ -1,4 +1,4 @@
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 
 from fastapi import HTTPException
 from sqlalchemy import desc, or_
@@ -366,9 +366,6 @@ class DashboardService:
                 id=data.id, state=data.state
             )
             self.update_device_state_in_db(id=data.id, state=data.state)
-            self.setting_repository._update_property_in_db(
-                "mode_switch_timestamp", datetime.now(UTC)
-            )
             return device_state
 
         except Exception as e:
