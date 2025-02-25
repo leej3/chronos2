@@ -23,26 +23,24 @@ const SwitchTimeDisplay = ({ devices }) => {
   };
 
   return (
-    <CRow>
-      <CCol>
-        <CCard>
-          <CCardBody>
-            <h2 className="chronous-title">Last Switch Time</h2>
-            <div className="switch-time-grid">
-              {[1, 2, 3, 4].map((number) => (
-                <div
-                  key={number}
-                  className="d-flex justify-content-between align-items-center mb-2"
-                >
-                  <strong>Chiller {number}:</strong>
-                  <span>{formatDate(getChillerTime(number))}</span>
-                </div>
-              ))}
-            </div>
-          </CCardBody>
-        </CCard>
-      </CCol>
-    </CRow>
+    <CCol>
+      <CCard>
+        <CCardBody>
+          <h2 className="chronous-title">Last Switch Time</h2>
+          <div className="switch-time-grid">
+            {[1, 2, 3, 4].map((number) => (
+              <div
+                key={number}
+                className="d-flex justify-content-between align-items-center mb-2"
+              >
+                <strong>Chiller {number}:</strong>
+                <span>{formatDate(getChillerTime(number))}</span>
+              </div>
+            ))}
+          </div>
+        </CCardBody>
+      </CCard>
+    </CCol>
   );
 };
 

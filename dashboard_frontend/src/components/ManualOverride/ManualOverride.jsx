@@ -192,38 +192,36 @@ const ManualOverride = ({ data }) => {
 
   return (
     <div>
-      <CRow>
-        <CCol>
-          <CCard className="modbus-card">
-            <CCardBody>
-              <h2 className="chronous-title m-0">Manual Override</h2>
-              <div className="p-3">
-                {alertMessage && (
-                  <CAlert
-                    color={alertColor}
-                    dismissible
-                    onClose={() => setAlertMessage('')}
-                  >
-                    <strong>
-                      {alertColor === 'danger' ? 'Error!' : 'Warning!'}
-                    </strong>{' '}
-                    {alertMessage}
-                  </CAlert>
-                )}
-                <CRow className="g-3 mx-0">
-                  {Object.keys(state)
-                    .filter(
-                      (device, index) =>
-                        index <= 4 &&
-                        (device === 'boiler' || device.startsWith('chiller')),
-                    )
-                    .map(renderDeviceControl)}
-                </CRow>
-              </div>
-            </CCardBody>
-          </CCard>
-        </CCol>
-      </CRow>
+      <CCol>
+        <CCard className="modbus-card">
+          <CCardBody>
+            <h2 className="chronous-title m-0">Manual Override</h2>
+            <div className="p-3">
+              {alertMessage && (
+                <CAlert
+                  color={alertColor}
+                  dismissible
+                  onClose={() => setAlertMessage('')}
+                >
+                  <strong>
+                    {alertColor === 'danger' ? 'Error!' : 'Warning!'}
+                  </strong>{' '}
+                  {alertMessage}
+                </CAlert>
+              )}
+              <CRow className="g-3 mx-0">
+                {Object.keys(state)
+                  .filter(
+                    (device, index) =>
+                      index <= 4 &&
+                      (device === 'boiler' || device.startsWith('chiller')),
+                  )
+                  .map(renderDeviceControl)}
+              </CRow>
+            </div>
+          </CCardBody>
+        </CCard>
+      </CCol>
     </div>
   );
 };
