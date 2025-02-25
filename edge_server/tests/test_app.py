@@ -94,6 +94,101 @@ def test_update_device_state(client, mock_serial_devices):
         mock_serial_devices[0].state = original_state
 
 
+def test_update_device_state_circuit_breaker(client, mock_serial_devices):
+    """Test updating device state with circuit breaker."""
+    with patch("chronos.app.circuit_breaker.can_execute", return_value=True):
+        response = client.post("/device_state", json={"id": 0, "state": True})
+        assert response.status_code == 200
+        data = response.json()
+        assert data["id"] == 0
+        assert data["state"] is True
+
+
+def test_update_device_state_error_circuit_breaker(client, mock_serial_devices):
+    # original_state = mock_serial_devices[0].state
+
+    """Test updating device state with circuit breaker error."""
+    with patch("chronos.app.circuit_breaker.can_execute", return_value=False):
+        response = client.post("/device_state", json={"id": 0, "state": True})
+        assert response.status_code == 503
+        assert "Service temporarily unavailable" in response.json()["detail"]
+
+
+def test_update_device_state_rate_limiter(client, mock_serial_devices):
+    """Test updating device state with rate limiter."""
+    with patch("chronos.app.rate_limiter.can_change", return_value=True):
+        response = client.post("/device_state", json={"id": 0, "state": True})
+        assert response.status_code == 200
+        data = response.json()
+        assert data["id"] == 0
+        assert data["state"] is True
+
+
+def test_update_device_state_rate_limiter_error(client, mock_serial_devices):
+    """Test updating device state with rate limiter error."""
+    with patch("chronos.app.rate_limiter.can_change", return_value=False):
+        response = client.post("/device_state", json={"id": 0, "state": True})
+        assert response.status_code == 429
+        assert (
+            "Too many temperature changes. Please wait before trying again."
+            in response.json()["detail"]
+        )
+
+
+def test_update_device_state_is_season_switch_rate_limiter(client, mock_serial_devices):
+    """Test updating device state with is_season_switch."""
+    response = client.post(
+        "/device_state", json={"id": 0, "state": True, "is_season_switch": True}
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == 0
+    assert data["state"] is True
+
+    response2 = client.post(
+        "/device_state", json={"id": 0, "state": True, "is_season_switch": True}
+    )
+    assert response2.status_code == 200
+    data2 = response2.json()
+    assert data2["id"] == 0
+    assert data2["state"] is True
+
+    response3 = client.post(
+        "/device_state", json={"id": 0, "state": False, "is_season_switch": True}
+    )
+    assert response3.status_code == 200
+    data3 = response3.json()
+    assert data3["id"] == 0
+    assert data3["state"] is False
+
+
+def test_update_device_state_is_season_switch_rate_limiter_error(
+    client, mock_serial_devices
+):
+    """Test updating device state with is_season_switch error."""
+    response = client.post(
+        "/device_state", json={"id": 0, "state": True, "is_season_switch": False}
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == 0
+    assert data["state"] is True
+
+    response2 = client.post(
+        "/device_state", json={"id": 0, "state": True, "is_season_switch": False}
+    )
+    assert response2.status_code == 429
+    data2 = response2.json()
+
+    assert "Too many temperature changes" in data2["detail"]
+    response3 = client.post(
+        "/device_state", json={"id": 0, "state": False, "is_season_switch": False}
+    )
+    assert response3.status_code == 429
+    data3 = response3.json()
+    assert "Too many temperature changes" in data3["detail"]
+
+
 def test_get_device_state_invalid_id(client):
     """Test getting device state with invalid device ID."""
     response = client.get("/device_state?device=10")  # Invalid device ID

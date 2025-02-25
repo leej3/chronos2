@@ -21,6 +21,7 @@ class SwitchStateRequest(BaseModel):
 class DeviceModel(BaseModel):
     id: int = Field(..., ge=0, lt=7, description="Device ID (0-4)")
     state: bool
+    is_season_switch: bool = False
 
 
 # New models for boiler data
