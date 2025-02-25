@@ -40,9 +40,7 @@ def is_modbus_connected():
         return False
 
 
-# Legacy endpoint tests
 def test_get_data(client, mock_temperature_sensor, mock_serial_devices):
-    """Test the legacy get_data endpoint."""
     response = client.get("/get_data")
     assert response.status_code == 200
     data = response.json()

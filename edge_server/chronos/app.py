@@ -166,7 +166,6 @@ def ensure_not_read_only():
     return True
 
 
-# Legacy endpoints
 def get_chronos_status():
     chronos_status = True
     try:
@@ -182,7 +181,6 @@ def get_chronos_status():
 @app.get("/get_data", response_model=SystemStatus)
 @with_circuit_breaker
 async def get_data():
-    """Legacy endpoint for system status."""
     if MOCK_DEVICES:
         try:
             sensors = mock_sensors()
