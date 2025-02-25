@@ -74,7 +74,7 @@ class CircuitBreaker:
 
 # Rate limiter for temperature changes
 class RateLimiter:
-    def __init__(self, min_interval: float = 5.0):
+    def __init__(self, min_interval: float = 1.0):
         self.min_interval = min_interval
         self.last_change_time = 0
 

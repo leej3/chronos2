@@ -28,7 +28,7 @@ class TestRateLimiter:
     def test_initialization_default_values(self):
         """Test RateLimiter initializes with correct default values"""
         limiter = RateLimiter()
-        assert limiter.min_interval == 5.0
+        assert limiter.min_interval == 1.0
         assert limiter.last_change_time == 0
 
     def test_initialization_custom_values(self):
