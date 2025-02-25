@@ -31,7 +31,7 @@ const HVACIcon = (props) => {
 };
 
 const TableTemplate = ({ homedata }) => {
-  const intelTemp = formatNumber(homedata?.sensors?.return_temp) || 'N/A';
+  const inletTemp = formatNumber(homedata?.sensors?.return_temp) || 'N/A';
   const outletTemp = formatNumber(homedata?.sensors?.water_out_temp) || 'N/A';
 
   return (
@@ -48,7 +48,7 @@ const TableTemplate = ({ homedata }) => {
                       icon={<HVACIcon />}
                       style={{ '--cui-card-cap-bg': 'none' }}
                       values={[
-                        { title: 'Intel Temp', value: `${intelTemp} °F` },
+                        { title: 'Inlet Temp', value: `${inletTemp} °F` },
                         { title: 'Outlet Temp', value: `${outletTemp} °F` },
                       ]}
                     />
