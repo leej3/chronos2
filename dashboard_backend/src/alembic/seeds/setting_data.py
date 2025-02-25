@@ -11,6 +11,6 @@ SETTING_DATA = [
         "cascade_time": 360,
         "mode": 0,
         "mode_switch_timestamp": "2021-01-01 00:00:00",
-        "mode_switch_lockout_time": -1,
+        "mode_switch_lockout_time": 1,
     },
 ]

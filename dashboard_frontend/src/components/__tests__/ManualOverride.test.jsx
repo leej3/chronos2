@@ -23,29 +23,49 @@ it('should render and toggle device states', async () => {
 
   const store = mockStore({
     manualOverride: {
-      boiler: true,
-      chiller1: false,
-      chiller2: true,
-      chiller3: false,
-      chiller4: true,
+      boiler: {
+        id: 0,
+        status: true,
+        switched_timestamp: '2024-01-01T00:00:00Z',
+      },
+      chiller1: {
+        id: 1,
+        status: false,
+        switched_timestamp: '2024-01-01T00:00:00Z',
+      },
+      chiller2: {
+        id: 2,
+        status: true,
+        switched_timestamp: '2024-01-01T00:00:00Z',
+      },
+      chiller3: {
+        id: 3,
+        status: true,
+        switched_timestamp: '2024-01-01T00:00:00Z',
+      },
+      chiller4: {
+        id: 4,
+        status: true,
+        switched_timestamp: '2024-01-01T00:00:00Z',
+      },
     },
     chronos: {
       read_only_mode: false,
       season: 0,
     },
   });
-
+  const devices = [
+    { id: 0, state: true },
+    { id: 1, state: true },
+    { id: 2, state: true },
+    { id: 3, state: true },
+    { id: 4, state: true },
+  ];
   render(
     <Provider store={store}>
       <ManualOverride
         data={{
-          devices: [
-            { id: 1, state: true },
-            { id: 2, state: false },
-            { id: 3, state: true },
-            { id: 4, state: false },
-            { id: 5, state: true },
-          ],
+          devices,
         }}
       />
     </Provider>,
@@ -65,6 +85,6 @@ it('should render and toggle device states', async () => {
   expect(updateDeviceState).toHaveBeenCalledTimes(1);
   expect(updateDeviceState).toHaveBeenCalledWith({
     id: 1,
-    state: false,
+    state: true,
   });
 });

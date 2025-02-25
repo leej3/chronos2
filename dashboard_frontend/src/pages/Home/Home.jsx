@@ -1,5 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect, useRef } from 'react';
+import { parseISO, differenceInSeconds } from 'date-fns';
 
 import {
   CContainer,
@@ -46,7 +47,7 @@ const LoadingOverlay = ({ remainingTimeRefresh, error, lastUpdated }) => (
 
 const Home = () => {
   const dispatch = useDispatch();
-  const { data, status, error, season, lastUpdated } = useSelector(
+  const { data, status, error, season, lastUpdated, devices } = useSelector(
     (state) => state.chronos,
   );
   const { data: temperatureData, status: temperatureStatus } = useSelector(
@@ -59,6 +60,16 @@ const Home = () => {
   const intervalRef = useRef(null);
   const chartIntervalRef = useRef(null);
   const timeoutRef = useRef(null);
+  const unlockTime = useSelector((state) => state.chronos.unlock_time);
+  const calculateDelay = () => {
+    if (unlockTime) {
+      const unlockDate = parseISO(unlockTime);
+      const now = new Date();
+      const delayInSeconds = differenceInSeconds(unlockDate, now);
+      return delayInSeconds > 0 ? delayInSeconds : 1;
+    }
+    return 1;
+  };
 
   const fetchHomeData = async () => {
     dispatch(fetchData());
@@ -119,11 +130,11 @@ const Home = () => {
       timeoutRef.current = setTimeout(() => {
         fetchHomeData();
         setIsReCallAPI(false);
-      }, 1000);
+      }, calculateDelay() * 1000);
     }
 
     return () => clearTimeout(timeoutRef.current);
-  }, [recallAPITime, status, temperatureStatus]);
+  }, [recallAPITime, status, temperatureStatus, unlockTime]);
 
   return (
     <>
@@ -160,7 +171,7 @@ const Home = () => {
 
           <CCol xs={12} className="mt-3">
             {season === 1 ? (
-              <SwitchTimeDisplay data={null} />
+              <SwitchTimeDisplay devices={devices} />
             ) : (
               <CCard>
                 <CCardBody className="p-0">
@@ -191,7 +202,7 @@ const Home = () => {
             </div>
             <div className="mt-3">
               {season === 1 ? (
-                <SwitchTimeDisplay data={null} />
+                <SwitchTimeDisplay devices={devices} />
               ) : (
                 <CCard className="mb-3">
                   <CCardBody className="p-0">

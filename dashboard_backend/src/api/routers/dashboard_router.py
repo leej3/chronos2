@@ -27,11 +27,16 @@ def get_edge_server():
     return EdgeServer()
 
 
+def get_dashboard_service():
+    return DashboardService()
+
+
 @router.get("/")
 def dashboard_data(
     request: Request,
     current_user: Annotated[UserToken, Security(get_current_user)],
     edge_server: Annotated[EdgeServer, Security(get_edge_server)],
+    dashboard_service: Annotated[DashboardService, Security(get_dashboard_service)],
 ):
     data = dashboard_service.get_data()
     return JSONResponse(content=data)
@@ -42,9 +47,10 @@ def update_state(
     data: UpdateDeviceState,
     current_user: Annotated[UserToken, Security(get_current_user)],
     edge_server: Annotated[EdgeServer, Security(get_edge_server)],
+    dashboard_service: Annotated[DashboardService, Security(get_dashboard_service)],
 ):
-    edge_server.update_device_state(id=data.id, state=data.state)
-    return JSONResponse(content={"message": "Updated state successfully"})
+    data = dashboard_service.update_device_state(data)
+    return JSONResponse(content=data)
 
 
 @router.get("/download_log")
@@ -183,11 +189,8 @@ async def boiler_set_setpoint(
 async def switch_season(
     data: SwitchSeason,
     current_user: Annotated[UserToken, Security(get_current_user)],
+    dashboard_service: Annotated[DashboardService, Security(get_dashboard_service)],
+    edge_server: Annotated[EdgeServer, Security(get_edge_server)],
 ):
-    try:
-        result = dashboard_service.switch_season_mode(data.season_value)
-        return JSONResponse(content=result, status_code=200)
-    except Exception as e:
-        return JSONResponse(
-            content={"message": str(e), "status": "error"}, status_code=400
-        )
+    result = dashboard_service.switch_season_mode(data.season_value)
+    return JSONResponse(content=result, status_code=200)

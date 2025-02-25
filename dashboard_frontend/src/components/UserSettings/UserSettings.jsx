@@ -144,125 +144,119 @@ const UserSettings = ({ data }) => {
   }
 
   return (
-    <CRow>
-      <CCol>
-        <CCard className="text-start">
-          <CCardBody>
-            <h2 className="chronous-title text-center mb-4">User Settings</h2>
-            <SeasonSwitch />
+    <CCol>
+      <CCard className="text-start">
+        <CCardBody>
+          <h2 className="chronous-title text-center mb-4">User Settings</h2>
+          <SeasonSwitch />
 
-            <CForm onSubmit={handleSubmit}>
-              <div className="content-container-mobile">
-                <CRow className="tab-content-container">
-                  {[
-                    {
-                      label: 'Baseline ',
-                      key: 'baseline_setpoint',
-                    },
-                    { label: 'THA ', key: 'tha_setpoint' },
-                    {
-                      label: 'Effective',
-                      key: 'effective_setpoint',
-                    },
-                  ].map(({ label, key }) => (
-                    <CCol sm="12" key={key}>
-                      <div className="temp-item">
-                        <span className=" temp-label" htmlFor={key}>
-                          {label}:
-                        </span>
-                        <span className="temp-value">
-                          {data.results[key] ?? '0.0'} <span>°F</span>
-                        </span>
-                      </div>
-                    </CCol>
-                  ))}
-                </CRow>
-              </div>
-              <h2 className="chronous-title text-center mb-0">Configuration</h2>
-              <div className="content-container-mobile">
-                <CRow className="tab-content-container">
-                  {[
-                    { label: 'Tolerance', key: 'tolerance' },
-                    {
-                      label: 'Min. Setpoint',
-                      key: 'setpoint_min',
-                      min: tempLimits.hard_limits.min_setpoint,
-                      max: tempLimits.hard_limits.max_setpoint,
-                      help: `Hard limits: ${tempLimits.hard_limits.min_setpoint}°F - ${tempLimits.hard_limits.max_setpoint}°F`,
-                    },
-                    {
-                      label: 'Max. Setpoint',
-                      key: 'setpoint_max',
-                      min: tempLimits.hard_limits.min_setpoint,
-                      max: tempLimits.hard_limits.max_setpoint,
-                      help: `Hard limits: ${tempLimits.hard_limits.min_setpoint}°F - ${tempLimits.hard_limits.max_setpoint}°F`,
-                    },
-                    {
-                      label: `Setpoint Offset (${
-                        season === 1 ? 'Summer' : 'Winter'
-                      })`,
-                      key:
-                        season === 1
-                          ? 'setpoint_offset_summer'
-                          : 'setpoint_offset_winter',
-                    },
-                    {
-                      label: 'Mode Change Delta Temp',
-                      key: 'mode_change_delta_temp',
-                    },
-                    {
-                      label: 'Mode Switch Lockout Time (Minutes)',
-                      key: 'mode_switch_lockout_time',
-                      unit: 'min.',
-                    },
-                    {
-                      label: 'Cascade Time',
-                      key: 'cascade_time',
-                      unit: 'min.',
-                    },
-                  ].map(({ label, key, unit = '', min, max, help }) => (
-                    <CCol xs="12" key={key}>
-                      <div style={{ marginBottom: '10px' }}>
-                        <span htmlFor={key} className="temp-label ">
-                          {label}:
-                          {help && (
-                            <small
-                              className="text-muted ms-2"
-                              style={{ fontWeight: 'normal' }}
-                            >
-                              {help}
-                            </small>
-                          )}
-                        </span>
-                        <CFormInput
-                          type="number"
-                          name={key}
-                          id={key}
-                          value={formData[key] ?? ''}
-                          onChange={handleInputChange}
-                          placeholder={`${data.results[key] ?? '0.0'} ${unit}`}
-                          min={min}
-                          max={max}
-                        />
-                      </div>
-                    </CCol>
-                  ))}
-                </CRow>
-              </div>
-              <CCol xs="12" className="text-end">
-                <CButton
-                  type="submit"
-                  color="primary"
-                  className="update-btn m-2"
-                >
-                  Update
-                </CButton>
-              </CCol>
-            </CForm>
-          </CCardBody>
-        </CCard>
-      </CCol>
-    </CRow>
+          <CForm onSubmit={handleSubmit}>
+            <div className="content-container-mobile">
+              <CRow className="tab-content-container">
+                {[
+                  {
+                    label: 'Baseline ',
+                    key: 'baseline_setpoint',
+                  },
+                  { label: 'THA ', key: 'tha_setpoint' },
+                  {
+                    label: 'Effective',
+                    key: 'effective_setpoint',
+                  },
+                ].map(({ label, key }) => (
+                  <CCol sm="12" key={key}>
+                    <div className="temp-item">
+                      <span className=" temp-label" htmlFor={key}>
+                        {label}:
+                      </span>
+                      <span className="temp-value">
+                        {data.results[key] ?? '0.0'} <span>°F</span>
+                      </span>
+                    </div>
+                  </CCol>
+                ))}
+              </CRow>
+            </div>
+            <h2 className="chronous-title text-center mb-0">Configuration</h2>
+            <div className="content-container-mobile">
+              <CRow className="tab-content-container">
+                {[
+                  { label: 'Tolerance', key: 'tolerance' },
+                  {
+                    label: 'Min. Setpoint',
+                    key: 'setpoint_min',
+                    min: tempLimits.hard_limits.min_setpoint,
+                    max: tempLimits.hard_limits.max_setpoint,
+                    help: `Hard limits: ${tempLimits.hard_limits.min_setpoint}°F - ${tempLimits.hard_limits.max_setpoint}°F`,
+                  },
+                  {
+                    label: 'Max. Setpoint',
+                    key: 'setpoint_max',
+                    min: tempLimits.hard_limits.min_setpoint,
+                    max: tempLimits.hard_limits.max_setpoint,
+                    help: `Hard limits: ${tempLimits.hard_limits.min_setpoint}°F - ${tempLimits.hard_limits.max_setpoint}°F`,
+                  },
+                  {
+                    label: `Setpoint Offset (${
+                      season === 1 ? 'Summer' : 'Winter'
+                    })`,
+                    key:
+                      season === 1
+                        ? 'setpoint_offset_summer'
+                        : 'setpoint_offset_winter',
+                  },
+                  {
+                    label: 'Mode Change Delta Temp',
+                    key: 'mode_change_delta_temp',
+                  },
+                  {
+                    label: 'Mode Switch Lockout Time (Minutes)',
+                    key: 'mode_switch_lockout_time',
+                    unit: 'min.',
+                  },
+                  {
+                    label: 'Cascade Time',
+                    key: 'cascade_time',
+                    unit: 'min.',
+                  },
+                ].map(({ label, key, unit = '', min, max, help }) => (
+                  <CCol xs="12" key={key}>
+                    <div style={{ marginBottom: '10px' }}>
+                      <span htmlFor={key} className="temp-label ">
+                        {label}:
+                        {help && (
+                          <small
+                            className="text-muted ms-2"
+                            style={{ fontWeight: 'normal' }}
+                          >
+                            {help}
+                          </small>
+                        )}
+                      </span>
+                      <CFormInput
+                        type="number"
+                        name={key}
+                        id={key}
+                        value={formData[key] ?? ''}
+                        onChange={handleInputChange}
+                        placeholder={`${data.results[key] ?? '0.0'} ${unit}`}
+                        min={min}
+                        max={max}
+                      />
+                    </div>
+                  </CCol>
+                ))}
+              </CRow>
+            </div>
+            <CCol xs="12" className="text-end">
+              <CButton type="submit" color="primary" className="update-btn m-2">
+                Update
+              </CButton>
+            </CCol>
+          </CForm>
+        </CCardBody>
+      </CCard>
+    </CCol>
   );
 };
 

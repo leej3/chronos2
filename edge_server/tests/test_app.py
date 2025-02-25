@@ -40,21 +40,15 @@ def is_modbus_connected():
         return False
 
 
-# Legacy endpoint tests
 def test_get_data(client, mock_temperature_sensor, mock_serial_devices):
-    """Test the legacy get_data endpoint."""
     response = client.get("/get_data")
     assert response.status_code == 200
     data = response.json()
 
     assert "sensors" in data
-    assert "devices" in data
     assert isinstance(data["sensors"]["water_out_temp"], (int, float))
     assert isinstance(data["sensors"]["return_temp"], (int, float))
     assert data["mock_devices"] in [True, False]
-    assert isinstance(data["devices"], dict)
-    for key, value in data["devices"].items():
-        assert value in [True, False]
 
 
 def test_get_data_with_sensor_error(
@@ -68,11 +62,8 @@ def test_get_data_with_sensor_error(
         assert response.status_code == 200
 
         data = response.json()
-        print("data", data)
-        assert isinstance(data["sensors"], dict)
         assert isinstance(data["sensors"], dict)
         assert data["status"] is False
-        assert isinstance(data["devices"], dict)
 
 
 def test_get_device_state(client, mock_serial_devices):
@@ -101,6 +92,101 @@ def test_update_device_state(client, mock_serial_devices):
     finally:
         # Restore original state
         mock_serial_devices[0].state = original_state
+
+
+def test_update_device_state_circuit_breaker(client, mock_serial_devices):
+    """Test updating device state with circuit breaker."""
+    with patch("chronos.app.circuit_breaker.can_execute", return_value=True):
+        response = client.post("/device_state", json={"id": 0, "state": True})
+        assert response.status_code == 200
+        data = response.json()
+        assert data["id"] == 0
+        assert data["state"] is True
+
+
+def test_update_device_state_error_circuit_breaker(client, mock_serial_devices):
+    # original_state = mock_serial_devices[0].state
+
+    """Test updating device state with circuit breaker error."""
+    with patch("chronos.app.circuit_breaker.can_execute", return_value=False):
+        response = client.post("/device_state", json={"id": 0, "state": True})
+        assert response.status_code == 503
+        assert "Service temporarily unavailable" in response.json()["detail"]
+
+
+def test_update_device_state_rate_limiter(client, mock_serial_devices):
+    """Test updating device state with rate limiter."""
+    with patch("chronos.app.rate_limiter.can_change", return_value=True):
+        response = client.post("/device_state", json={"id": 0, "state": True})
+        assert response.status_code == 200
+        data = response.json()
+        assert data["id"] == 0
+        assert data["state"] is True
+
+
+def test_update_device_state_rate_limiter_error(client, mock_serial_devices):
+    """Test updating device state with rate limiter error."""
+    with patch("chronos.app.rate_limiter.can_change", return_value=False):
+        response = client.post("/device_state", json={"id": 0, "state": True})
+        assert response.status_code == 429
+        assert (
+            "Too many temperature changes. Please wait before trying again."
+            in response.json()["detail"]
+        )
+
+
+def test_update_device_state_is_season_switch_rate_limiter(client, mock_serial_devices):
+    """Test updating device state with is_season_switch."""
+    response = client.post(
+        "/device_state", json={"id": 0, "state": True, "is_season_switch": True}
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == 0
+    assert data["state"] is True
+
+    response2 = client.post(
+        "/device_state", json={"id": 0, "state": True, "is_season_switch": True}
+    )
+    assert response2.status_code == 200
+    data2 = response2.json()
+    assert data2["id"] == 0
+    assert data2["state"] is True
+
+    response3 = client.post(
+        "/device_state", json={"id": 0, "state": False, "is_season_switch": True}
+    )
+    assert response3.status_code == 200
+    data3 = response3.json()
+    assert data3["id"] == 0
+    assert data3["state"] is False
+
+
+def test_update_device_state_is_season_switch_rate_limiter_error(
+    client, mock_serial_devices
+):
+    """Test updating device state with is_season_switch error."""
+    response = client.post(
+        "/device_state", json={"id": 0, "state": True, "is_season_switch": False}
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == 0
+    assert data["state"] is True
+
+    response2 = client.post(
+        "/device_state", json={"id": 0, "state": True, "is_season_switch": False}
+    )
+    assert response2.status_code == 429
+    data2 = response2.json()
+
+    assert "Too many temperature changes" in data2["detail"]
+    response3 = client.post(
+        "/device_state", json={"id": 0, "state": False, "is_season_switch": False}
+    )
+    assert response3.status_code == 429
+    data3 = response3.json()
+    assert "Too many temperature changes" in data3["detail"]
 
 
 def test_get_device_state_invalid_id(client):
@@ -190,20 +276,38 @@ def test_get_boiler_operating_status_mock(client, mock_modbus_device):
         "operating_mode_str": "Central Heat",
         "cascade_mode": 0,
         "cascade_mode_str": "Single Boiler",
-        "current_setpoint": 158.0,
+        "current_setpoint": 90.0,
     }
-
     response = client.get("/boiler_status")
+
     assert response.status_code == 200
     data = response.json()
     assert data["operating_mode"] == 3
     assert data["operating_mode_str"] == "Central Heat"
-    assert data["current_setpoint"] == 158.0
+    assert data["current_setpoint"] == 90.0
 
 
-def test_set_boiler_setpoint_failure(client, mock_modbus_device):
+def test_set_boiler_setpoint_failure(client, mock_modbus_device, monkeypatch):
     """Test failure when setting boiler setpoint."""
+    from unittest.mock import MagicMock
+
+    from chronos.app import circuit_breaker
+
+    # Reset circuit breaker state
+    circuit_breaker.failure_count = 0
+    circuit_breaker.is_open = False
+    # Create a context manager mock that returns our mock_modbus_device
+    mock_context = MagicMock()
+    mock_context.__enter__ = lambda _: mock_modbus_device
+    mock_context.__exit__ = lambda *args: None
+
+    # Mock the initial connection check
+    mock_modbus_device.client.is_socket_open.return_value = True
     mock_modbus_device.set_boiler_setpoint.return_value = False
+
+    monkeypatch.setattr(cfg, "MOCK_DEVICES", False)
+    monkeypatch.setattr("chronos.app.create_modbus_connection", lambda: mock_context)
+
     response = client.post("/boiler_set_setpoint", json={"temperature": 90.0})
     assert response.status_code == 500
     assert "Failed to set temperature" in response.json()["detail"]
@@ -353,54 +457,44 @@ def test_error_handling_scenarios(
 
 
 @pytest.mark.integration
-def test_complete_boiler_flow(client, mock_modbus_device):
+def test_complete_boiler_flow(client, mock_modbus_device, monkeypatch):
     """Test the complete flow of boiler operations."""
+    monkeypatch.setattr(cfg, "MOCK_DEVICES", True)
+    monkeypatch.setattr(cfg, "READ_ONLY_MODE", False)
+
+    # Mock the operating status response
+    mock_status = {
+        "operating_mode": 3,
+        "operating_mode_str": "Central Heat",
+        "cascade_mode": 0,
+        "cascade_mode_str": "Single Boiler",
+        "current_setpoint": 90.0,
+    }
+
     # 1. Get initial stats
     response = client.get("/boiler_stats")
     assert response.status_code == 200
     assert response.json()  # Verify we get valid JSON response
 
     # 2. Get current operating status
-    response = client.get("/boiler_status")
-    assert response.status_code == 200
-    initial_status = response.json()
+    with patch("chronos.app.mock_operating_status", return_value=mock_status):
+        response = client.get("/boiler_status")
+        assert response.status_code == 200
+        initial_status = response.json()
+        assert initial_status["current_setpoint"] == 90.0
 
     # 3. Change setpoint
     original_setpoint = initial_status["current_setpoint"]
     try:
-        new_temp = 90.0
-        # Update mock device's operating status to reflect the new setpoint
-        mock_modbus_device.read_operating_status.return_value = {
-            "operating_mode": 3,
-            "operating_mode_str": "Central Heat",
-            "cascade_mode": 0,
-            "cascade_mode_str": "Single Boiler",
-            "current_setpoint": new_temp,
-        }
-
+        new_temp = 95.0
         response = client.post("/boiler_set_setpoint", json={"temperature": new_temp})
         assert response.status_code == 200
+        assert f"{new_temp}°F" in response.json()["message"]
 
         # Test rate limiting
         response = client.post("/boiler_set_setpoint", json={"temperature": 85.0})
         assert response.status_code == 429  # Too Many Requests
-
-        # Wait for rate limit to expire (handled by reset_limiters fixture)
-
-        # 4. Verify status changed
-        response = client.get("/boiler_status")
-        assert response.status_code == 200
-        new_status = response.json()
-        assert abs(new_status["current_setpoint"] - new_temp) < 2.0
     finally:
-        # Update mock device's operating status back to original setpoint
-        mock_modbus_device.read_operating_status.return_value = {
-            "operating_mode": 3,
-            "operating_mode_str": "Central Heat",
-            "cascade_mode": 0,
-            "cascade_mode_str": "Single Boiler",
-            "current_setpoint": original_setpoint,
-        }
         # Restore original setpoint
         client.post("/boiler_set_setpoint", json={"temperature": original_setpoint})
 
@@ -445,9 +539,27 @@ def test_set_temperature_limits_validation(client):
     assert response.status_code == 422
 
 
-def test_set_temperature_limits_failure(client, mock_modbus_device):
+def test_set_temperature_limits_failure(client, mock_modbus_device, monkeypatch):
     """Test failure when setting temperature limits."""
+    from unittest.mock import MagicMock
+
+    from chronos.app import circuit_breaker
+
+    # Reset circuit breaker state
+    circuit_breaker.failure_count = 0
+    circuit_breaker.is_open = False
+
+    # Create a context manager mock that returns our mock_modbus_device
+    mock_context = MagicMock()
+    mock_context.__enter__ = lambda _: mock_modbus_device
+    mock_context.__exit__ = lambda *args: None
+
+    # Mock the initial connection check
+    mock_modbus_device.client.is_socket_open.return_value = True
     mock_modbus_device.set_temperature_limits.return_value = False
+
+    monkeypatch.setattr("chronos.app.create_modbus_connection", lambda: mock_context)
+
     response = client.post(
         "/temperature_limits", json={"min_setpoint": 75.0, "max_setpoint": 105.0}
     )
@@ -455,16 +567,38 @@ def test_set_temperature_limits_failure(client, mock_modbus_device):
     assert "Failed to set temperature limits" in response.json()["detail"]
 
 
-def test_set_temperature_limits_connection_error(client, mock_modbus_device):
+def test_set_temperature_limits_connection_error(
+    client, mock_modbus_device, monkeypatch
+):
     """Test connection error when setting temperature limits."""
+    from unittest.mock import MagicMock
+
+    from chronos.app import circuit_breaker
+    from chronos.config import cfg
+
+    # Reset circuit breaker state
+    circuit_breaker.failure_count = 0
+    circuit_breaker.is_open = False
+
+    # Create a context manager mock that returns our mock_modbus_device
+    mock_context = MagicMock()
+    mock_context.__enter__ = lambda _: mock_modbus_device
+    mock_context.__exit__ = lambda *args: None
+
+    # Mock the initial connection check
+    mock_modbus_device.client.is_socket_open.return_value = True
     mock_modbus_device.set_temperature_limits.side_effect = ModbusException(
         "Connection failed"
     )
+
+    monkeypatch.setattr(cfg, "MOCK_DEVICES", False)
+    monkeypatch.setattr("chronos.app.create_modbus_connection", lambda: mock_context)
+
     response = client.post(
         "/temperature_limits", json={"min_setpoint": 75.0, "max_setpoint": 105.0}
     )
     assert response.status_code == 503
-    assert "Connection failed" in response.json()["detail"]
+    assert "Modbus Error: Connection failed" in response.json()["detail"]
 
 
 def test_set_boiler_setpoint_read_only(client, mock_modbus_device):

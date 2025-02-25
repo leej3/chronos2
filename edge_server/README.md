@@ -12,7 +12,7 @@ Chronos talks to the following components on the RPI. These devices are specifie
 
 ### API Endpoints
 
-Once deployed, api endpoint documentation can be accessed at http://5171/api/docs
+Once deployed, api endpoint documentation can be accessed at http://localhost:5171/docs
 
 
 ### Hardware dependencies

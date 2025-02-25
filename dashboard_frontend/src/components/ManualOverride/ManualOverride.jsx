@@ -26,12 +26,14 @@ const ManualOverride = ({ data }) => {
   const [alertMessage, setAlertMessage] = useState('');
   const readOnlyMode = useSelector((state) => state.chronos.read_only_mode);
   const [alertColor, setAlertColor] = useState('danger');
+  const unlockTime = useSelector((state) => state.chronos.unlock_time);
+  const [remainingTime, setRemainingTime] = useState('');
   // const [socket, setSocket] = useState(null);
 
   useEffect(() => {
     if (!data?.devices) return;
-
     const devices = data.devices;
+
     dispatch(
       setInitialState({
         boiler: devices[0],
@@ -43,7 +45,41 @@ const ManualOverride = ({ data }) => {
     );
   }, [data]);
 
+  useEffect(() => {
+    if (!unlockTime) {
+      setAlertMessage('');
+      return;
+    }
+
+    const updateRemainingTime = () => {
+      const now = new Date();
+      const unlockDateTime = new Date(unlockTime);
+      const timeDiff = unlockDateTime - now;
+
+      if (timeDiff <= 0) {
+        setAlertMessage('');
+        return;
+      }
+
+      const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+
+      const timeStr = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+      setAlertMessage(`System is locked for ${timeStr}`);
+      setAlertColor('warning');
+    };
+
+    updateRemainingTime();
+    const timer = setInterval(updateRemainingTime, 1000);
+
+    return () => clearInterval(timer);
+  }, [unlockTime]);
+
   const isDeviceDisabled = (device) => {
+    if (unlockTime) {
+      return true;
+    }
+
     if (season === 1) {
       return device === 'boiler';
     }
@@ -131,7 +167,7 @@ const ManualOverride = ({ data }) => {
         <CTooltip
           content={
             isDisabled
-              ? `${deviceName} not available in ${season} mode`
+              ? `${deviceName} is currently locked at this time`
               : 'Click to switch between ON and OFF'
           }
           placement="top"
@@ -139,7 +175,7 @@ const ManualOverride = ({ data }) => {
           <div className={`device-control ${isDisabled ? 'disabled' : ''}`}>
             <span className="temp-label">OFF</span>
             <CFormSwitch
-              checked={state[device] === true}
+              checked={state[device].state === 1}
               className="temp-label"
               onChange={(e) =>
                 handleDeviceStateChange(device, e.target.checked)
@@ -156,38 +192,36 @@ const ManualOverride = ({ data }) => {
 
   return (
     <div>
-      <CRow>
-        <CCol>
-          <CCard className="modbus-card">
-            <CCardBody>
-              <h2 className="chronous-title m-0">Manual Override</h2>
-              <div className="p-3">
-                {alertMessage && (
-                  <CAlert
-                    color={alertColor}
-                    dismissible
-                    onClose={() => setAlertMessage('')}
-                  >
-                    <strong>
-                      {alertColor === 'danger' ? 'Error!' : 'Warning!'}
-                    </strong>{' '}
-                    {alertMessage}
-                  </CAlert>
-                )}
-                <CRow className="g-3 mx-0">
-                  {Object.keys(state)
-                    .filter(
-                      (device, index) =>
-                        index <= 4 &&
-                        (device === 'boiler' || device.startsWith('chiller')),
-                    )
-                    .map(renderDeviceControl)}
-                </CRow>
-              </div>
-            </CCardBody>
-          </CCard>
-        </CCol>
-      </CRow>
+      <CCol>
+        <CCard className="modbus-card">
+          <CCardBody>
+            <h2 className="chronous-title m-0">Manual Override</h2>
+            <div className="p-3">
+              {alertMessage && (
+                <CAlert
+                  color={alertColor}
+                  dismissible
+                  onClose={() => setAlertMessage('')}
+                >
+                  <strong>
+                    {alertColor === 'danger' ? 'Error!' : 'Warning!'}
+                  </strong>{' '}
+                  {alertMessage}
+                </CAlert>
+              )}
+              <CRow className="g-3 mx-0">
+                {Object.keys(state)
+                  .filter(
+                    (device, index) =>
+                      index <= 4 &&
+                      (device === 'boiler' || device.startsWith('chiller')),
+                  )
+                  .map(renderDeviceControl)}
+              </CRow>
+            </div>
+          </CCardBody>
+        </CCard>
+      </CCol>
     </div>
   );
 };
