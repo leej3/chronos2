@@ -51,11 +51,12 @@ fi
 # Enter repository directory
 cd chronos2
 
-# Fetch latest changes and checkout specified ref
+# Fetch latest changes and checkout the specific ref (tag or commit)
 echo "Updating repository..."
-git fetch origin
-git checkout ${GIT_REF}
-git pull origin ${GIT_REF}
+git fetch --all --tags
+# Use git checkout with --detach to avoid being on a branch
+git checkout --detach ${GIT_REF}
+echo "Successfully checked out ${GIT_REF}"
 
 # Run the installation script
 echo "Running installation script..."

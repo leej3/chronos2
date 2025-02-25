@@ -116,11 +116,12 @@ deploy_application() {
             # Enter repository directory
             cd chronos2
 
-            # Fetch latest changes and checkout specified ref
+            # Fetch latest changes and checkout the specific ref (tag or commit)
             echo "Updating repository..."
-            git fetch origin
-            git checkout -f "${TF_VAR_git_ref}"
-            git reset --hard "origin/${TF_VAR_git_ref}"  # Ensure we're exactly at the remote version
+            git fetch --all --tags
+            # Use git checkout with --detach to avoid being on a branch
+            git checkout --detach ${TF_VAR_git_ref}
+            echo "Successfully checked out ${TF_VAR_git_ref}"
 
             # Update submodules
             git submodule update --init --recursive
