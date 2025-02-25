@@ -117,6 +117,11 @@ def with_circuit_breaker(func: Callable):
 def with_rate_limit(func: Callable):
     @wraps(func)
     async def wrapper(*args, **kwargs):
+        data = kwargs.get("data") or (args[0] if args else None)
+        is_season_switch = getattr(data, "is_season_switch", False) if data else False
+        if is_season_switch:
+            return await func(*args, **kwargs)
+
         if not rate_limiter.can_change():
             raise HTTPException(
                 status_code=429,
