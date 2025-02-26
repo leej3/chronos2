@@ -67,23 +67,12 @@ describe('TemperatureGraph', () => {
 
     render(<TemperatureGraph data={mockData} />);
 
-    expect(
-      screen.getByText(/Inlet\/Outlet Temperature History/i),
-    ).toBeInTheDocument();
-
     const inletLine = screen.getByTestId('line-inlet');
     const outletLine = screen.getByTestId('line-outlet');
     expect(inletLine).toBeInTheDocument();
     expect(outletLine).toBeInTheDocument();
 
     expect(screen.getByText('Temperature (°F)')).toBeInTheDocument();
-  });
-
-  it('should handle empty data array', () => {
-    render(<TemperatureGraph data={[]} />);
-    expect(
-      screen.getByText(/Inlet\/Outlet Temperature History/i),
-    ).toBeInTheDocument();
   });
 
   it('should render download button and handle click', () => {
@@ -118,22 +107,6 @@ describe('TemperatureGraph', () => {
     expect(mockLink.click).toHaveBeenCalled();
 
     document.createElement = originalCreateElement;
-  });
-
-  it('should adjust layout for mobile view', () => {
-    window.innerWidth = 767;
-
-    fireEvent(window, new Event('resize'));
-
-    const mockData = [
-      { date: '2024-07-31T12:00:00Z', 'column-2': 80, 'column-1': 75 },
-    ];
-
-    render(<TemperatureGraph data={mockData} />);
-
-    expect(
-      screen.getByText(/Inlet\/Outlet Temperature History/i),
-    ).toBeInTheDocument();
   });
 
   it('should correctly format and display temperature data', () => {

@@ -179,8 +179,6 @@ const TemperatureGraph = ({ data }) => {
   return (
     <div className="graph-container p-0">
       <div className="graphbody">
-        <h2 className="chronous-title">Inlet/Outlet Temperature History</h2>
-
         {isLoading && (
           <div className="loading-state">
             <div className="spinner"></div>
