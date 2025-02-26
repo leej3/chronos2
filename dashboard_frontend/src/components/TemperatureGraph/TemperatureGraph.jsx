@@ -13,7 +13,11 @@ import {
 } from 'recharts';
 
 import './TemperatureGraph.css';
-import { formatNumber } from '../../utils/tranform';
+import {
+  formatNumber,
+  formatTimeChicagoByTimestamp,
+  convertUCTtoUnixTimestamp,
+} from '../../utils/tranform';
 
 const TemperatureGraph = ({ data }) => {
   const [chartData, setChartData] = useState([]);
@@ -38,20 +42,11 @@ const TemperatureGraph = ({ data }) => {
     return [Math.floor(min - padding), Math.ceil(max + padding)];
   };
 
-  const convertToUnixChicago = (dateStr) =>
-    Math.floor(
-      new Date(
-        new Date(dateStr).toLocaleString('en-US', {
-          timeZone: 'America/Chicago',
-        }),
-      ).getTime() / 1000,
-    );
-
   useEffect(() => {
     if (data) {
       try {
         const mappedData = data.map((entry) => ({
-          date: convertToUnixChicago(entry.date),
+          date: convertUCTtoUnixTimestamp(entry.date),
           inlet: formatNumber(entry['column-2'], 1),
           outlet: formatNumber(entry['column-1'], 1),
         }));
@@ -111,7 +106,7 @@ const TemperatureGraph = ({ data }) => {
             }}
           >
             <strong>Time: </strong>
-            {label}
+            {formatTimeChicagoByTimestamp(label)}
           </p>
           <p
             style={{
@@ -163,10 +158,6 @@ const TemperatureGraph = ({ data }) => {
     link.setAttribute('href', encodedUri);
     link.setAttribute('download', 'temperature_data.csv');
     link.click();
-  };
-
-  const getResponsiveFontSize = () => {
-    return window.innerWidth < 768 ? 12 : 12;
   };
 
   const getFilteredData = (data) => {
