@@ -46,7 +46,6 @@ class Chronos(object):
             self.chiller4,
         )
         self.valves = (self.winter_valve, self.summer_valve)
-
         self._outside_temp = None
         self._wind_speed = None
         self._baseline_setpoint = None
@@ -202,7 +201,7 @@ class Chronos(object):
         if mode == Mode.WAITING_SWITCH_TO_SUMMER.value:
             logger.debug("Switching to summer mode")
             self.mode = Mode.WAITING_SWITCH_TO_SUMMER.value
-            self.mode_switch_timestamp = datetime.now()
+            self.mode_switch_timestamp = datetime.now(UTC)
             self._save_devices_states(mode)
             self.turn_off_devices(is_season_switch=True)
             self.summer_valve.turn_on(is_season_switch=True)
@@ -211,7 +210,7 @@ class Chronos(object):
             self.scheduler.add_job(
                 self._switch_season,
                 "date",
-                run_date=datetime.now()
+                run_date=datetime.now(UTC)
                 + timedelta(minutes=self.mode_switch_lockout_time),
                 args=[Mode.SWITCHING_TO_SUMMER.value],
             )
@@ -219,7 +218,7 @@ class Chronos(object):
         elif mode == Mode.WAITING_SWITCH_TO_WINTER.value:
             logger.debug("Switching to winter mode")
             self.mode = Mode.WAITING_SWITCH_TO_WINTER.value
-            self.mode_switch_timestamp = datetime.now()
+            self.mode_switch_timestamp = datetime.now(UTC)
             self._save_devices_states(mode)
             self.turn_off_devices(is_season_switch=True)
             self.summer_valve.turn_off(is_season_switch=True)
@@ -228,7 +227,7 @@ class Chronos(object):
             self.scheduler.add_job(
                 self._switch_season,
                 "date",
-                run_date=datetime.now()
+                run_date=datetime.now(UTC)
                 + timedelta(minutes=self.mode_switch_lockout_time),
                 args=[Mode.SWITCHING_TO_WINTER.value],
             )

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 from src.core import models
 from src.core.configs.database import session_scope
@@ -6,12 +6,13 @@ from src.core.repositories.setting_repository import SettingRepository
 
 
 class ChillerRepository:
-    def __init__(self):
-        self.timestamp = datetime.now()
+    def __init__(self, chiller_name: str):
+        self.timestamp = datetime.now(UTC)
         self.setting = SettingRepository()
+        self.chiller_name = chiller_name
 
-    def _update_value_in_db(self, chiller_name: str, param, value, **kwargs):
-        model_class = getattr(models, chiller_name)
+    def _update_value_in_db(self, param, value, **kwargs):
+        model_class = getattr(models, self.chiller_name)
         to_backup = kwargs.pop("to_backup", False)
         with session_scope() as session:
             property_ = (
@@ -21,8 +22,8 @@ class ChillerRepository:
             )
             setattr(property_, param, value)
 
-    def _get_property_from_db(self, chiller_name: str, *args, **kwargs):
-        device = getattr(models, chiller_name)
+    def _get_property_from_db(self, *args, **kwargs):
+        device = getattr(models, self.chiller_name)
         from_backup = kwargs.pop("from_backup", False)
         with session_scope() as session:
             instance = (
@@ -33,12 +34,12 @@ class ChillerRepository:
             result = result[0]
         return result
 
-    def set_chiller_status(self, chiller_name: str, status: int):
-        self._update_value_in_db(chiller_name, "status", status)
-        self._update_value_in_db(chiller_name, "switched_timestamp", self.timestamp)
+    def set_chiller_status(self, status: int):
+        self._update_value_in_db("status", status)
+        self._update_value_in_db("switched_timestamp", self.timestamp)
 
-    def get_chiller_status(self, chiller_name: str) -> int:
-        return self._get_property_from_db(chiller_name, "status")
+    def get_chiller_status(self) -> int:
+        return self._get_property_from_db("status")
 
-    def get_unlock_timestamp(self, chiller_name: str):
-        return self._get_property_from_db(chiller_name, "switched_timestamp")
+    def get_unlock_timestamp(self):
+        return self._get_property_from_db("switched_timestamp")

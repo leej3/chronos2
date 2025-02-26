@@ -48,5 +48,15 @@ def mock_operating_status():
     }
 
 
+def mock_devices_state():
+    return [
+        {"id": 0, "state": 1},
+        {"id": 1, "state": 0},
+        {"id": 2, "state": 0},
+        {"id": 3, "state": 0},
+        {"id": 4, "state": 0},
+    ]
+
+
 def mock_point_update():
     return True

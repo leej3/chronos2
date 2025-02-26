@@ -5,13 +5,6 @@ from pydantic import BaseModel, Field
 from .config import cfg
 
 
-class SystemStatus(BaseModel):
-    sensors: dict
-    status: bool
-    mock_devices: bool = False
-    read_only_mode: bool = False
-
-
 class SwitchStateRequest(BaseModel):
     command: str
     relay_only: bool = False
@@ -22,6 +15,14 @@ class DeviceModel(BaseModel):
     id: int = Field(..., ge=0, lt=7, description="Device ID (0-4)")
     state: bool
     is_season_switch: bool = False
+
+
+class SystemStatus(BaseModel):
+    sensors: dict
+    status: bool
+    mock_devices: bool = False
+    read_only_mode: bool = False
+    devices: list[DeviceModel]
 
 
 # New models for boiler data
