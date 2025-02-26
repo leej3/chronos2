@@ -335,3 +335,83 @@ The domain name is managed through environment variables:
 To view logs:
 - Dashboard: Connect to the EC2 instance and check docker logs
 - Edge Server: `journalctl -u chronos-edge -f`
+
+# Chronos Dashboard Deployment
+
+This directory contains the Terraform configuration and deployment scripts for the Chronos dashboard.
+
+## Overview
+
+The deployment architecture cleanly separates infrastructure from application configuration. The process:
+
+1. Uses Terraform to manage infrastructure (EC2, security groups, etc.)
+2. Uses SSH to connect to the provisioned instances and deploy the application
+3. Configures the application using environment variables from the environment files
+
+## Deployment Files
+
+- `deployments/env-stage` - Environment variables for staging deployment
+- `deployments/env-prod` - Environment variables for production deployment
+- `deploy-dashboard.sh` - Main deployment script
+
+## Deployment Workflow
+
+### 1. Setting Up Environment Variables
+
+Copy the template and customize it for your environment:
+
+```bash
+cp deployments/env.template deployments/env-custom
+nano deployments/env-custom
+```
+
+Important variables:
+- `git_ref` - Git reference (branch, tag, or commit) to deploy
+- `TF_VAR_public_key` - SSH public key for EC2 instance access
+- Application configuration variables (postgres_password, jwt_secret_key, etc.)
+- `background_color` - Background color for the frontend application
+
+### 2. Running Deployments
+
+To deploy to staging:
+```bash
+./deploy-dashboard.sh stage plan    # Preview changes
+./deploy-dashboard.sh stage apply   # Apply changes
+```
+
+To deploy to production:
+```bash
+./deploy-dashboard.sh prod plan     # Preview changes
+./deploy-dashboard.sh prod apply    # Apply changes
+```
+
+### 3. Updating Configuration
+
+To update application configuration (e.g., background color) without affecting infrastructure:
+- Edit the environment file (e.g., `deployments/env-stage`)
+- Run the deploy script:
+  ```bash
+  ./deploy-dashboard.sh stage apply
+  ```
+- The script will detect no infrastructure changes and only update the application configuration via SSH
+
+### 4. Destroying Environment
+
+```bash
+./deploy-dashboard.sh stage destroy
+```
+
+## Idempotent Deployment
+
+The deployment process is idempotent:
+- Running the deployment script multiple times with the same configuration will not cause problems
+- The installation script (`install.sh`) handles both first-time installations and updates
+- EC2 instances are only recreated if infrastructure parameters change, not application configuration
+
+## Troubleshooting
+
+If deployment fails:
+1. Check the Terraform logs for infrastructure issues
+2. Check SSH connectivity to the instance
+3. Check the application logs with `journalctl -u chronos -f`
+4. Check Docker logs with `docker compose logs -f`

@@ -4,7 +4,10 @@
   --app-bg-color-light: #ffffff;
   --app-text-color-dark: #ffffff;
   --app-text-color-light: #213547;
-  --configurable-bg-color: var(--vite-background-color, var(--app-bg-color-dark));
+  --configurable-bg-color: var(
+    --vite-background-color,
+    var(--app-bg-color-dark)
+  );
 
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;

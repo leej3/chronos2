@@ -40,7 +40,6 @@ echo "Setting up installation directory..."
 mkdir -p "$INSTALL_DIR"
 rsync -av --delete . "$INSTALL_DIR/"
 
-
 # Verify deployment environment variables
 if [ ! -f "$INSTALL_DIR/.env.deployment" ]; then
     echo "No .env.deployment file detected..."
@@ -59,14 +58,29 @@ echo "Configuring systemd service..."
 cp chronos.service /etc/systemd/system/
 systemctl daemon-reload
 
-# Enable and start service
+# Check if service is already running
+SERVICE_RUNNING=false
+if systemctl is-active --quiet "$SERVICE_NAME"; then
+    SERVICE_RUNNING=true
+    echo "Service is currently running, will be restarted to apply changes..."
+fi
+
+# Enable and start/restart service
 echo "Enabling and starting service..."
 systemctl enable "$SERVICE_NAME"
-systemctl restart "$SERVICE_NAME"
+
+if [ "$SERVICE_RUNNING" = true ]; then
+    echo "Restarting service to apply changes..."
+    systemctl restart "$SERVICE_NAME"
+else
+    echo "Starting service for the first time..."
+    systemctl start "$SERVICE_NAME"
+fi
 
 echo "Installation complete! Service status:"
-echo Deployment successful $(date) >> deployment.log
-systemctl status "$SERVICE_NAME"
+systemctl status "$SERVICE_NAME" || true # Don't fail if status check fails
+echo
+echo "Deployment successful $(date)" >> deployment.log
 echo
 echo "To view logs, run: journalctl -u $SERVICE_NAME -f"
 echo "To view docker logs, run: docker compose -f docker-compose.yml -f docker-compose.deployment.yml logs -f"

@@ -38,14 +38,16 @@ required_vars=(
     "TF_VAR_deptype"
     "TF_VAR_public_key"
     "TF_VAR_additional_public_key"
-    "TF_VAR_vite_api_base_url"
-    "TF_VAR_postgres_password"
-    "TF_VAR_jwt_secret_key"
-    "TF_VAR_edge_server_ip"
-    "TF_VAR_edge_server_port"
-    "TF_VAR_user_1_email"
-    "TF_VAR_user_1_password"
-    "TF_VAR_git_ref"
+    "vite_api_base_url"
+    "postgres_password"
+    "jwt_secret_key"
+    "edge_server_ip"
+    "edge_server_port"
+    "user_1_email"
+    "user_1_password"
+    "git_ref"
+    "frp_auth_token"
+    "letsencrypt_admin_email"
 )
 
 for var in "${required_vars[@]}"; do
@@ -61,6 +63,8 @@ if [ "$TF_VAR_deptype" != "$ENV" ]; then
     echo "Found: $TF_VAR_deptype"
     exit 1
 fi
+
+# Note: git_ref is now only used for application deployment, not for Terraform
 
 cd deployments
 
@@ -94,7 +98,7 @@ wait_for_instance() {
     return 1
 }
 
-# Add this function near the start of the file, after the environment validation
+# Handle application deployment
 deploy_application() {
     local instance_dns=$1
     local max_retries=3
@@ -102,10 +106,32 @@ deploy_application() {
 
     echo "Deploying to dashboard server ($ENV environment): $instance_dns"
 
+    # Wait for basic setup to complete (first time deployments)
+    echo "Checking if instance setup is complete..."
     while [ $retry_count -lt $max_retries ]; do
-        if ssh -o ConnectTimeout=10 "ubuntu@$instance_dns" bash -s << ENDSSH; then
+        if ssh -o ConnectTimeout=10 "ubuntu@$instance_dns" "test -f /home/ubuntu/.setup_complete && echo 'Setup complete'" 2>/dev/null; then
+            echo "Basic setup is complete, proceeding with application deployment"
+            break
+        fi
+        retry_count=$((retry_count + 1))
+        if [ $retry_count -lt $max_retries ]; then
+            echo "Setup not yet complete. Waiting 30 seconds... (Attempt $retry_count of $max_retries)"
+            sleep 30
+        else
+            echo "Error: Setup did not complete after $max_retries attempts"
+            echo "This might be a new instance that's still initializing. Try again in a few minutes."
+            return 1
+        fi
+    done
+
+    retry_count=0
+
+    # Run the full deployment process via SSH
+    while [ $retry_count -lt $max_retries ]; do
+        echo "Deploying application..."
+        if ssh -o ConnectTimeout=30 "ubuntu@$instance_dns" bash -s << ENDSSH; then
             set -e
-            echo "Starting deployment on remote host..."
+            echo "Starting application deployment..."
 
             # Check if repository exists, if not clone it
             if [ ! -d "chronos2" ]; then
@@ -120,14 +146,63 @@ deploy_application() {
             echo "Updating repository..."
             git fetch --all --tags
             # Use git checkout with --detach to avoid being on a branch
-            git checkout --detach ${TF_VAR_git_ref}
-            echo "Successfully checked out ${TF_VAR_git_ref}"
+            git checkout --detach ${git_ref}
+            echo "Successfully checked out ${git_ref}"
 
-            # Update submodules
+            # Configure git to use HTTPS instead of SSH for submodules
+            git config --global url."https://github.com/".insteadOf git@github.com:
+
+            # Initialize git submodules
             git submodule update --init --recursive
 
-            # Run the dashboard installation/update script
-            echo "Running dashboard update..."
+            # Run setup script to create initial .env files if they don't exist
+            if [ ! -f "dashboard_frontend/.env.docker" ] || [ ! -f "dashboard_backend/.env.docker" ]; then
+                echo "Setting up initial .env files..."
+                bash setup-dotenv.sh
+            fi
+
+            # Extract base URL without /api suffix for Traefik configuration
+            BASE_URL=\$(echo "${vite_api_base_url}" | sed "s|/api\$||")
+            DOMAIN=\$(echo "\$BASE_URL" | sed "s|^https://||")
+
+            # Frontend environment updates
+            sed -i "s|VITE_API_BASE_URL=.*|VITE_API_BASE_URL=${vite_api_base_url}|" dashboard_frontend/.env.docker
+
+            # Apply background color if provided
+            if [ ! -z "${background_color}" ]; then
+                if grep -q "VITE_BACKGROUND_COLOR" dashboard_frontend/.env.docker; then
+                    sed -i "s|VITE_BACKGROUND_COLOR=.*|VITE_BACKGROUND_COLOR=${background_color}|" dashboard_frontend/.env.docker
+                else
+                    echo "VITE_BACKGROUND_COLOR=${background_color}" >> dashboard_frontend/.env.docker
+                fi
+                echo "Background color set to: ${background_color}"
+            fi
+
+            # Backend environment updates
+            sed -i "s|POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=${postgres_password}|" dashboard_backend/.env.docker
+            sed -i "s|JWT_SECRET_KEY=.*|JWT_SECRET_KEY=${jwt_secret_key}|" dashboard_backend/.env.docker
+            sed -i "s|EDGE_SERVER_IP=.*|EDGE_SERVER_IP=${edge_server_ip}|" dashboard_backend/.env.docker
+            sed -i "s|EDGE_SERVER_PORT=.*|EDGE_SERVER_PORT=${edge_server_port}|" dashboard_backend/.env.docker
+            sed -i "s|USER_1_EMAIL=.*|USER_1_EMAIL=${user_1_email}|" dashboard_backend/.env.docker
+            sed -i "s|USER_1_PASSWORD=.*|USER_1_PASSWORD=${user_1_password}|" dashboard_backend/.env.docker
+            sed -i "s|LETSENCRYPT_ADMIN_EMAIL=.*|LETSENCRYPT_ADMIN_EMAIL=${letsencrypt_admin_email}|" dashboard_backend/.env.docker
+
+            # Create deployment .env.deployment file
+            cat > .env.deployment << EOF
+DEPLOYMENT_URI=\$DOMAIN
+LETSENCRYPT_ADMIN_EMAIL=${letsencrypt_admin_email}
+EOF
+
+            # Setup FRP configuration
+            mkdir -p frp_config
+            if [ -f "frp_config/frps.template.toml" ]; then
+                cp frp_config/frps.template.toml frp_config/frps.toml
+                sed -i "s|auth.token = \"12345678\"|auth.token = \"${frp_auth_token}\"|" frp_config/frps.toml
+            fi
+
+            echo "Configuration complete, running installation script..."
+
+            # Run the installation script with root privileges
             sudo bash install.sh
 ENDSSH
             echo "Deployment successful!"
@@ -160,16 +235,19 @@ case "$ACTION" in
         set -e  # Re-enable exit on error
 
         # Extract hostname from API URL using bash string substitution
-        instance_dns=${TF_VAR_vite_api_base_url#*//}
+        instance_dns=${vite_api_base_url#*//}
         instance_dns=${instance_dns%%:*}
         instance_dns=${instance_dns%/api}
 
         # Exit code 0 means no changes, 1 means error, 2 means changes present
         if [ $plan_exit_code -eq 0 ]; then
-            echo "No infrastructure changes detected. Proceeding with application deployment..."
+            echo "No infrastructure changes detected. Applying configuration updates only..."
+            # Always run the full deployment to ensure configuration is updated
             deploy_application "$instance_dns"
         elif [ $plan_exit_code -eq 2 ]; then
-            echo "Infrastructure changes detected. Running Terraform apply..."
+            # Apply infrastructure changes
+            echo "Infrastructure changes detected."
+            echo "Running Terraform apply to update infrastructure..."
             cat plan_output.txt  # Show the plan output
             tofu apply -auto-approve
 
@@ -179,9 +257,12 @@ case "$ACTION" in
                 exit 1
             fi
 
-            echo "Infrastructure changes applied successfully."
-            echo "Note: The EC2 instance is handling the deployment through user data script."
-            echo "You can check the instance's system log for deployment progress."
+            # Give some time for setup to complete
+            echo "Waiting 30 seconds for basic setup to complete..."
+            sleep 30
+
+            # Now deploy the application
+            deploy_application "$instance_dns"
         else
             echo "Error during Terraform plan:"
             cat plan_output.txt

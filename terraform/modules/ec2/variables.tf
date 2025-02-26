@@ -60,63 +60,24 @@ variable "eip_allocation_id" {
   type        = string
 }
 
-# Application Configuration Variables
-variable "vite_api_base_url" {
-  description = "Base URL for the frontend API"
+# State management backend configuration
+variable "state_bucket_name" {
+  description = "S3 bucket for Terraform state"
   type        = string
 }
 
-variable "postgres_password" {
-  description = "Password for PostgreSQL database"
-  type        = string
-  sensitive   = true
-}
-
-variable "jwt_secret_key" {
-  description = "Secret key for JWT token generation"
-  type        = string
-  sensitive   = true
-}
-
-variable "edge_server_ip" {
-  description = "IP address for the edge server"
+variable "state_backend_key" {
+  description = "Path to the shared state file"
   type        = string
 }
 
-variable "edge_server_port" {
-  description = "Port for the edge server"
+variable "state_table_name" {
+  description = "DynamoDB table name for state locking"
   type        = string
 }
 
-variable "user_1_email" {
-  description = "Email for the first user"
+variable "state_storage_region" {
+  description = "Region for state storage"
   type        = string
-}
-
-variable "user_1_password" {
-  description = "Password for the first user"
-  type        = string
-  sensitive   = true
-}
-
-variable "frp_auth_token" {
-  description = "Authentication token for FRP server"
-  type        = string
-  sensitive   = true
-}
-
-variable "git_ref" {
-  description = "Git reference (branch, tag, or commit) to deploy"
-  type        = string
-}
-
-variable "letsencrypt_admin_email" {
-  type        = string
-  description = "The admin email address used by Let's Encrypt for certificate administration."
-}
-
-variable "background_color" {
-  description = "Background color for the frontend application"
-  type        = string
-  default     = "#2b2e3b"
+  default     = "us-east-1"
 }
