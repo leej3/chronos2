@@ -135,8 +135,8 @@ ENDSSH
         else
             retry_count=$((retry_count + 1))
             if [ $retry_count -lt $max_retries ]; then
-                echo "Deployment failed. Retrying in 10 seconds... (Attempt $retry_count of $max_retries)"
-                sleep 10
+                echo "Deployment failed. Retrying in 30 seconds... (Attempt $retry_count of $max_retries)"
+                sleep 30
             else
                 echo "Error: Deployment failed after $max_retries attempts"
                 return 1
