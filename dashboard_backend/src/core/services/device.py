@@ -1,8 +1,9 @@
-from datetime import UTC, datetime
+from datetime import UTC
 
 from src.core.repositories.device_repository import DeviceRepository
 from src.core.services.edge_server import EdgeServer
 from src.core.utils.constant import MANUAL_AUTO, MANUAL_OFF, MANUAL_ON, OFF, ON
+from src.core.utils.helpers import get_current_time
 
 
 class Device(object):
@@ -42,7 +43,7 @@ class Device(object):
         )
 
         if not relay_only and self.TYPE == "boiler":
-            switched_timestamp = datetime.now(UTC)
+            switched_timestamp = get_current_time(UTC)
             self._update_value_in_db(switched_timestamp=switched_timestamp)
 
     def turn_off(self, relay_only=False, is_season_switch=False):
@@ -51,7 +52,7 @@ class Device(object):
         )
 
         if not relay_only and self.TYPE == "boiler":
-            switched_timestamp = datetime.now(UTC)
+            switched_timestamp = get_current_time(UTC)
             self._update_value_in_db(
                 timestamp=switched_timestamp, switched_timestamp=switched_timestamp
             )

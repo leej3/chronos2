@@ -75,38 +75,7 @@ def mock_edge_server():
         "soft_limits": {"min_setpoint": 70.0, "max_setpoint": 110.0},
     }
     mock._switch_state = MagicMock(spec=EdgeServer._switch_state)
-    mock.get_all_devices_state.return_value = {
-        "0": {
-            "id": 0,
-            "state": True,
-            "switched_timestamp": datetime.now().isoformat(),
-        },
-        "1": {
-            "id": 1,
-            "state": False,
-            "switched_timestamp": datetime.now().isoformat(),
-        },
-        "2": {
-            "id": 2,
-            "state": False,
-            "switched_timestamp": datetime.now().isoformat(),
-        },
-        "3": {
-            "id": 3,
-            "state": False,
-            "switched_timestamp": datetime.now().isoformat(),
-        },
-        "4": {
-            "id": 4,
-            "state": False,
-            "switched_timestamp": datetime.now().isoformat(),
-        },
-    }
-    mock.update_device_state.return_value = {
-        "id": 1,
-        "state": True,
-        "switched_timestamp": datetime.now().isoformat(),
-    }
+
     return mock
 
 

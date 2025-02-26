@@ -641,3 +641,14 @@ def test_set_temperature_limits_read_only(client, mock_modbus_device):
     finally:
         # Reset read-only mode to its original state
         cfg.READ_ONLY_MODE = False
+
+
+def test_get_all_devices_state_mock(client):
+    """Test getting all devices state with mocked device."""
+    response = client.get("/get_all_devices_state")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 5
+    for device in data:
+        assert device["id"] in range(5)
+        assert isinstance(device["state"], bool)
