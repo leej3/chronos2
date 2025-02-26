@@ -1,4 +1,4 @@
-const format = {
+const formatTime = {
   timeZone: 'America/Chicago',
   year: 'numeric',
   month: 'numeric',
@@ -25,14 +25,25 @@ export const formatTemperature = (temp) => {
   return `${formatNumber(temp)}°F`;
 };
 
-export const formatDate = (date) => {
+export const formatDate = (date, format = 'HH:mm:ss') => {
   if (date === null || date === undefined || date === 'N/A') return 'N/A';
-  return new Date(date).toLocaleString('en-US', format);
+  if (format === 'HH:mm:ss') {
+    return new Date(date).toLocaleString('en-US', {
+      timeZone: 'America/Chicago',
+      hour: 'numeric',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    });
+  }
+  return new Date(date).toLocaleString('en-US', {
+    ...formatTime,
+  });
 };
 
 export const formatTimeChicagoByTimestamp = (timestamp) => {
   return new Intl.DateTimeFormat('en-US', {
-    ...format,
+    ...formatTime,
   }).format(new Date(timestamp * 1000));
 };
 

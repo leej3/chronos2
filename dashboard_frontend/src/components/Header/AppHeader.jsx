@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 
-import { cilFactorySlash, cilLockLocked } from '@coreui/icons';
+import { cilClock, cilFactorySlash, cilLockLocked } from '@coreui/icons';
 import CIcon from '@coreui/icons-react';
 import {
   CContainer,
@@ -14,12 +14,14 @@ import {
   CCol,
 } from '@coreui/react';
 import { useSelector } from 'react-redux';
+import { formatDate } from '../../utils/tranform';
 import './AppHeader.css';
 
 const AppHeader = () => {
   const headerRef = useRef();
-  const systemStatus = useSelector((state) => state.chronos.systemStatus);
-  const season = useSelector((state) => state.chronos.season);
+  const { systemStatus, season, lastUpdated } = useSelector(
+    (state) => state.chronos,
+  );
   const data = useSelector((state) => state.chronos.data);
 
   const outdoorTemp = data?.results?.outside_temp || 'N/A';
@@ -60,7 +62,9 @@ const AppHeader = () => {
                 className="d-flex align-items-center mt-0 mt-sm-1"
                 style={{ fontSize: '0.8rem' }}
               >
-                <span className="text-white-50 me-1 me-sm-2">SYSTEM</span>
+                <span className="text-white-50 me-1 me-sm-2 text-info">
+                  SYSTEM
+                </span>
                 <span
                   className={`${
                     systemStatus === 'ONLINE' ? 'text-success' : 'text-danger'
@@ -78,6 +82,22 @@ const AppHeader = () => {
                   {systemStatus}
                 </span>
               </div>
+              {lastUpdated && (
+                <div className="d-flex align-items-center text-info">
+                  <span
+                    className=" me-1 me-sm-2 "
+                    style={{ fontSize: '0.8rem' }}
+                  >
+                    Last sync:
+                  </span>
+                  <span
+                    className=" me-1 me-sm-2 font-weight-bold"
+                    style={{ fontSize: '0.8rem' }}
+                  >
+                    {formatDate(lastUpdated, 'HH:mm:ss')}
+                  </span>
+                </div>
+              )}
             </div>
           </CHeaderBrand>
 
@@ -139,6 +159,16 @@ const AppHeader = () => {
                 <span>{systemStatus}</span>
               </div>
             </div>
+            {lastUpdated && (
+              <div className="d-flex align-items-center text-info">
+                <span className=" me-1 me-sm-2 " style={{ fontSize: '0.9rem' }}>
+                  Last sync:
+                </span>
+                <span className=" me-1 me-sm-2 font-weight-bold">
+                  {formatDate(lastUpdated, 'HH:mm:ss')}
+                </span>
+              </div>
+            )}
           </CCol>
 
           <CCol xs={6} md={6}>
@@ -167,6 +197,7 @@ const AppHeader = () => {
                   </span>
                 </div>
               )}
+
               <div className="d-flex flex-column flex-md-row">
                 <div className="temperature-container d-flex align-items-center">
                   <span className="temperature-label">Avg (96hrs):</span>
