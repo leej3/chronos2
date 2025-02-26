@@ -18,7 +18,6 @@ import SystemMap from '../../components/systemMap/SystemMap';
 import TemperatureGraph from '../../components/TemperatureGraph/TemperatureGraph';
 import { fetchData } from '../../features/chronos/chronosSlice';
 import { REFRESH_TIME, RETRY_TIME } from '../../utils/constant';
-import { formatDate } from '../../utils/tranform';
 import TypeMode from '../../components/TypeMode/TypeMode';
 import UserSettings from '../../components/UserSettings/UserSettings';
 import TableTemplate from '../../components/Sensor/TableTemplate';
@@ -28,14 +27,9 @@ import EfficiencyMetrics from '../../components/EfficiencyMetrics/EfficiencyMetr
 import { fetchCharData } from '../../features/chronos/temperatureSlice';
 import './Home.css';
 
-const LoadingOverlay = ({ remainingTimeRefresh, error, lastUpdated }) => (
+const LoadingOverlay = ({ remainingTimeRefresh, error }) => (
   <div className="loading-overlay">
     <div className="loading-content">
-      {lastUpdated && (
-        <p className="text-success mb-2 mt-0">
-          Last updated data: {formatDate(lastUpdated)}
-        </p>
-      )}
       <p className="loading-text mb-4 mt-0">{error}</p>
       <CSpinner color="primary" />
       <p className="loading-text mt-2">
@@ -47,7 +41,7 @@ const LoadingOverlay = ({ remainingTimeRefresh, error, lastUpdated }) => (
 
 const Home = () => {
   const dispatch = useDispatch();
-  const { data, status, error, season, lastUpdated, devices } = useSelector(
+  const { data, status, error, season, devices } = useSelector(
     (state) => state.chronos,
   );
   const { data: temperatureData, status: temperatureStatus } = useSelector(
@@ -143,7 +137,6 @@ const Home = () => {
           remainingTimeRefresh={recallAPITime}
           error={error}
           isReCallAPI={isReCallAPI}
-          lastUpdated={lastUpdated}
         />
       )}
 
