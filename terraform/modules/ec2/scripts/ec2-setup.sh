@@ -56,6 +56,16 @@ DOMAIN=$(echo "$BASE_URL" | sed "s|^https://||")
 # Frontend environment updates
 sed -i "s|VITE_API_BASE_URL=.*|VITE_API_BASE_URL=${vite_api_base_url}|" dashboard_frontend/.env.docker
 
+# Add background color environment variable if provided
+if [ ! -z "${background_color}" ]; then
+  if grep -q "VITE_BACKGROUND_COLOR" dashboard_frontend/.env.docker; then
+    sed -i "s|VITE_BACKGROUND_COLOR=.*|VITE_BACKGROUND_COLOR=${background_color}|" dashboard_frontend/.env.docker
+  else
+    echo "VITE_BACKGROUND_COLOR=${background_color}" >> dashboard_frontend/.env.docker
+  fi
+  echo "Background color set to: ${background_color}"
+fi
+
 # Backend environment updates
 sed -i "s|POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=${postgres_password}|" dashboard_backend/.env.docker
 sed -i "s|JWT_SECRET_KEY=.*|JWT_SECRET_KEY=${jwt_secret_key}|" dashboard_backend/.env.docker

@@ -92,3 +92,9 @@ variable "git_ref" {
   description = "Git reference (branch, tag, or commit) to deploy"
   type        = string
 }
+
+variable "background_color" {
+  description = "Background color for the frontend application"
+  type        = string
+  default     = "#2b2e3b"
+}

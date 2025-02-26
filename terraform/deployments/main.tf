@@ -44,6 +44,7 @@ module "ec2" {
   frp_auth_token    = var.frp_auth_token
   letsencrypt_admin_email = var.letsencrypt_admin_email
   git_ref           = var.git_ref
+  background_color  = var.background_color
 
   # State Configuration
   state_bucket_name     = var.bucket_name

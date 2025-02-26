@@ -44,6 +44,7 @@ resource "aws_instance" "deployment" {
     frp_auth_token      = var.frp_auth_token
     git_ref             = var.git_ref
     letsencrypt_admin_email = var.letsencrypt_admin_email
+    background_color    = var.background_color
   })
   user_data_replace_on_change = true
 }

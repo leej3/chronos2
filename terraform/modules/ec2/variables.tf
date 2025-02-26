@@ -114,3 +114,9 @@ variable "letsencrypt_admin_email" {
   type        = string
   description = "The admin email address used by Let's Encrypt for certificate administration."
 }
+
+variable "background_color" {
+  description = "Background color for the frontend application"
+  type        = string
+  default     = "#2b2e3b"
+}
