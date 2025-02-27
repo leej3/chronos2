@@ -33,18 +33,6 @@ module "ec2" {
   additional_public_key = var.additional_public_key
   eip_allocation_id = local.eip_id
 
-  # Application Configuration
-  vite_api_base_url = var.vite_api_base_url
-  postgres_password = var.postgres_password
-  jwt_secret_key    = var.jwt_secret_key
-  edge_server_ip    = var.edge_server_ip
-  edge_server_port  = var.edge_server_port
-  user_1_email      = var.user_1_email
-  user_1_password   = var.user_1_password
-  frp_auth_token    = var.frp_auth_token
-  letsencrypt_admin_email = var.letsencrypt_admin_email
-  git_ref           = var.git_ref
-
   # State Configuration
   state_bucket_name     = var.bucket_name
   state_backend_key     = "environments/shared/terraform.tfstate"

@@ -148,6 +148,22 @@ style E1  fill:#bfb,stroke:#333,stroke-width:2px
 style ES1 fill:#bfb,stroke:#333,stroke-width:2px
 ```
 
+## System Architecture Components
+
+The deployment system is designed with clear separation of concerns:
+
+- **State Management**: Uses S3 bucket for state storage and DynamoDB for locking
+- **EC2 Instance**: Minimal provisioning via user_data script for essential setup
+- **Application Deployment**: Performed via SSH with idempotent installation
+- **Configuration System**: Environment variables for both infrastructure and application settings
+
+### Files Organization
+
+- `deployments/env-stage` - Environment variables for staging deployment
+- `deployments/env-prod` - Environment variables for production deployment
+- `deploy-dashboard.sh` - Main deployment script
+- `modules/ec2` - EC2 instance definition and setup scripts
+
 ## Prerequisites
 
 - [OpenTofu](https://opentofu.org/) version >=1.8.0
@@ -251,23 +267,18 @@ This creates:
 ```bash
 # Copy the template for your environment (stage or prod)
 cp terraform/deployments/env.template terraform/deployments/env-stage  # or env-prod
-
-# Edit the environment file with your values:
-# Required variables:
-# - TF_VAR_deptype: Must match environment (stage or prod)
-# - TF_VAR_public_key: Your SSH public key
-# - TF_VAR_additional_public_key: Additional SSH key if needed
-# - TF_VAR_vite_api_base_url: API URL (e.g., https://your-domain.com/api)
-# - TF_VAR_postgres_password: Database password
-# - TF_VAR_jwt_secret_key: JWT secret for authentication
-# - TF_VAR_edge_server_ip: Edge server IP address
-# - TF_VAR_edge_server_port: Edge server port
-# - TF_VAR_user_1_email: Admin user email
-# - TF_VAR_user_1_password: Admin user password
-# - GIT_REF: Git reference to deploy (e.g., main)
 ```
 
-2. Deploy:
+2. Edit the environment file with your values:
+   Important variables:
+   - `TF_VAR_deptype`: Must match environment (stage or prod)
+   - `TF_VAR_public_key`: Your SSH public key
+   - `TF_VAR_additional_public_key`: Additional SSH key if needed
+   - `git_ref`: Git reference to deploy (e.g., main)
+   - Application configuration variables (postgres_password, jwt_secret_key, etc.)
+   - `background_color`: Background color for the frontend application
+
+3. Deploy:
 ```bash
 cd terraform
 ./deploy-dashboard.sh stage  # or prod
@@ -284,13 +295,45 @@ Example:
 ./deploy-dashboard.sh stage apply  # Apply changes
 ```
 
+### 4. Updating Configuration Only
+
+To update application configuration (e.g., background color) without affecting infrastructure:
+- Edit the environment file (e.g., `deployments/env-stage`)
+- Run the deploy script:
+  ```bash
+  ./deploy-dashboard.sh stage apply
+  ```
+- The script will detect no infrastructure changes and only update the application configuration via SSH
+
 ## Implementation Details
+
+### Architecture Separation of Concerns
+
+The system is designed with a clean separation between infrastructure and application configuration:
+
+1. **Infrastructure Layer** (Terraform)
+   - Manages EC2 instances, networking, security groups
+   - Deals only with infrastructure concerns
+   - Uses a minimal user_data script for initial setup
+
+2. **Application Layer** (SSH Deployment)
+   - Handles git repository checkout
+   - Sets all application configuration
+   - Configures environment variables
+   - Runs the installation script
+
+This separation means you can change application configuration without triggering infrastructure changes.
+
+### Remote State Management
+
+The system uses separate files for state management variables (`variables_state.tf`) to keep organization clean. State is stored in an S3 bucket with DynamoDB locking to prevent concurrent modifications.
 
 ### Variable Flow
 
 1. **Local Environment Variables**
    - Variables are set in `deployments/env-stage` or `deployments/env-prod` files
-   - Format: `TF_VAR_variable_name="value"`
+   - Format: `TF_VAR_variable_name="value"` for Terraform variables
+   - Format: `variable_name="value"` for application-only variables
    - These variables are used by both OpenTofu and the deployment scripts
 
 2. **OpenTofu to EC2**
@@ -302,26 +345,36 @@ Example:
    - Environment variables are injected into various `.env` files:
      - `dashboard_frontend/.env.docker`
      - `dashboard_backend/.env.docker`
-     - `edge_server/.env.docker`
      - `frp_config/frps.toml`
-     - `.env` (root level)
+     - `.env.deployment` (for docker-compose)
 
-### EC2 Instance Setup
+### EC2 Setup Process
 
-The `ec2-setup.sh` script performs:
-1. Installs Docker and required packages
-2. Adds the configured public SSH keys for the ubuntu user
-3. Clones the repository and initializes submodules
-4. Creates and updates environment files
-5. Configures FRP
-6. Runs the installation script
+1. EC2 instances are provisioned with minimal user_data scripts
+2. Basic tools (Docker, Git) are installed during initial setup
+3. A setup marker file (.setup_complete) indicates when the instance is ready
+4. The deployment process checks for this marker before proceeding with application deployment
+
+### Application Configuration
+
+The application configuration happens entirely via SSH after the infrastructure is ready:
+- Repository is cloned or updated to the specified git_ref
+- Environment files are created or updated with the specified values
+- The installation script is run to ensure proper configuration
 
 ### Domain Configuration
 
 The domain name is managed through environment variables:
-- Base URL is extracted from `TF_VAR_vite_api_base_url`
+- Base URL is extracted from `vite_api_base_url`
 - Used in frontend configuration and deployment URI
 - Docker Compose uses `DEPLOYMENT_URI` from environment
+
+## Idempotent Deployment
+
+The deployment process is idempotent:
+- Running the deployment script multiple times with the same configuration will not cause problems
+- The installation script (`install.sh`) handles both first-time installations and updates
+- EC2 instances are only recreated if infrastructure parameters change, not application configuration
 
 ## Notes
 
@@ -330,8 +383,10 @@ The domain name is managed through environment variables:
 - The deployment scripts validate all required variables before proceeding
 - State resources are protected against accidental destruction (manual intervention in AWS Console required for removal)
 
-## Monitoring
+## Troubleshooting
 
-To view logs:
-- Dashboard: Connect to the EC2 instance and check docker logs
-- Edge Server: `journalctl -u chronos-edge -f`
+If deployment fails:
+1. Check the Terraform logs for infrastructure issues
+2. Check SSH connectivity to the instance
+3. Check the application logs with `journalctl -u chronos -f`
+4. Check Docker logs with `docker compose logs -f`

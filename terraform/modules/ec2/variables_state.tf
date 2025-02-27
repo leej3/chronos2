@@ -1,23 +1,21 @@
+# State management backend configuration
 variable "state_bucket_name" {
-  description = "The name of the S3 bucket to store Terraform state. Must be globally unique."
-  type        = string
-  default     = "chronos2-terraform-state-storage"
-}
-
-variable "state_table_name" {
-  description = "The name of the DynamoDB table. Must be unique in this AWS account."
-  type        = string
-  default     = "terraform-state-locks"
-}
-
-variable "state_storage_region" {
-  description = "AWS region"
-  default     = "us-east-1"
+  description = "S3 bucket for Terraform state"
   type        = string
 }
 
 variable "state_backend_key" {
-  description = "Path to the state file inside the S3 Bucket"
+  description = "Path to the shared state file"
   type        = string
-  default     = "terraform.tfstate"
+}
+
+variable "state_table_name" {
+  description = "DynamoDB table name for state locking"
+  type        = string
+}
+
+variable "state_storage_region" {
+  description = "Region for state storage"
+  type        = string
+  default     = "us-east-1"
 }
