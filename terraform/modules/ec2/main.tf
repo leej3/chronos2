@@ -31,19 +31,10 @@ resource "aws_instance" "deployment" {
     Name = var.environment
   }
 
+  # Simplified user_data with only essential setup elements
   user_data                   = templatefile("${path.module}/scripts/ec2-setup.sh", {
     additional_public_key = var.additional_public_key
     public_key            = var.public_key
-    vite_api_base_url    = var.vite_api_base_url
-    postgres_password    = var.postgres_password
-    jwt_secret_key       = var.jwt_secret_key
-    edge_server_ip       = var.edge_server_ip
-    edge_server_port     = var.edge_server_port
-    user_1_email        = var.user_1_email
-    user_1_password     = var.user_1_password
-    frp_auth_token      = var.frp_auth_token
-    git_ref             = var.git_ref
-    letsencrypt_admin_email = var.letsencrypt_admin_email
   })
   user_data_replace_on_change = true
 }
