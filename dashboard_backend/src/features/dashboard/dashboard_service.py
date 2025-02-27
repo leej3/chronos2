@@ -25,7 +25,7 @@ class DashboardService:
         settings = self.setting_repository.get_last_settings()
 
         edge_server_data = self.edge_server.get_data()
-        devices = self.edge_server.get_all_devices_state()
+        devices = self.edge_server.get_state_of_all_relays()
         for i in range(len(devices)):
             devices[i]["switched_timestamp"] = convert_datetime_to_str(
                 self.get_switch_timestamp(devices[i]["id"]), "%Y-%m-%dT%H:%M:%SZ"

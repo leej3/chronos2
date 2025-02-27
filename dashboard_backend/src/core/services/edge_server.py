@@ -126,6 +126,6 @@ class EdgeServer:
         return self._handle_response(response)
 
     @catch_connection_error
-    def get_all_devices_state(self):
-        response = requests.get(f"{self.url}/get_all_devices_state")
+    def get_state_of_all_relays(self):
+        response = requests.get(f"{self.url}/get_state_of_all_relays")
         return self._handle_response(response)

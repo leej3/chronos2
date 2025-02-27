@@ -66,7 +66,7 @@ def test_get_data_with_sensor_error(
         assert data["status"] is False
 
 
-def test_get_device_state(client, mock_serial_devices):
+def test_get_relay_state(client, mock_serial_devices):
     """Test getting device state."""
     response = client.get("/device_state?device=0")
     assert response.status_code == 200
@@ -189,7 +189,7 @@ def test_update_device_state_is_season_switch_rate_limiter_error(
     assert "Too many temperature changes" in data3["detail"]
 
 
-def test_get_device_state_invalid_id(client):
+def test_get_relay_state_invalid_id(client):
     """Test getting device state with invalid device ID."""
     response = client.get("/device_state?device=10")  # Invalid device ID
     assert response.status_code == 422  # Validation error
@@ -643,9 +643,9 @@ def test_set_temperature_limits_read_only(client, mock_modbus_device):
         cfg.READ_ONLY_MODE = False
 
 
-def test_get_all_devices_state_mock(client):
+def test_get_state_of_all_relays_mock(client):
     """Test getting all devices state with mocked device."""
-    response = client.get("/get_all_devices_state")
+    response = client.get("/get_state_of_all_relays")
     assert response.status_code == 200
     data = response.json()
     assert len(data) == 5

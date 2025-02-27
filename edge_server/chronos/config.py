@@ -68,6 +68,13 @@ config_dict = {
         "min_setpoint": float(os.getenv("MIN_SETPOINT_TEMP", "70.0")),
         "max_setpoint": float(os.getenv("MAX_SETPOINT_TEMP", "110.0")),
     },
+    "circuit_breaker": {
+        "failure_threshold": int(os.getenv("CIRCUIT_BREAKER_FAILURE_THRESHOLD", "5")),
+        "reset_timeout": int(os.getenv("CIRCUIT_BREAKER_RESET_TIMEOUT", "60")),
+    },
+    "rate_limit": {
+        "min_interval": float(os.getenv("RATE_LIMIT_MIN_INTERVAL", "1.0")),
+    },
     "MOCK_DEVICES": os.getenv("MOCK_DEVICES", "false").lower() == "true",
     "READ_ONLY_MODE": os.getenv("READ_ONLY_MODE", "false").lower() == "true",
     "registers": {

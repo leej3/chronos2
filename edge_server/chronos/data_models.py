@@ -7,7 +7,6 @@ from .config import cfg
 
 class SystemStatus(BaseModel):
     sensors: dict
-    status: bool
     mock_devices: bool = False
     read_only_mode: bool = False
 
@@ -18,8 +17,8 @@ class SwitchStateRequest(BaseModel):
     is_season_switch: bool = False
 
 
-class DeviceModel(BaseModel):
-    id: int = Field(..., ge=0, lt=7, description="Device ID (0-4)")
+class RelayModel(BaseModel):
+    id: int = Field(..., ge=0, lt=8, description="Device ID (0-7)")
     state: bool
     is_season_switch: bool = False
 
