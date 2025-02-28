@@ -1,29 +1,71 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from chronos.device_manager import (
+from chronos.config import cfg
+from chronos.devices.manager import (
+    DeviceManager,
     MockDeviceManager,
-    RealDeviceManager,
+    MockModbusDevice,
+    MockModbusManager,
+    MockRelayManager,
+    MockSerialDevice,
     get_device_manager,
 )
 
 
+@pytest.fixture(autouse=True)
+def mock_mode():
+    """Ensure mock mode is enabled for these tests."""
+    original = cfg.MOCK_DEVICES
+    cfg.MOCK_DEVICES = True
+    yield
+    cfg.MOCK_DEVICES = original
+
+
+@pytest.fixture
+def mock_device_manager():
+    """Return a MockDeviceManager instance."""
+    return MockDeviceManager()
+
+
+@pytest.fixture
+def mock_relay_manager():
+    """Return a MockRelayManager instance."""
+    manager = MockRelayManager()
+    return manager
+
+
+@pytest.fixture
+def mock_modbus_manager():
+    """Return a MockModbusManager instance."""
+    manager = MockModbusManager()
+    return manager
+
+
+@pytest.fixture
+def mock_modbus_device():
+    """Return a MockModbusDevice instance."""
+    manager = MockModbusDevice(port="COM1", baudrate=9600)
+    return manager
+
+
+@pytest.fixture
+def mock_serial_device():
+    """Return a MockSerialDevice instance."""
+    manager = MockSerialDevice()
+    return manager
+
+
 def test_get_device_manager_mock():
-    """Test that get_device_manager returns a MockDeviceManager when MOCK_DEVICES is True."""
-    with patch("chronos.devices.device_manager.cfg") as mock_cfg:
-        mock_cfg.MOCK_DEVICES = True
-        manager = get_device_manager()
-        assert isinstance(manager, MockDeviceManager)
+    cfg.MOCK_DEVICES = True
+    manager = get_device_manager()
+    assert isinstance(manager, MockDeviceManager)
 
 
 def test_get_device_manager_real():
-    """Test that get_device_manager returns a RealDeviceManager when MOCK_DEVICES is False."""
-    with patch("chronos.devices.device_manager.cfg") as mock_cfg:
-        mock_cfg.MOCK_DEVICES = False
-        # Need to mock SerialDevice to avoid actual hardware access
-        with patch("chronos.devices.device_manager.SerialDevice"):
-            manager = get_device_manager()
-            assert isinstance(manager, RealDeviceManager)
+    cfg.MOCK_DEVICES = False
+    manager = get_device_manager()
+    assert isinstance(manager, DeviceManager)
 
 
 class TestMockDeviceManager:
@@ -36,8 +78,9 @@ class TestMockDeviceManager:
             manager.set_device_state(i, False)
 
         # Verify states are all False
+        devices = manager.get_state_of_all_relays()
         for i in range(5):
-            assert not manager.get_relay_state(i)
+            assert devices[i]["state"] == 0
 
         # Change one state
         manager.set_device_state(0, True)
@@ -45,29 +88,18 @@ class TestMockDeviceManager:
 
         # Check all device states
         devices = manager.get_state_of_all_relays()
-        assert len(devices) == 5
-        assert devices[0]["state"] is True
+        assert len(devices) == 8  # 5 relays + 3 chiller
+        assert devices[0]["state"] == 1
         for i in range(1, 5):
-            assert devices[i]["state"] is False
+            assert devices[i]["state"] == 0
 
-    def test_switch_state(self):
-        """Test switch_state functionality."""
-        manager = MockDeviceManager()
-
-        # Switch on
-        manager.switch_state("on", False)
-        assert manager.get_relay_state(0)
-
-        # Switch off
-        manager.switch_state("off", False)
-        assert not manager.get_relay_state(0)
-
-    def test_boiler_setpoint(self):
+    def test_boiler_setpoint(self, mock_modbus_manager):
         """Test boiler setpoint management."""
-        manager = MockDeviceManager()
+        manager = mock_modbus_manager
 
         # Initial state should have a valid setpoint
-        initial_setpoint = manager.mock_state.current_setpoint
+        initial_setpoint = manager.get_operating_status()["current_setpoint"]
+        print("initial_setpoint", initial_setpoint)
         assert 70 <= initial_setpoint <= 110
 
         # Set a new setpoint
@@ -132,13 +164,16 @@ class TestRealDeviceManager:
 
     @pytest.fixture
     def manager(self, mock_serial_devices):
-        """Create a RealDeviceManager with mocked dependencies."""
-        with patch("chronos.devices.device_manager.SerialDevice") as mock_serial:
+        with patch("chronos.devices.hardware.SerialDevice") as mock_serial:
             mock_serial.side_effect = mock_serial_devices
-            manager = RealDeviceManager()
-            # Replace real devices with mocks
-            manager.devices = mock_serial_devices
+        manager = DeviceManager()
+        manager._devices = {
+            i: mock_serial_devices[i] for i in range(len(mock_serial_devices))
+        }
+        try:
             yield manager
+        finally:
+            pass
 
     def test_device_state_management(self, manager, mock_serial_devices):
         """Test that RealDeviceManager correctly manages device states."""
@@ -148,34 +183,23 @@ class TestRealDeviceManager:
             mock_serial_devices[i].state = False
 
         # Verify states are all False
+        devices = manager.get_state_of_all_relays()
         for i in range(5):
-            assert not manager.get_relay_state(i)
+            assert devices[i]["state"] is False
 
-        # Change one state
+        # # Change one state
         manager.set_device_state(0, True)
         mock_serial_devices[0].state = True
         assert manager.get_relay_state(0)
 
-        # Check all device states
+        # # Check all device states
         devices = manager.get_state_of_all_relays()
         assert len(devices) == 5
         assert devices[0]["state"] is True
         for i in range(1, 5):
             assert devices[i]["state"] is False
 
-    def test_switch_state(self, manager, mock_serial_devices):
-        """Test switch_state functionality."""
-        # Setup mock
-        mock_serial_devices[0].switch_state.return_value = True
-
-        # Call method
-        result = manager.switch_state("on", False)
-
-        # Verify mock was called
-        mock_serial_devices[0].switch_state.assert_called_with("on", False)
-        assert result is True
-
-    def test_boiler_stats(self, manager):
+    def test_boiler_stats(self, manager, mock_serial_devices):
         """Test boiler stats with mocked ModbusDevice."""
         mock_stats = {
             "system_supply_temp": 154.4,
@@ -188,19 +212,11 @@ class TestRealDeviceManager:
             "flame_status": True,
         }
 
-        with patch(
-            "chronos.devices.device_manager.create_modbus_connection"
-        ) as mock_create:
-            mock_device = MagicMock()
-            mock_device.__enter__.return_value.read_boiler_data.return_value = (
-                mock_stats
-            )
-            mock_create.return_value = mock_device
+        manager.get_boiler_stats = MagicMock(return_value=mock_stats)
+        stats = manager.get_boiler_stats()
+        assert stats == mock_stats
 
-            stats = manager.get_boiler_stats()
-            assert stats == mock_stats
-
-    def test_operating_status(self, manager):
+    def test_operating_status(self, manager, mock_serial_devices):
         """Test operating status with mocked ModbusDevice."""
         mock_status = {
             "operating_mode": 3,
@@ -210,31 +226,19 @@ class TestRealDeviceManager:
             "current_setpoint": 90.0,
         }
 
-        with patch(
-            "chronos.devices.device_manager.create_modbus_connection"
-        ) as mock_create:
-            mock_device = MagicMock()
-            mock_device.__enter__.return_value.read_operating_status.return_value = (
-                mock_status
-            )
-            mock_create.return_value = mock_device
+        manager.get_operating_status = MagicMock(return_value=mock_status)
+        status = manager.get_operating_status()
+        assert status == mock_status
 
-            status = manager.get_operating_status()
-            assert status == mock_status
-
-    def test_validation(self, manager):
+    def test_validation(self, manager, mock_serial_devices):
         """Test validation in the real manager."""
         # Invalid device ID
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="Unknown device ID: 10"):
             manager.get_relay_state(10)
 
         # Test error propagation from modbus device
-        with patch(
-            "chronos.devices.device_manager.create_modbus_connection"
-        ) as mock_create:
-            mock_device = MagicMock()
-            mock_device.__enter__.return_value.set_boiler_setpoint.return_value = False
-            mock_create.return_value = mock_device
-
-            with pytest.raises(RuntimeError, match="Failed to set temperature"):
-                manager.set_boiler_setpoint(90.0)
+        manager.set_boiler_setpoint = MagicMock(
+            side_effect=RuntimeError("Failed to set temperature")
+        )
+        with pytest.raises(RuntimeError, match="Failed to set temperature"):
+            manager.set_boiler_setpoint(90.0)

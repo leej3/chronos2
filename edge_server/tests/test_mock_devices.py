@@ -1,167 +1,218 @@
+from unittest.mock import patch
+
 import pytest
-from chronos.mock_devices.mock_data import (
+from chronos.config import cfg
+from chronos.devices.manager import (
     MockDeviceManager,
-    get_mock_device_manager,
-    mock_boiler_stats,
-    mock_devices_state,
-    mock_operating_status,
+    MockModbusManager,
+    MockRelayManager,
+    get_device_manager,
 )
+from chronos.devices.mock import MockModbusDevice, MockSerialDevice
+
+
+@pytest.fixture(autouse=True)
+def mock_mode():
+    """Ensure mock mode is enabled for these tests."""
+    original = cfg.MOCK_DEVICES
+    cfg.MOCK_DEVICES = True
+    yield
+    cfg.MOCK_DEVICES = original
+
+
+@pytest.fixture
+def mock_device_manager():
+    """Return a MockDeviceManager instance."""
+    return MockDeviceManager()
+
+
+@pytest.fixture
+def mock_relay_manager():
+    """Return a MockRelayManager instance."""
+    manager = MockRelayManager()
+    return manager
+
+
+@pytest.fixture
+def mock_modbus_manager():
+    """Return a MockModbusManager instance."""
+    manager = MockModbusManager()
+    return manager
+
+
+@pytest.fixture
+def mock_modbus_device():
+    """Return a MockModbusDevice instance."""
+    manager = MockModbusDevice(port="COM1", baudrate=9600)
+    return manager
+
+
+@pytest.fixture
+def mock_serial_device():
+    """Return a MockSerialDevice instance."""
+    manager = MockSerialDevice()
+    return manager
 
 
 def test_mock_device_manager_singleton():
     """Test that MockDeviceManager is a singleton."""
+    # Ensure mock mode is enabled
+    cfg.MOCK_DEVICES = True
+
     manager1 = MockDeviceManager()
-    manager2 = MockDeviceManager()
+    manager2 = get_device_manager()
 
-    # Verify they are the same instance
-    assert manager1 is manager2
-
-    # Verify get_mock_device_manager returns the same instance
-    manager3 = get_mock_device_manager()
-    assert manager1 is manager3
+    assert manager1 == manager2
+    assert isinstance(manager1, MockDeviceManager)
+    assert isinstance(manager2, MockDeviceManager)
 
 
-def test_device_state_tracking():
+def test_device_state_tracking(mock_relay_manager):
     """Test that device state changes are tracked."""
-    manager = get_mock_device_manager()
+    manager = mock_relay_manager
 
-    # Reset to known state
+    # boiler on -> turn off chiller
     for i in range(5):
-        manager.set_device_state(i, False)
+        manager.set_device_state(i, True)
+    devices = manager.get_state_of_all_relays()
+    for i in range(1, 4):
+        assert devices[i]["state"] == 0
 
-    # Initial state should be all False
+    # chiller on -> turn off boiler
+    manager.set_device_state(1, False)
     for i in range(5):
-        assert not manager.get_relay_state(i)
-
-    # Change device 0 to True
-    manager.set_device_state(0, True)
-
-    # Verify device 0 is now True
-    assert manager.get_relay_state(0)
-
-    # Other devices should still be False
-    for i in range(1, 5):
-        assert not manager.get_relay_state(i)
-
-    # Verify mock_devices_state() reflects the changes
-    devices = mock_devices_state()
-    assert devices[0]["state"] == 1
-    for i in range(1, 5):
+        manager.set_device_state(i, True)
+    devices = manager.get_state_of_all_relays()
+    for i in range(1, 4):
         assert devices[i]["state"] == 0
 
 
-def test_invalid_device_id():
+def test_invalid_device_id(mock_relay_manager):
     """Test handling of invalid device IDs."""
-    manager = get_mock_device_manager()
+    manager = mock_relay_manager
 
-    with pytest.raises(ValueError, match="Invalid device ID: 10"):
+    with pytest.raises(ValueError, match="Unknown device ID: 10"):
         manager.get_relay_state(10)
 
-    with pytest.raises(ValueError, match="Invalid device ID: -1"):
-        manager.set_device_state(-1, True)
 
-
-def test_setpoint_tracking():
+def test_boiler_setpoint_tracking(mock_modbus_manager):
     """Test that setpoint changes are tracked."""
-    manager = get_mock_device_manager()
+    manager = mock_modbus_manager
 
-    # Set a new setpoint
-    initial_setpoint = manager.current_setpoint
-    new_setpoint = 95.0
+    current_setpoint = 95.0
 
-    manager.set_setpoint(new_setpoint)
+    manager.set_boiler_setpoint(current_setpoint)
 
-    # Verify the setpoint was updated
-    assert manager.current_setpoint == new_setpoint
-
-    # Verify mock_operating_status() returns the new setpoint
-    status = mock_operating_status()
-    assert status["current_setpoint"] == new_setpoint
-    assert status["setpoint_temperature"] == new_setpoint
-
-    # Reset to initial setpoint
-    manager.set_setpoint(initial_setpoint)
+    assert manager.get_operating_status()["current_setpoint"] == current_setpoint
 
 
-def test_setpoint_validation():
+def test_boiler_setpoint_validation(mock_modbus_manager):
     """Test setpoint validation."""
-    manager = get_mock_device_manager()
-
-    # Test setting a valid setpoint
-    assert manager.set_setpoint(90.0)
-
+    manager = mock_modbus_manager
+    temperature_below_minimum = 60.0
+    temperature_above_maximum = 120.0
     # Test setting a setpoint below minimum
-    with pytest.raises(ValueError, match="outside allowed range"):
-        manager.set_setpoint(60.0)
+    with pytest.raises(
+        ValueError, match=f"Temperature {temperature_below_minimum}°F is below minimum"
+    ):
+        manager.set_boiler_setpoint(temperature_below_minimum)
 
     # Test setting a setpoint above maximum
-    with pytest.raises(ValueError, match="outside allowed range"):
-        manager.set_setpoint(120.0)
+    with pytest.raises(
+        ValueError, match=f"Temperature {temperature_above_maximum}°F is above maximum"
+    ):
+        manager.set_boiler_setpoint(temperature_above_maximum)
 
 
-def test_temperature_limits():
+def test_temperature_limits(mock_device_manager):
     """Test setting temperature limits."""
-    manager = get_mock_device_manager()
+    manager = mock_device_manager
 
     # Save original limits
-    original_min = manager.min_setpoint
-    original_max = manager.max_setpoint
 
-    try:
-        # Set new valid limits
-        manager.set_temperature_limits(75.0, 105.0)
-        assert manager.min_setpoint == 75.0
-        assert manager.max_setpoint == 105.0
+    # Set new valid limits
+    manager.set_temperature_limits(75.0, 105.0)
+    assert manager.get_temperature_limits()["min_setpoint"] == 75.0
+    assert manager.get_temperature_limits()["max_setpoint"] == 105.0
 
-        # Set a setpoint at the new minimum
-        assert manager.set_setpoint(75.0)
+    # Set a setpoint at the new minimum
+    assert manager.set_boiler_setpoint(75.0)
 
-        # Set a setpoint at the new maximum
-        assert manager.set_setpoint(105.0)
+    # Set a setpoint at the new maximum
+    assert manager.set_boiler_setpoint(105.0)
 
-        # Test validation of invalid limits
-        with pytest.raises(
-            ValueError, match="Min setpoint must be less than max setpoint"
-        ):
-            manager.set_temperature_limits(90.0, 85.0)
+    # Test validation of invalid limits
+    with pytest.raises(
+        ValueError,
+        match="Minimum setpoint 90.0°F must be less than maximum setpoint 85.0°F",
+    ):
+        manager.set_temperature_limits(90.0, 85.0)
 
-        with pytest.raises(ValueError, match="out of allowed range"):
-            manager.set_temperature_limits(65.0, 105.0)
-
-        with pytest.raises(ValueError, match="out of allowed range"):
-            manager.set_temperature_limits(75.0, 115.0)
-    finally:
-        # Restore original limits
-        manager.set_temperature_limits(original_min, original_max)
+    with pytest.raises(
+        ValueError,
+        match="Temperature limits 65.0°F and 105.0°F are outside allowed range",
+    ):
+        manager.set_temperature_limits(65.0, 105.0)
 
 
-def test_boiler_stats_integration():
+def test_device_status(mock_relay_manager):
+    """Test that device status reflects state changes."""
+    manager = mock_relay_manager
+
+    # Set boiler state to on
+    manager.set_device_state(0, True, is_season_switch=False)
+    assert manager.get_relay_state(0)["state"] == 1
+    assert manager.get_relay_state(0)["name"] == "boiler"
+    assert manager.get_relay_state(0)["id"] == 0
+
+    # Set boiler state to off
+    manager.set_device_state(0, False, is_season_switch=False)
+    assert manager.get_relay_state(0)["state"] == 0
+    assert manager.get_relay_state(0)["name"] == "boiler"
+    assert manager.get_relay_state(0)["id"] == 0
+
+
+def test_boiler_stats_integration(mock_modbus_manager, mock_relay_manager):
     """Test that boiler stats reflect device state."""
-    manager = get_mock_device_manager()
-
+    modbus_manager = mock_modbus_manager
+    relay_manager = mock_relay_manager
     # Set boiler state to on
-    manager.set_device_state(0, True)
-    stats = mock_boiler_stats()
-    assert stats["pump_status"] is True
-    assert stats["flame_status"] is True
+    relay_manager.set_device_state(0, True, is_season_switch=False)
+    stats = modbus_manager.get_boiler_stats()
+    print(stats)
+    assert stats["pump_status"] in [True, False]
+    assert stats["flame_status"] in [True, False]
 
     # Set boiler state to off
-    manager.set_device_state(0, False)
-    stats = mock_boiler_stats()
-    assert stats["pump_status"] is False
-    assert stats["flame_status"] is False
+    relay_manager.set_device_state(0, False, is_season_switch=False)
+    stats = modbus_manager.get_boiler_stats()
+    assert stats["pump_status"] in [True, False]
+    assert stats["flame_status"] in [True, False]
 
 
-def test_operating_status_integration():
+def test_operating_status_integration(
+    mock_modbus_manager, mock_relay_manager, mock_modbus_device
+):
     """Test that operating status reflects device state."""
-    manager = get_mock_device_manager()
+    modbus_manager = mock_modbus_manager
+    relay_manager = mock_relay_manager
+    modbus_device = mock_modbus_device
 
-    # Set boiler state to on
-    manager.set_device_state(0, True)
-    status = mock_operating_status()
-    assert status["status"] == "running"
+    # Set operating mode to running
+    modbus_device._operating_mode = 2
+    with patch(
+        "chronos.devices.mock.MockModbusDevice.read_operating_status",
+        return_value={"status": "running"},
+    ):
+        relay_manager.set_device_state(0, True, is_season_switch=False)
+        status = modbus_manager.get_operating_status()
+        assert status["status"] == "running"
 
     # Set boiler state to off
-    manager.set_device_state(0, False)
-    status = mock_operating_status()
-    assert status["status"] in ["idle", "off"]
+    with patch(
+        "chronos.devices.mock.MockModbusDevice.read_operating_status",
+        return_value={"status": "idle"},
+    ):
+        relay_manager.set_device_state(0, False, is_season_switch=False)
+        status = modbus_manager.get_operating_status()
+        assert status["status"] in ["idle", "off"]

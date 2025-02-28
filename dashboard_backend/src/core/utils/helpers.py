@@ -7,9 +7,7 @@ def c_to_f(t):
 
 
 def convert_datetime_to_str(datetime: datetime, format: str):
-    """
-    Todo: Convert date to date string with specific date format.
-    """
+    """Convert date to date string with specific date format."""
     try:
         return datetime.strftime(format)
     except Exception:
@@ -17,7 +15,5 @@ def convert_datetime_to_str(datetime: datetime, format: str):
 
 
 def get_current_time(time_zone):
-    """
-    Todo: Get current time in specific time zone.
-    """
+    """Get current time in specific time zone."""
     return datetime.now(time_zone)

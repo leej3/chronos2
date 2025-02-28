@@ -13,7 +13,7 @@ class Chiller(Device):
             raise ValueError("Chiller number must be in range from 1 to 4")
 
         self.number = number
-        self.relay_number = Relay[f"CHILLER{number}"]
+        self.relay_number = Relay[f"CHILLER{number}"].value
         self.table_class_name = f"Chiller{number}"
         self.history_repository = HistoryRepository()
         self.setting_repository = SettingRepository()

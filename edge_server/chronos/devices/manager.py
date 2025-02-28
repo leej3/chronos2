@@ -81,6 +81,7 @@ class RelayManager:
 
         # Set state directly if all checks pass
         self._devices[device_id].state = state
+
         return True
 
     def get_state_of_all_relays(self) -> List[Dict[str, Any]]:
@@ -161,6 +162,9 @@ class MockModbusManager(ModbusManager):
     def get_operating_status(self) -> Dict[str, Any]:
         return self._modbus.read_operating_status()
 
+    def set_boiler_setpoint(self, temperature: float) -> bool:
+        return self._modbus.set_boiler_setpoint(temperature)
+
     def get_sensor_data(self) -> Dict[str, Any]:
         """Get readings from sensors."""
         # Create simulated sensor readings using the Modbus device's methods
@@ -178,14 +182,22 @@ class MockModbusManager(ModbusManager):
 class MockDeviceManager(MockRelayManager, MockModbusManager):
     """Mock implementation of DeviceManager for testing."""
 
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._instance._initialized = False
+        return cls._instance
+
     def __init__(self):
-        """Initialize both mock relay and Modbus managers."""
-        MockRelayManager.__init__(self)
-        MockModbusManager.__init__(self)
-        logger.info("Initialized mock device manager")
+        if not self._initialized:
+            MockRelayManager.__init__(self)
+            MockModbusManager.__init__(self)
+            logger.info("Initialized mock device manager")
+            self._initialized = True
 
     def is_mock_mode(self) -> bool:
-        """Return whether the device manager is in mock mode."""
         return True
 
 

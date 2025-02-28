@@ -9,7 +9,7 @@ from src.core.repositories.history_repository import HistoryRepository
 from src.core.repositories.setting_repository import SettingRepository
 from src.core.services.chronos import Chronos
 from src.core.services.edge_server import EdgeServer
-from src.core.utils.constant import EFFICIENCY_HOUR, Mode, Relay
+from src.core.utils.constant import EFFICIENCY_HOUR, Mode, Relay, State
 from src.core.utils.helpers import convert_datetime_to_str, get_current_time
 
 
@@ -19,6 +19,16 @@ class DashboardService:
         self.history_repository = HistoryRepository()
         self.setting_repository = SettingRepository()
         self.edge_server = EdgeServer()
+        self.device_map = {
+            Relay.BOILER.value: self.chronos.boiler,
+            Relay.CHILLER1.value: self.chronos.chiller1,
+            Relay.CHILLER2.value: self.chronos.chiller2,
+            Relay.CHILLER3.value: self.chronos.chiller3,
+            Relay.CHILLER4.value: self.chronos.chiller4,
+        }
+
+    def _get_device(self, id: int):
+        return self.device_map.get(id)
 
     def get_data(self):
         history = self.history_repository.get_last_history()
@@ -72,6 +82,7 @@ class DashboardService:
             "efficiency": efficiency,
             "boiler": boiler,
             "devices": devices,
+            "status": State.ON.value,
         }
 
     def get_chart_data(self):
@@ -281,7 +292,6 @@ class DashboardService:
         """
         Args:
             season_value (int): The season value to switch to. SUMMER (0) or WINTER (1)
-
         Step to switch seasion:
         1. Change mode to WAITING_SWITCH_TO_WINTER or WAITING_SWITCH_TO_SUMMER:
             - Turn off all devices
@@ -293,19 +303,19 @@ class DashboardService:
             - Change mode to SUMMER or WINTER
         """
 
-        mode_values = [Mode.WINTER.value, Mode.SUMMER.value]
-        if season_value not in mode_values:
+        if season_value not in [Mode.WINTER.value, Mode.SUMMER.value]:
             raise HTTPException(
                 status_code=400, detail=f"Invalid season value: {season_value}"
             )
 
-        if season_value == Mode.WINTER.value:
-            self.chronos._switch_season(Mode.WAITING_SWITCH_TO_WINTER.value)
-        else:
-            self.chronos._switch_season(Mode.WAITING_SWITCH_TO_SUMMER.value)
+        waiting_mode = (
+            Mode.WAITING_SWITCH_TO_WINTER
+            if season_value == Mode.WINTER.value
+            else Mode.WAITING_SWITCH_TO_SUMMER
+        )
+        self.chronos._switch_season(waiting_mode.value)
 
         settings = self.setting_repository.get_last_settings()
-
         unlock_time = get_current_time(UTC) + timedelta(
             minutes=settings.mode_switch_lockout_time
         )
@@ -318,16 +328,8 @@ class DashboardService:
         }
 
     def get_switch_timestamp(self, id: int):
-        if id == Relay.BOILER.value:
-            return self.chronos.boiler.switched_timestamp
-        elif id == Relay.CHILLER1.value:
-            return self.chronos.chiller1.switched_timestamp
-        elif id == Relay.CHILLER2.value:
-            return self.chronos.chiller2.switched_timestamp
-        elif id == Relay.CHILLER3.value:
-            return self.chronos.chiller3.switched_timestamp
-        elif id == Relay.CHILLER4.value:
-            return self.chronos.chiller4.switched_timestamp
+        device = self._get_device(id)
+        return device.switched_timestamp if device else None
 
     def update_device_state(self, data):
         try:
@@ -336,37 +338,22 @@ class DashboardService:
             )
             self.update_device_state_in_db(id=data.id, state=data.state)
             return device_state
-
         except Exception as e:
             raise HTTPException(
                 status_code=500, detail=f"Failed to update device state: {str(e)}"
             )
 
     def update_device_state_in_db(self, id: int, state: bool):
-        state = 1 if state else 0
-        if id == Relay.BOILER.value:
-            self.chronos.boiler.status = state
-            self.chronos.boiler.switched_timestamp = get_current_time(UTC)
-        elif id == Relay.CHILLER1.value:
-            self.chronos.chiller1.status = state
-            self.chronos.chiller1.switched_timestamp = get_current_time(UTC)
-        elif id == Relay.CHILLER2.value:
-            self.chronos.chiller2.status = state
-            self.chronos.chiller2.switched_timestamp = get_current_time(UTC)
-        elif id == Relay.CHILLER3.value:
-            self.chronos.chiller3.status = state
-            self.chronos.chiller3.switched_timestamp = get_current_time(UTC)
-        elif id == Relay.CHILLER4.value:
-            self.chronos.chiller4.status = state
-            self.chronos.chiller4.switched_timestamp = get_current_time(UTC)
+        if device := self._get_device(id):
+            device.status = 1 if state else 0
+            device.switched_timestamp = get_current_time(UTC)
 
     def get_unlock_time(self):
         mode_switch_timestamp = self.setting_repository._get_property_from_db(
             "mode_switch_timestamp"
         )
-        unlock_time = mode_switch_timestamp + timedelta(
-            minutes=self.setting_repository._get_property_from_db(
-                "mode_switch_lockout_time"
-            )
+        lockout_time = self.setting_repository._get_property_from_db(
+            "mode_switch_lockout_time"
         )
+        unlock_time = mode_switch_timestamp + timedelta(minutes=lockout_time)
         return convert_datetime_to_str(unlock_time, "%Y-%m-%dT%H:%M:%SZ")

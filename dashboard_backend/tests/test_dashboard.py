@@ -74,7 +74,6 @@ def mock_edge_server():
         "hard_limits": {"min_setpoint": 70.0, "max_setpoint": 110.0},
         "soft_limits": {"min_setpoint": 70.0, "max_setpoint": 110.0},
     }
-    mock._switch_state = MagicMock(spec=EdgeServer._switch_state)
 
     return mock
 
@@ -84,9 +83,7 @@ def mock_device():
     mock = MagicMock(spec=Device)
     mock.turn_on = MagicMock(spec=Device.turn_on)
     mock.turn_off = MagicMock(spec=Device.turn_off)
-    mock._switch_state = MagicMock(spec=Device._switch_state)
     mock.edge_server = MagicMock(spec=EdgeServer)
-    mock.edge_server._switch_state = MagicMock(spec=EdgeServer._switch_state)
     return mock
 
 
@@ -137,7 +134,10 @@ def test_update_device_state(client, mock_dashboard_service):
         "state": 1,
         "switched_timestamp": datetime.now().isoformat(),
     }
-    response = client.post("/api/update_device_state", json={"id": 0, "state": 1})
+    response = client.post(
+        "/api/update_device_state",
+        json={"id": 0, "state": 1, "is_season_switch": False},
+    )
     assert response.status_code == 200
     data = response.json()
     assert data["id"] == 0

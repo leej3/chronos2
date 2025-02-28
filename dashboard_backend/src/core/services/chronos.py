@@ -160,14 +160,14 @@ class Chronos(object):
     def _switch_devices(self, is_season_switch=False):
         for device in self.devices:
             if device.manual_override == MANUAL_ON:
-                device.turn_on(relay_only=True, is_season_switch=is_season_switch)
+                device.turn_on(is_season_switch=is_season_switch)
             elif device.manual_override == MANUAL_OFF:
-                device.turn_off(relay_only=True, is_season_switch=is_season_switch)
+                device.turn_off(is_season_switch=is_season_switch)
             elif device.manual_override == MANUAL_AUTO:
                 if device.status == ON:
-                    device.turn_on(relay_only=True, is_season_switch=is_season_switch)
+                    device.turn_on(is_season_switch=is_season_switch)
                 elif device.status == OFF:
-                    device.turn_off(relay_only=True, is_season_switch=is_season_switch)
+                    device.turn_off(is_season_switch=is_season_switch)
 
     def _save_devices_states(self, mode):
         if mode == Mode.SWITCHING_TO_SUMMER.value:
@@ -183,20 +183,9 @@ class Chronos(object):
             for chiller in self.devices[1:]:
                 chiller.restore_status()
 
-    def turn_off_devices(
-        self, with_valves=False, relay_only=False, is_season_switch=False
-    ):
-        if relay_only:
-            for device in self.devices:
-                device.turn_off(
-                    relay_only=relay_only, is_season_switch=is_season_switch
-                )
-        else:
-            # for device in self.devices:
-            #     device.manual_override = MANUAL_OFF
-            if with_valves:
-                self.winter_valve.turn_off(is_season_switch=is_season_switch)
-                self.summer_valve.turn_off(is_season_switch=is_season_switch)
+    def turn_off_devices(self, is_season_switch=False):
+        for device in self.devices:
+            device.turn_off(is_season_switch=is_season_switch)
 
     def _switch_season(self, mode: int):
         if mode == Mode.WAITING_SWITCH_TO_SUMMER.value:

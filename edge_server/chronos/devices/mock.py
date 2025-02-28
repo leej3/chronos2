@@ -64,7 +64,7 @@ class MockModbusDevice:
     def __init__(self, port: str = None, baudrate: int = 9600):
         """Initialize the mock Modbus device."""
         # Simulated boiler settings
-        self._boiler_setpoint = 140.0
+        self._boiler_setpoint = 100.0
         self._min_setpoint = 120.0
         self._max_setpoint = 180.0
 
@@ -138,10 +138,10 @@ class MockModbusDevice:
         # Validate temperature range
         if temperature < cfg.temperature.min_setpoint:
             logger.error(f"Temperature {temperature}°F is below minimum")
-            return False
+            raise ValueError(f"Temperature {temperature}°F is below minimum")
         if temperature > cfg.temperature.max_setpoint:
             logger.error(f"Temperature {temperature}°F is above maximum")
-            return False
+            raise ValueError(f"Temperature {temperature}°F is above maximum")
 
         self._boiler_setpoint = temperature
         logger.info(f"Set mock boiler setpoint to {temperature}°F")
@@ -163,9 +163,13 @@ class MockModbusDevice:
             min_setpoint < cfg.temperature.min_setpoint
             or max_setpoint > cfg.temperature.max_setpoint
         ):
-            return False
+            raise ValueError(
+                f"Temperature limits {min_setpoint}°F and {max_setpoint}°F are outside allowed range"
+            )
         if min_setpoint >= max_setpoint:
-            return False
+            raise ValueError(
+                f"Minimum setpoint {min_setpoint}°F must be less than maximum setpoint {max_setpoint}°F"
+            )
 
         self._min_setpoint = min_setpoint
         self._max_setpoint = max_setpoint

@@ -37,10 +37,10 @@ const ManualOverride = ({ data }) => {
     dispatch(
       setInitialState({
         boiler: devices[0],
-        chiller1: devices[1],
-        chiller2: devices[2],
-        chiller3: devices[3],
-        chiller4: devices[4],
+        chiller1: devices[2],
+        chiller2: devices[1],
+        chiller3: devices[4],
+        chiller4: devices[3],
       }),
     );
   }, [data]);
@@ -175,7 +175,7 @@ const ManualOverride = ({ data }) => {
           <div className={`device-control ${isDisabled ? 'disabled' : ''}`}>
             <span className="temp-label">OFF</span>
             <CFormSwitch
-              checked={state[device].state === 1}
+              checked={state[device].state === true}
               className="temp-label"
               onChange={(e) =>
                 handleDeviceStateChange(device, e.target.checked)
