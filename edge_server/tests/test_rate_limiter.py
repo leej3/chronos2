@@ -65,11 +65,11 @@ async def rate_limited_test_function(data=None):
 class TestRateLimitDecorator:
     """Test suite for with_rate_limit decorator"""
 
-    def test_basic_rate_limiting(self):
+    def test_basic_rate_limiting(self, rate_limiter):
         """Test basic rate limiting functionality"""
 
         # Apply the decorator to the function
-        decorated_function = with_rate_limit(rate_limited_test_function)
+        decorated_function = with_rate_limit(rate_limiter)(rate_limited_test_function)
 
         # Run the coroutine in an event loop
         loop = asyncio.get_event_loop()
@@ -83,11 +83,11 @@ class TestRateLimitDecorator:
         assert exc_info.value.status_code == 429
         assert "Too many temperature changes" in exc_info.value.detail
 
-    def test_season_switch_bypass(self):
+    def test_season_switch_bypass(self, rate_limiter):
         """Test that season switch requests bypass rate limiting"""
 
         # Apply the decorator to the function
-        decorated_function = with_rate_limit(rate_limited_test_function)
+        decorated_function = with_rate_limit(rate_limiter)(rate_limited_test_function)
 
         # Regular request should be rate limited
         regular_request = MockRequest(is_season_switch=False)
@@ -113,11 +113,11 @@ class TestRateLimitDecorator:
             == "success"
         )
 
-    def test_concurrent_requests(self):
+    def test_concurrent_requests(self, rate_limiter):
         """Test handling of concurrent requests"""
 
         # Apply the decorator to the function
-        decorated_function = with_rate_limit(rate_limited_test_function)
+        decorated_function = with_rate_limit(rate_limiter)(rate_limited_test_function)
 
         # Simulate multiple concurrent calls
         task_count = 5
@@ -141,14 +141,14 @@ class TestRateLimitDecorator:
         assert success_count == 1
         assert error_count == task_count - 1
 
-    def test_error_handling(self):
+    def test_error_handling(self, rate_limiter):
         """Test that decorator properly handles errors from wrapped function"""
 
         async def failing_function():
             raise ValueError("Test error")
 
         # Apply the decorator to the function
-        decorated_function = with_rate_limit(failing_function)
+        decorated_function = with_rate_limit(rate_limiter)(failing_function)
 
         # Run the coroutine in an event loop
         loop = asyncio.get_event_loop()
