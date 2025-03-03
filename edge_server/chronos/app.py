@@ -29,7 +29,7 @@ device_manager = get_device_manager()
 
 # Create instances of CircuitBreaker and RateLimiter
 circuit_breaker = CircuitBreaker()
-rate_limiter = RateLimiter()
+rate_limiter = RateLimiter(min_interval=5)
 
 # Initialize FastAPI app
 app = FastAPI()

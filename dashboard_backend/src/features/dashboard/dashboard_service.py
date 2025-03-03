@@ -332,16 +332,11 @@ class DashboardService:
         return device.switched_timestamp if device else None
 
     def update_device_state(self, data):
-        try:
-            device_state = self.edge_server.update_device_state(
-                id=data.id, state=data.state
-            )
-            self.update_device_state_in_db(id=data.id, state=data.state)
-            return device_state
-        except Exception as e:
-            raise HTTPException(
-                status_code=500, detail=f"Failed to update device state: {str(e)}"
-            )
+        device_state = self.edge_server.update_device_state(
+            id=data.id, state=data.state
+        )
+        self.update_device_state_in_db(id=data.id, state=data.state)
+        return device_state
 
     def update_device_state_in_db(self, id: int, state: bool):
         if device := self._get_device(id):

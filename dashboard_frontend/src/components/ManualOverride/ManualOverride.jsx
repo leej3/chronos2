@@ -90,6 +90,7 @@ const ManualOverride = ({ data }) => {
   };
 
   const handleDeviceStateChange = async (device, newState) => {
+    setAlertMessage('');
     if (isDeviceDisabled(device)) return;
 
     if (readOnlyMode) {
@@ -139,7 +140,7 @@ const ManualOverride = ({ data }) => {
           draggable: true,
         },
       );
-      setAlertMessage('Relay switching has failed.');
+      setAlertMessage(error.response?.data?.message || 'Relay switching has failed.');
     }
   };
 
