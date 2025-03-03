@@ -1,9 +1,10 @@
 import time
+from datetime import datetime
 from functools import wraps
 from typing import Callable
 
 from chronos.config import cfg
-from chronos.logging import root_logger as logger
+from chronos.logging_config import root_logger as logger
 from fastapi import HTTPException
 
 
@@ -143,3 +144,8 @@ def with_rate_limit(rl):
         return wrapper
 
     return decorator
+
+
+def get_current_time(time_zone):
+    """Get current time in specific time zone."""
+    return datetime.now(time_zone)

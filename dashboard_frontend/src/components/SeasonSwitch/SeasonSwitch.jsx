@@ -9,17 +9,17 @@ import { fetchData } from '../../features/chronos/chronosSlice';
 import './SeasonSwitch.css';
 import { SEASON_MODE } from '../../utils/constant';
 
-const SeasonSwitch = () => {
+const SeasonSwitch = ({ season_mode }) => {
   const dispatch = useDispatch();
-  const season = useSelector((state) => state.chronos.season);
   const readOnlyMode = useSelector((state) => state.chronos.read_only_mode);
   const unlockTime = useSelector((state) => state.chronos.unlock_time);
-
+  const isSwitchingSeason = useSelector(
+    (state) => state.chronos.is_switching_season,
+  );
   const [countdown, setCountdown] = useState(null);
   const [switchDirection, setSwitchDirection] = useState(null);
   const [alertState, setAlertState] = useState({ color: '', message: '' });
   const [isAnimating, setIsAnimating] = useState(false);
-
   useEffect(() => {
     if (!unlockTime) {
       resetStates();
@@ -61,71 +61,94 @@ const SeasonSwitch = () => {
     if (isAnimating) return;
 
     try {
-      const seasonValue = newSeason === 'Winter' ? 0 : 1;
       setSwitchDirection(`to${newSeason}`);
       setIsAnimating(true);
-
-      await switchSeason(seasonValue);
+      await switchSeason(newSeason);
       dispatch(fetchData());
     } catch (error) {
       resetStates();
     }
   };
 
-  const getSeasonClassName = (seasonType) => {
-    const isActive = season === (seasonType === 'Winter' ? 0 : 1);
+  const getSeasonClassName = (seasonMode) => {
+    const isCurrentSeason = seasonMode === season_mode;
     return [
       'season-icon',
-      isActive ? 'active disabled' : '',
+      isCurrentSeason ? 'active disabled' : '',
       unlockTime ? 'locked' : '',
-      switchDirection === `to${seasonType}`
-        ? `switching-${seasonType.toLowerCase()}`
+      switchDirection === `to${seasonMode}`
+        ? `switching-${seasonMode.toLowerCase()}`
         : '',
     ]
       .filter(Boolean)
       .join(' ');
   };
 
-  const getSeasonImage = (seasonType) => {
-    const isWinter = seasonType === 'Winter';
-    const isWinterMode =
-      season === SEASON_MODE.WINTER ||
-      season === SEASON_MODE.WAITING_SWITCH_TO_SUMMER ||
-      season === SEASON_MODE.SWITCHING_TO_SUMMER;
+  const getSeasonImage = (seasonMode) => {
+    if (
+      seasonMode === 'winter' &&
+      !isSwitchingSeason &&
+      season_mode === 'winter'
+    ) {
+      return '/images/Icons/WinterSummer/WOn.png';
+    }
+
+    if (
+      seasonMode === 'summer' &&
+      !isSwitchingSeason &&
+      season_mode === 'summer'
+    ) {
+      return '/images/Icons/WinterSummer/SOn.png';
+    }
+
+    if (isSwitchingSeason) {
+      if (seasonMode === 'winter' && season_mode === 'summer') {
+        return '/images/Icons/WinterSummer/WOn.png';
+      }
+
+      if (seasonMode === 'summer' && season_mode === 'winter') {
+        return '/images/Icons/WinterSummer/SOn.png';
+      }
+    }
 
     return `/images/Icons/WinterSummer/${
-      (isWinter && isWinterMode) || (!isWinter && !isWinterMode)
-        ? `${isWinter ? 'W' : 'S'}On`
-        : `${isWinter ? 'W' : 'S'}Off`
+      seasonMode === 'winter' ? 'WOff' : 'SOff'
     }.png`;
   };
 
-  const getTooltipContent = (seasonType) => {
-    if (unlockTime && countdown) return `Locked - ${countdown} remaining`;
-    const isCurrentSeason = season === (seasonType === 'Winter' ? 0 : 1);
-    return isCurrentSeason
-      ? `Currently in ${seasonType} mode`
-      : `Switch to ${seasonType} mode`;
+  const getTooltipContent = (seasonMode) => {
+    if (unlockTime && countdown) {
+      return `Locked - ${countdown} remaining`;
+    }
+
+    const isCurrentSeason = seasonMode === season_mode;
+    if (isCurrentSeason) {
+      return `Currently in ${seasonMode} mode`;
+    }
+
+    if (isAnimating) {
+      return `Switching to ${seasonMode} mode...`;
+    }
+
+    return `Click to switch to ${seasonMode} mode`;
   };
 
-  const renderSeasonButton = (seasonType) => (
-    <CTooltip content={getTooltipContent(seasonType)} placement="bottom">
+  const renderSeasonButton = (seasonMode) => (
+    <CTooltip content={getTooltipContent(seasonMode)} placement="bottom">
       <div
-        className={getSeasonClassName(seasonType)}
+        className={getSeasonClassName(seasonMode)}
         onClick={() => {
           const canSwitch =
-            !unlockTime &&
-            !isAnimating &&
-            season !== (seasonType === 'Winter' ? 0 : 1);
-          if (canSwitch) handleSeasonChange(seasonType);
+            !unlockTime && !isAnimating && seasonMode !== season_mode; // Only allow switching if not current season
+          if (canSwitch) handleSeasonChange(seasonMode);
         }}
       >
         <img
-          src={getSeasonImage(seasonType)}
-          alt={seasonType}
+          src={getSeasonImage(seasonMode)}
+          alt={seasonMode}
           className="season-icon-img"
         />
-        <span>{seasonType}</span>
+        <span>{seasonMode}</span>
       </div>
     </CTooltip>
   );
@@ -147,11 +170,13 @@ const SeasonSwitch = () => {
       )}
 
       <div className="season-toggle-header">
-        {renderSeasonButton('Winter')}
+        {renderSeasonButton('winter')}
 
-        {season === SEASON_MODE.WINTER ||
-        season === SEASON_MODE.WAITING_SWITCH_TO_SUMMER ||
-        season === SEASON_MODE.SWITCHING_TO_SUMMER ? (
+        {(unlockTime || isSwitchingSeason
+          ? switchDirection === 'tosummer'
+            ? 'winter'
+            : 'summer'
+          : season_mode) === 'winter' ? (
           <BsArrowRight
             className={`arrow-icon ${switchDirection ? 'switching' : ''}`}
           />
@@ -161,7 +186,7 @@ const SeasonSwitch = () => {
           />
         )}
 
-        {renderSeasonButton('Summer')}
+        {renderSeasonButton('summer')}
       </div>
 
       {unlockTime && countdown && (

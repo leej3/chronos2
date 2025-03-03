@@ -6,13 +6,14 @@ const initialState = {
   data: null,
   status: 'idle',
   error: null,
-  season: 0,
+  season_mode: null,
   mock_devices: true,
   read_only_mode: false,
   lastUpdated: null,
   systemStatus: 'OFFLINE',
   unlock_time: null,
   switch_override: false,
+  is_switching_season: false,
 };
 
 export const fetchData = createAsyncThunk('chronos/fetchData', async () => {
@@ -24,11 +25,14 @@ export const chronosSlice = createSlice({
   name: 'chronos',
   initialState,
   reducers: {
-    setSeason(state, action) {
-      state.season = action.payload;
+    setSeasonMode(state, action) {
+      state.season_mode = action.payload;
     },
     setSwitchOverride: (state, action) => {
       state.switch_override = action.payload;
+    },
+    setIsSwitchingSeason: (state, action) => {
+      state.is_switching_season = action.payload;
     },
   },
   extraReducers(builder) {
@@ -41,7 +45,8 @@ export const chronosSlice = createSlice({
         const data = action.payload;
         state.devices = data.devices;
         state.data = data;
-        state.season = data.results.mode;
+        state.is_switching_season = data.is_switching_season;
+        state.season_mode = data.season_mode;
         state.mock_devices = data.mock_devices;
         state.read_only_mode = data.read_only_mode;
         state.lastUpdated = new Date().toISOString();
@@ -69,5 +74,5 @@ export const chronosSlice = createSlice({
 // export const getAllData = (state) => state.summerData.data
 // export const getDataError = (state) => state.summerData.error
 // export const getDataStatus = (state) => state.summerData.status
-export const { setSwitchOverride, setSeason } = chronosSlice.actions;
+export const { setSwitchOverride, setSeasonMode } = chronosSlice.actions;
 export default chronosSlice.reducer;

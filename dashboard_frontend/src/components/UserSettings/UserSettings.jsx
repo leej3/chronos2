@@ -15,7 +15,7 @@ import { updateSettings } from '../../api/updateSetting';
 import './UserSettings.css';
 import SeasonSwitch from '../SeasonSwitch/SeasonSwitch';
 
-const UserSettings = ({ data }) => {
+const UserSettings = ({ data, season_mode }) => {
   const initialFormData = {
     tolerance: null,
     setpoint_min: null,
@@ -31,7 +31,6 @@ const UserSettings = ({ data }) => {
   const [formData, setFormData] = useState(initialFormData);
   const [isEditing, setIsEditing] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
-  const season = useSelector((state) => state.chronos.season);
   const [tempLimits, setTempLimits] = useState({
     hard_limits: { min_setpoint: 70, max_setpoint: 110 },
     soft_limits: { min_setpoint: 70, max_setpoint: 110 },
@@ -148,7 +147,7 @@ const UserSettings = ({ data }) => {
       <CCard className="text-start">
         <CCardBody>
           <h2 className="chronous-title text-center mb-4">User Settings</h2>
-          <SeasonSwitch />
+          <SeasonSwitch season_mode={season_mode} />
 
           <CForm onSubmit={handleSubmit}>
             <div className="content-container-mobile">
@@ -198,10 +197,10 @@ const UserSettings = ({ data }) => {
                   },
                   {
                     label: `Setpoint Offset (${
-                      season === 1 ? 'Summer' : 'Winter'
+                      season_mode === 'summer' ? 'Summer' : 'Winter'
                     })`,
                     key:
-                      season === 1
+                      season_mode === 'summer'
                         ? 'setpoint_offset_summer'
                         : 'setpoint_offset_winter',
                   },

@@ -8,7 +8,7 @@ class SetpointUpdate(BaseModel):
 
 
 class SwitchSeason(BaseModel):
-    season_value: int
+    season_mode: str
 
 
 class UpdateDeviceState(BaseModel):

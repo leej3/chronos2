@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Dict
 
 from chronos.config import cfg
-from chronos.logging import root_logger as logger
+from chronos.logging_config import root_logger as logger
 from pymodbus.client import ModbusSerialClient
 from pymodbus.exceptions import ModbusException, ModbusIOException
 from serial import Serial

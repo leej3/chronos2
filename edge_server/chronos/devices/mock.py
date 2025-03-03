@@ -9,7 +9,7 @@ from typing import Any, Dict
 
 from chronos.config import cfg
 from chronos.devices.hardware import SerialDevice
-from chronos.logging import root_logger as logger
+from chronos.logging_config import root_logger as logger
 
 
 class MockSerialDevice(SerialDevice):

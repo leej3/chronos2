@@ -9,7 +9,7 @@ from src.core.repositories.history_repository import HistoryRepository
 from src.core.repositories.setting_repository import SettingRepository
 from src.core.services.chronos import Chronos
 from src.core.services.edge_server import EdgeServer
-from src.core.utils.constant import EFFICIENCY_HOUR, Mode, Relay, State
+from src.core.utils.constant import EFFICIENCY_HOUR, Relay, State
 from src.core.utils.helpers import convert_datetime_to_str, get_current_time
 
 
@@ -288,42 +288,26 @@ class DashboardService:
             )
         return self.edge_server.boiler_set_setpoint(temperature)
 
-    def switch_season_mode(self, season_value: int):
-        """
-        Args:
-            season_value (int): The season value to switch to. SUMMER (0) or WINTER (1)
-        Step to switch seasion:
-        1. Change mode to WAITING_SWITCH_TO_WINTER or WAITING_SWITCH_TO_SUMMER:
-            - Turn off all devices
-            - Turn on/off valves (summer or winter)
-            - Add job to switch season after <mode_switch_lockout_time> minutes. <mode_switch_lockout_time> will be set in user's setting
-        2. Run the job to switch season after <mode_switch_lockout_time> minutes:
-            - Restore devices states
-            - Switch devices
-            - Change mode to SUMMER or WINTER
-        """
-
-        if season_value not in [Mode.WINTER.value, Mode.SUMMER.value]:
+    def switch_season_mode(self, season_mode: str):
+        if season_mode not in ["winter", "summer"]:
             raise HTTPException(
-                status_code=400, detail=f"Invalid season value: {season_value}"
+                status_code=400, detail=f"Invalid season mode: {season_mode}"
             )
-
-        waiting_mode = (
-            Mode.WAITING_SWITCH_TO_WINTER
-            if season_value == Mode.WINTER.value
-            else Mode.WAITING_SWITCH_TO_SUMMER
-        )
-        self.chronos._switch_season(waiting_mode.value)
-
         settings = self.setting_repository.get_last_settings()
-        unlock_time = get_current_time(UTC) + timedelta(
+
+        self.edge_server.season_switch(season_mode, settings.mode_switch_lockout_time)
+        current_time = get_current_time(UTC)
+
+        self.setting_repository._update_property_in_db(
+            "mode_switch_timestamp", current_time
+        )
+        unlock_time = current_time + timedelta(
             minutes=settings.mode_switch_lockout_time
         )
 
         return {
             "status": "success",
-            "mode": season_value,
-            "mode_switch_lockout_time": self.chronos.mode_switch_lockout_time,
+            "mode": season_mode,
             "unlock_time": unlock_time.isoformat(),
         }
 

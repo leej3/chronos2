@@ -117,3 +117,14 @@ class EdgeServer:
     def get_state_of_all_relays(self):
         response = requests.get(f"{self.url}/get_state_of_all_relays")
         return self._handle_response(response)
+
+    @catch_connection_error
+    def season_switch(self, season_mode: str, mode_switch_lockout_time: int):
+        response = requests.post(
+            f"{self.url}/season_switch",
+            json={
+                "season_mode": season_mode,
+                "mode_switch_lockout_time": mode_switch_lockout_time,
+            },
+        )
+        return self._handle_response(response)

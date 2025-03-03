@@ -39,7 +39,7 @@ const AppHeader = () => {
     });
   }, []);
   const getSeasonIcon = () => {
-    if (season === 1) {
+    if (season === "summer") {
       return '/images/Icons/WinterSummer/SOn.png';
     }
     return '/images/Icons/WinterSummer/WOn.png';
@@ -66,9 +66,8 @@ const AppHeader = () => {
                   SYSTEM
                 </span>
                 <span
-                  className={`${
-                    systemStatus === 'ONLINE' ? 'text-success' : 'text-danger'
-                  } d-flex align-items-center`}
+                  className={`${systemStatus === 'ONLINE' ? 'text-success' : 'text-danger'
+                    } d-flex align-items-center`}
                 >
                   <span
                     className="d-inline-block rounded-circle me-1"
@@ -119,7 +118,7 @@ const AppHeader = () => {
                   <img
                     className="me-1 me-sm-2 ms-2"
                     src={getSeasonIcon()}
-                    alt={`${season === 1 ? 'Summer' : 'Winter'} mode`}
+                    alt={`${season === "summer" ? 'Summer' : 'Winter'} mode`}
                   />
                 </CNavLink>
               </CNavItem>
@@ -142,19 +141,17 @@ const AppHeader = () => {
             <div className="d-flex align-items-center mb-1 ">
               <img
                 src={getSeasonIcon()}
-                alt={`${season === 1 ? 'Summer' : 'Winter'} mode`}
+                alt={`${season === "summer" ? 'Summer' : 'Winter'} mode`}
               />
               <div
-                className={`ms-1 d-flex align-items-center ${
-                  systemStatus === 'ONLINE' ? 'text-success' : 'text-danger'
-                } status-indicator`}
+                className={`ms-1 d-flex align-items-center ${systemStatus === 'ONLINE' ? 'text-success' : 'text-danger'
+                  } status-indicator`}
               >
                 <span
-                  className={`status-dot ${
-                    systemStatus === 'ONLINE'
+                  className={`status-dot ${systemStatus === 'ONLINE'
                       ? 'status-dot-online'
                       : 'status-dot-offline'
-                  }`}
+                    }`}
                 />
                 <span>{systemStatus}</span>
               </div>

@@ -6,6 +6,7 @@ from chronos.data_models import (
     BoilerStats,
     OperatingStatus,
     RelayModel,
+    SeasonSwitch,
     SetpointLimitsUpdate,
     SetpointUpdate,
     SystemStatus,
@@ -29,7 +30,9 @@ device_manager = get_device_manager()
 
 # Create instances of CircuitBreaker and RateLimiter
 circuit_breaker = CircuitBreaker()
+
 rate_limiter = RateLimiter(min_interval=5)
+rate_limiter_season_switch = RateLimiter(min_interval=120)
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -58,6 +61,8 @@ async def get_data():
         sensors=device_manager.get_sensor_data(),
         mock_devices=device_manager.is_mock_mode(),
         read_only_mode=cfg.READ_ONLY_MODE,
+        season_mode=device_manager.season_mode,
+        is_switching_season=device_manager.is_switching_season,
     )
 
 
@@ -79,9 +84,7 @@ async def get_relay_state(
 @with_circuit_breaker(circuit_breaker)
 @with_rate_limit(rate_limiter)
 async def update_device_state(data: RelayModel):
-    return device_manager.set_device_state(
-        data.id, data.state, is_season_switch=data.is_season_switch
-    )
+    return device_manager.set_device_state(data.id, data.state)
 
 
 # New boiler endpoints
@@ -187,4 +190,16 @@ async def set_temperature_limits(limits: SetpointLimitsUpdate):
             )
         return {"message": "Temperature limits updated successfully"}
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/season_switch", dependencies=[Depends(ensure_not_read_only)])
+@with_circuit_breaker(circuit_breaker)
+@with_rate_limit(rate_limiter_season_switch)
+async def season_switch(data: SeasonSwitch):
+    try:
+        device_manager.season_switch(data.season_mode, data.mode_switch_lockout_time)
+        return {"message": "Season switch updated successfully"}
+    except Exception as e:
+        logger.error(f"Failed to set season switch: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))

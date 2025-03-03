@@ -5,21 +5,28 @@ This module provides a unified interface for managing both relay devices
 and Modbus devices.
 """
 
+from datetime import UTC, timedelta
 from typing import Any, Dict, List, Union
 
+from apscheduler.schedulers.background import BackgroundScheduler
 from chronos.config import cfg
 from chronos.devices.hardware import ModbusDevice, SerialDevice
 from chronos.devices.mock import MockModbusDevice, MockSerialDevice
-from chronos.logging import root_logger as logger
+from chronos.logging_config import root_logger as logger
+from chronos.utils import get_current_time
 
 
 class RelayManager:
     """Manager for relay devices."""
 
-    def __init__(self):
+    def __init__(self, season_mode="winter"):
         """Initialize the relay manager with all configured devices."""
         self._devices = {}
-
+        self._season_mode = None
+        self.season_mode = season_mode
+        self.is_switching_season = False
+        self.scheduler = BackgroundScheduler()
+        self.scheduler.start()
         # Initialize all devices immediately
         # Use the relay dictionary from config which maps names to device IDs
         for relay_name, device_id in cfg.relay.__dict__.items():
@@ -33,51 +40,112 @@ class RelayManager:
                 )
                 logger.info(f"Initialized device {device_id} ({relay_name})")
 
+        # Init season mode based on summer/winter valve
+        self.season_mode = "winter" if self.get_relay_state(5)["state"] else "summer"
+
+    @property
+    def season_mode(self):
+        return self._season_mode
+
+    @season_mode.setter
+    def season_mode(self, value):
+        if value not in {"winter", "summer"}:
+            raise ValueError("season_mode must be either 'winter' or 'summer'")
+        self._season_mode = value
+
     def get_relay_state(self, device_id: int) -> Dict[str, Any]:
         """Get the current state of a device."""
         if device_id not in self._devices:
             raise ValueError(f"Unknown device ID: {device_id}")
 
         device = self._devices[device_id]
-        return {"id": device_id, "name": device.name, "state": device.state}
+        return {
+            "id": device_id,
+            "name": device.name,
+            "state": device.state,
+        }
 
-    def set_device_state(
-        self, device_id: int, state: bool, is_season_switch: bool = False
-    ) -> bool:
+    def _validate_update_boiler(self, state: bool) -> bool:
+        """
+        - Cannot turn ON boiler when season_mode = "summer"
+        - Cannot turn ON boiler while chillers are running
+        - Cannot turn ON boiler while summer valve is ON
+        """
+        if self.season_mode == "summer" and state:
+            raise ValueError("Cannot turn ON boiler when season_mode = 'summer'")
+
+        for chiller_id in range(1, 5):
+            if (
+                chiller_id in self._devices
+                and self._devices[chiller_id].state
+                and state
+            ):
+                raise ValueError("Cannot turn ON boiler while chillers are running")
+
+        if state and self.get_relay_state(6)["state"]:
+            raise ValueError("Cannot turn ON boiler while summer valve is ON")
+        return True
+
+    def _validate_update_chiller(self, state: bool) -> bool:
+        """
+        - Cannot turn ON chiller when season_mode = "winter"
+        - Cannot turn ON chiller while boiler is running
+        - Cannot turn ON chiller while winter valve is ON
+        """
+        if self.season_mode == "winter" and state:
+            raise ValueError("Cannot turn ON chiller when season_mode = 'winter'")
+        if state and self.get_relay_state(0)["state"]:
+            raise ValueError("Cannot turn ON chiller while boiler is running")
+        if state and self.get_relay_state(5)["state"]:
+            raise ValueError("Cannot turn ON chiller while winter valve is ON")
+        return True
+
+    def _validate_update_summer_valve(self, state: bool) -> bool:
+        """
+        - Cannot turn ON summer valve when season_mode = "winter".
+        - Cannot turn ON summer valve while winter valve is ON
+        """
+        if self.season_mode == "winter" and state:
+            raise ValueError("Cannot turn ON summer/winter valve in winter mode")
+        if state and self.get_relay_state(5)["state"]:
+            raise ValueError("Cannot turn ON summer valve while winter valve is ON")
+        return True
+
+    def _validate_update_winter_valve(self, state: bool) -> bool:
+        """
+        - Cannot turn ON winter valve when season_mode = "summer".
+        - Cannot turn ON winter valve while summer valve is ON
+        """
+        if self.season_mode == "summer" and state:
+            raise ValueError("Cannot turn ON winter/summer valve in summer mode")
+        if state and self.get_relay_state(6)["state"]:
+            raise ValueError("Cannot turn ON winter valve while summer valve is ON")
+        return True
+
+    def set_device_state(self, device_id: int, state: bool) -> bool:
         """Set the state of a device with safety checks.
 
         Args:
             device_id: The ID of the device to control
             state: The desired state (True=ON, False=OFF)
-            is_season_switch: Whether this is part of a season changeover
 
         Returns:
             bool: True if successful, False otherwise
         """
+        if cfg.READ_ONLY_MODE:
+            raise ValueError("Cannot set device state in read-only mode")
+
         if device_id not in self._devices:
             return False
 
-        # If trying to turn ON a device
-        if state:
-            # Season switch operations bypass some safety checks
-            if not is_season_switch:
-                # Rule: Never allow relay 0 (boiler) to be ON with any chiller (relays 1-4)
-                if device_id == 0:  # Boiler
-                    # Check if any chiller is ON
-                    for chiller_id in range(1, 5):
-                        if (
-                            chiller_id in self._devices
-                            and self._devices[chiller_id].state
-                        ):
-                            logger.warning(
-                                "Cannot turn ON boiler while chillers are running"
-                            )
-                            return False
-                elif 1 <= device_id <= 4:  # Chiller
-                    # Check if boiler is ON
-                    if 0 in self._devices and self._devices[0].state:
-                        logger.warning("Cannot turn ON chiller while boiler is running")
-                        return False
+        if device_id == 0:
+            self._validate_update_boiler(state)
+        elif 1 <= device_id <= 4:
+            self._validate_update_chiller(state)
+        elif device_id == 5:
+            self._validate_update_winter_valve(state)
+        elif device_id == 6:
+            self._validate_update_summer_valve(state)
 
         # Set state directly if all checks pass
         self._devices[device_id].state = state
@@ -87,6 +155,60 @@ class RelayManager:
     def get_state_of_all_relays(self) -> List[Dict[str, Any]]:
         """Get the state of all available devices."""
         return [self.get_relay_state(device_id) for device_id in self._devices]
+
+    def _turn_off_all_devices(self):
+        for device in self._devices.values():
+            self.set_device_state(device.id, False)
+
+    def season_switch(self, season_mode: str, mode_switch_lockout_time: int):
+        """Handle season switching logic for relays."""
+        if season_mode == "winter":
+            logger.debug("Switching to winter mode")
+            self.season_mode = "winter"
+            self._turn_off_all_devices()
+            self._turn_off_device(6)
+            self._turn_on_device(5)
+            self.scheduler.add_job(
+                self._restore_devices_state_for_winter,
+                "date",
+                run_date=self.get_current_time()
+                + timedelta(minutes=mode_switch_lockout_time),
+            )
+            self.is_switching_season = True
+
+        elif season_mode == "summer":
+            logger.debug("Switching to summer mode")
+            self.season_mode = "summer"
+            self._turn_off_all_devices()
+            self._turn_off_device(5)
+            self._turn_on_device(6)
+            self.scheduler.add_job(
+                self._restore_devices_state_for_summer,
+                "date",
+                run_date=self.get_current_time()
+                + timedelta(minutes=mode_switch_lockout_time),
+            )
+            self.is_switching_season = True
+
+    def _restore_devices_state_for_winter(self):
+        self._turn_on_device(0)
+        self.is_switching_season = False
+
+    def _restore_devices_state_for_summer(self):
+        self._turn_on_device(1)
+        self._turn_on_device(2)
+        self._turn_on_device(3)
+        self._turn_on_device(4)
+        self.is_switching_season = False
+
+    def _turn_off_device(self, relay_id: int):
+        self.set_device_state(relay_id, False)
+
+    def _turn_on_device(self, relay_id: int):
+        self.set_device_state(relay_id, True)
+
+    def get_current_time(self):
+        return get_current_time(UTC)
 
 
 class ModbusManager:
@@ -134,9 +256,14 @@ class DeviceManager(RelayManager, ModbusManager):
 class MockRelayManager(RelayManager):
     """Mock implementation of RelayManager."""
 
-    def __init__(self):
+    def __init__(self, season_mode="winter"):
         """Initialize the mock relay manager with all configured devices."""
         self._devices = {}
+        self._season_mode = None
+        self.season_mode = season_mode
+        self.scheduler = BackgroundScheduler()
+        self.scheduler.start()
+        self.is_switching_season = False
 
         # Initialize mock devices for each configured relay
         for relay_name, device_id in cfg.relay.__dict__.items():
@@ -147,6 +274,9 @@ class MockRelayManager(RelayManager):
                     id=device_id, name=relay_name
                 )
                 logger.info(f"Initialized mock device {device_id} ({relay_name})")
+
+        # Init season mode based on summer/winter valve
+        self.season_mode = "winter" if self.get_relay_state(5)["state"] else "summer"
 
 
 class MockModbusManager(ModbusManager):

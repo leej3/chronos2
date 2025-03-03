@@ -19,10 +19,9 @@ import { getDeviceId } from '../../utils/constant';
 import { fetchData } from '../../features/chronos/chronosSlice';
 import './ManualOverride.css';
 
-const ManualOverride = ({ data }) => {
+const ManualOverride = ({ data, season_mode }) => {
   const dispatch = useDispatch();
   const state = useSelector((state) => state.manualOverride);
-  const season = useSelector((state) => state.chronos.season);
   const [alertMessage, setAlertMessage] = useState('');
   const readOnlyMode = useSelector((state) => state.chronos.read_only_mode);
   const [alertColor, setAlertColor] = useState('danger');
@@ -80,10 +79,10 @@ const ManualOverride = ({ data }) => {
       return true;
     }
 
-    if (season === 1) {
+    if (season_mode === 'summer') {
       return device === 'boiler';
     }
-    if (season === 0) {
+    if (season_mode === 'winter') {
       return device.startsWith('chiller');
     }
     return false;
@@ -150,7 +149,7 @@ const ManualOverride = ({ data }) => {
     const isDisabled = isDeviceDisabled(device);
     const deviceName = device.charAt(0).toUpperCase() + device.slice(1);
     const tooltipContent = isDisabled
-      ? `${deviceName} not available in ${season} mode`
+      ? `${deviceName} not available in ${season_mode} mode`
       : `Click to toggle ${deviceName} ON/OFF`;
 
     return (
