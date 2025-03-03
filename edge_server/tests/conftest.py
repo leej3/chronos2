@@ -116,7 +116,7 @@ def client():
 @pytest.fixture
 def mock_modbus_client():
     """Fixture to provide a mocked ModbusSerialClient."""
-    with patch("chronos.devices.ModbusSerialClient") as mock_class:
+    with patch("chronos.devices.hardware.ModbusDevice") as mock_class:
         mock_instance = MagicMock()
         mock_class.return_value = mock_instance
         # Default to successful connection
@@ -174,7 +174,9 @@ def mock_modbus_device(monkeypatch):
     mock_context.__exit__ = lambda *args: None
 
     # Patch the create_modbus_connection function to return our mock context
-    monkeypatch.setattr("chronos.app.create_modbus_connection", lambda: mock_context)
+    monkeypatch.setattr(
+        "chronos.devices.create_modbus_connection", lambda: mock_context
+    )
     return mock_device
 
 
