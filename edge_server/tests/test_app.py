@@ -130,10 +130,7 @@ def test_update_device_state_rate_limiter_error(client, mock_device_manager):
     with patch("chronos.app.rate_limiter.can_change", return_value=False):
         response = client.post("/device_state", json={"id": 0, "state": True})
         assert response.status_code == 429
-        assert (
-            "Too many temperature changes. Please wait before trying again."
-            in response.json()["detail"]
-        )
+        assert "Too many changes" in response.json()["detail"]
 
 
 def test_update_device_state_is_season_switch_rate_limiter(client, mock_device_manager):
@@ -162,22 +159,22 @@ def test_update_device_state_is_season_switch_rate_limiter_error(
 ):
     mock_device_manager.set_device_state.return_value = True
     response = client.post(
-        "/device_state", json={"id": 0, "state": True, "is_season_switch": False}
+        "/device_state", json={"id": 1, "state": True, "is_season_switch": False}
     )
     assert response.status_code == 200
     assert response.json() is True
 
     response2 = client.post(
-        "/device_state", json={"id": 0, "state": True, "is_season_switch": False}
+        "/device_state", json={"id": 1, "state": True, "is_season_switch": False}
     )
     assert response2.status_code == 429
-    assert "Too many temperature changes" in response2.json()["detail"]
+    assert "Too many changes" in response2.json()["detail"]
 
     response3 = client.post(
-        "/device_state", json={"id": 0, "state": False, "is_season_switch": False}
+        "/device_state", json={"id": 1, "state": False, "is_season_switch": False}
     )
     assert response3.status_code == 429
-    assert "Too many temperature changes" in response3.json()["detail"]
+    assert "Too many changes" in response3.json()["detail"]
 
 
 def test_update_device_state_read_only(client, mock_device_manager):
