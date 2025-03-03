@@ -140,7 +140,9 @@ const ManualOverride = ({ data }) => {
           draggable: true,
         },
       );
-      setAlertMessage(error.response?.data?.message || 'Relay switching has failed.');
+      setAlertMessage(
+        error.response?.data?.message || 'Relay switching has failed.',
+      );
     }
   };
 

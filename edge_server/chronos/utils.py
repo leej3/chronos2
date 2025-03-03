@@ -48,15 +48,23 @@ class CircuitBreaker:
 class RateLimiter:
     def __init__(self, min_interval: float = 1.0):
         self.min_interval = min_interval
-        self.last_change_times = {}  # Store last change time for each relay
+        self.last_relay_change_times = {}  # Store last change time for each relay
+        self.last_change_time = 0
 
-    def can_change(self, relay_id) -> bool:
+    def can_change(self) -> bool:
+        current_time = time.time()
+        if current_time - self.last_change_time >= self.min_interval:
+            self.last_change_time = current_time
+            return True
+        return False
+
+    def can_change_specific_relay(self, relay_id) -> bool:
         """Check if enough time has passed since last change for a specific relay."""
         current_time = time.time()
-        last_change_time = self.last_change_times.get(relay_id, 0)
+        last_change_time = self.last_relay_change_times.get(relay_id, 0)
 
         if current_time - last_change_time >= self.min_interval:
-            self.last_change_times[relay_id] = current_time
+            self.last_relay_change_times[relay_id] = current_time
             return True
         return False
 
@@ -99,27 +107,36 @@ def with_rate_limit(rl):
         rl: A RateLimiter instance to use for this function.
     """
 
+    def _rate_limit_update_device_state(data):
+        # Extract relay_id and ensure it's provided
+        relay_id = getattr(data, "id", None)
+        if relay_id is None:
+            raise ValueError("Relay ID must be provided for rate limiting.")
+
+        # Apply rate limiting for the specific relay
+        if not rl.can_change_specific_relay(relay_id):
+            relay_name = cfg.relay_names.__dict__.get(str(relay_id), "unknown")
+            raise HTTPException(
+                status_code=429,
+                detail=f"Too many changes for relay {relay_name}. Please wait before trying again.",
+            )
+
     def decorator(func: Callable):
         @wraps(func)
         async def wrapper(*args, **kwargs):
             data = kwargs.get("data") if "data" in kwargs else args[0] if args else None
+            name_function = func.__name__
 
-            # Check if it's a season switch
-            if getattr(data, "is_season_switch", False):
-                return await func(*args, **kwargs)
-
-            # Extract relay_id and ensure it's provided
-            relay_id = getattr(data, "id", None)
-            if relay_id is None:
-                raise ValueError("Relay ID must be provided for rate limiting.")
-
-            # Apply rate limiting for the specific relay
-            if not rl.can_change(relay_id):
-                relay_name = cfg.relay_names.__dict__.get(str(relay_id), "unknown")
-                raise HTTPException(
-                    status_code=429,
-                    detail=f"Too many changes for relay {relay_name}. Please wait before trying again.",
-                )
+            # Check if the function is not 'update_device_state'
+            if name_function != "update_device_state":
+                if not rl.can_change():
+                    raise HTTPException(
+                        status_code=429,
+                        detail="Too many changes. Please wait before trying again.",
+                    )
+            # If it is 'update_device_state', check for season switch
+            elif not getattr(data, "is_season_switch", False):
+                _rate_limit_update_device_state(data)
 
             return await func(*args, **kwargs)
 

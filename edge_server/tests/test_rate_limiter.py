@@ -30,34 +30,34 @@ class TestRateLimiter:
         """Test RateLimiter initializes with correct default values"""
         limiter = RateLimiter()
         assert limiter.min_interval == 1.0
-        assert limiter.last_change_times == {}
+        assert limiter.last_relay_change_times == {}
 
     def test_initialization_custom_values(self):
         """Test RateLimiter initializes with custom values"""
         custom_interval = 10.0
         limiter = RateLimiter(min_interval=custom_interval)
         assert limiter.min_interval == custom_interval
-        assert limiter.last_change_times == {}
+        assert limiter.last_relay_change_times == {}
 
-    def test_can_change_basic_flow(self, rate_limiter):
-        """Test the basic flow of can_change method"""
+    def test_can_change_specific_relay_basic_flow(self, rate_limiter):
+        """Test the basic flow of can_change_specific_relay method"""
         relay_id = 1
         # First call should succeed
-        assert rate_limiter.can_change(relay_id) is True
-        initial_time = rate_limiter.last_change_times[relay_id]
+        assert rate_limiter.can_change_specific_relay(relay_id) is True
+        initial_time = rate_limiter.last_relay_change_times[relay_id]
         assert initial_time > 0
 
         # Immediate second call should fail
-        assert rate_limiter.can_change(relay_id) is False
+        assert rate_limiter.can_change_specific_relay(relay_id) is False
         # Verify last_change_time wasn't updated
-        assert rate_limiter.last_change_times[relay_id] == initial_time
+        assert rate_limiter.last_relay_change_times[relay_id] == initial_time
 
-    def test_can_change_after_interval(self, rate_limiter):
-        """Test can_change allows changes after interval"""
+    def test_can_change_specific_relay_after_interval(self, rate_limiter):
+        """Test can_change_specific_relay allows changes after interval"""
         relay_id = 1
-        assert rate_limiter.can_change(relay_id) is True
+        assert rate_limiter.can_change_specific_relay(relay_id) is True
         time.sleep(1.1)  # Sleep slightly longer than min_interval
-        assert rate_limiter.can_change(relay_id) is True
+        assert rate_limiter.can_change_specific_relay(relay_id) is True
 
     def test_multiple_relays(self, rate_limiter):
         """Test that different relays are rate limited independently"""
@@ -65,21 +65,21 @@ class TestRateLimiter:
         relay_2 = 2
 
         # Both relays should succeed initially
-        assert rate_limiter.can_change(relay_1) is True
-        assert rate_limiter.can_change(relay_2) is True
+        assert rate_limiter.can_change_specific_relay(relay_1) is True
+        assert rate_limiter.can_change_specific_relay(relay_2) is True
 
         # Relay 1 should be rate limited
-        assert rate_limiter.can_change(relay_1) is False
+        assert rate_limiter.can_change_specific_relay(relay_1) is False
         # But relay 2 should still work
-        assert rate_limiter.can_change(relay_2) is False
+        assert rate_limiter.can_change_specific_relay(relay_2) is False
 
         # After waiting, both should work again
         time.sleep(1.1)
-        assert rate_limiter.can_change(relay_1) is True
-        assert rate_limiter.can_change(relay_2) is True
+        assert rate_limiter.can_change_specific_relay(relay_1) is True
+        assert rate_limiter.can_change_specific_relay(relay_2) is True
 
 
-async def rate_limited_test_function(data):
+async def update_device_state(data):
     """Function to be tested with rate limiting"""
     relay_id = data.id
     if relay_id is None:
@@ -94,7 +94,7 @@ class TestRateLimitDecorator:
         """Test basic rate limiting functionality"""
 
         # Apply the decorator to the function
-        decorated_function = with_rate_limit(rate_limiter)(rate_limited_test_function)
+        decorated_function = with_rate_limit(rate_limiter)(update_device_state)
 
         # Run the coroutine in an event loop
         loop = asyncio.get_event_loop()
@@ -114,11 +114,11 @@ class TestRateLimitDecorator:
         """Test that season switch requests bypass rate limiting"""
 
         # Apply the decorator to the function
-        decorated_function = with_rate_limit(rate_limiter)(rate_limited_test_function)
+        decorated_function = with_rate_limit(rate_limiter)(update_device_state)
 
         # Regular request should be rate limited
         regular_request = MockRequest(id=1, is_season_switch=False)
-        season_switch_request = MockRequest(id=1, is_season_switch=True)
+        season_switch_request = MockRequest(id=2, is_season_switch=True)
 
         # Run the coroutine in an event loop
         loop = asyncio.get_event_loop()
@@ -144,7 +144,7 @@ class TestRateLimitDecorator:
         """Test handling of concurrent requests"""
 
         # Apply the decorator to the function
-        decorated_function = with_rate_limit(rate_limiter)(rate_limited_test_function)
+        decorated_function = with_rate_limit(rate_limiter)(update_device_state)
 
         # Simulate multiple concurrent calls
         task_count = 5

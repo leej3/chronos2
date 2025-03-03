@@ -119,7 +119,7 @@ def test_update_device_state_error_circuit_breaker(client, mock_device_manager):
 
 def test_update_device_state_rate_limiter(client, mock_device_manager):
     mock_device_manager.set_device_state.return_value = True
-    with patch("chronos.app.rate_limiter.can_change", return_value=True):
+    with patch("chronos.app.rate_limiter.can_change_specific_relay", return_value=True):
         response = client.post("/device_state", json={"id": 0, "state": True})
         assert response.status_code == 200
         assert response.json() is True
@@ -127,7 +127,9 @@ def test_update_device_state_rate_limiter(client, mock_device_manager):
 
 def test_update_device_state_rate_limiter_error(client, mock_device_manager):
     mock_device_manager.set_device_state.return_value = True
-    with patch("chronos.app.rate_limiter.can_change", return_value=False):
+    with patch(
+        "chronos.app.rate_limiter.can_change_specific_relay", return_value=False
+    ):
         response = client.post("/device_state", json={"id": 0, "state": True})
         assert response.status_code == 429
         assert "Too many changes" in response.json()["detail"]
@@ -251,10 +253,7 @@ def test_set_setpoint_rate_limiter_error(client, mock_device_manager):
     with patch("chronos.app.rate_limiter.can_change", return_value=False):
         response = client.post("/boiler_set_setpoint", json={"temperature": 80})
         assert response.status_code == 429
-        assert (
-            "Too many temperature changes. Please wait before trying again."
-            in response.json()["detail"]
-        )
+        assert "Too many changes." in response.json()["detail"]
 
 
 def test_get_temperature_limits(client, mock_device_manager):
