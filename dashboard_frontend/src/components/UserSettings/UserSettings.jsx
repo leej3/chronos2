@@ -36,6 +36,31 @@ const UserSettings = ({ data, season_mode }) => {
     soft_limits: { min_setpoint: 70, max_setpoint: 110 },
   });
 
+  const [errors, setErrors] = useState({});
+
+  const validationRules = {
+    tolerance: {
+      min: 0,
+      max: 10,
+      message: 'Tolerance must be between 0°F and 10°F',
+    },
+    mode_change_delta_temp: {
+      min: 0,
+      max: 20,
+      message: 'Delta temperature must be between 0°F and 20°F',
+    },
+    mode_switch_lockout_time: {
+      min: 1,
+      max: 1440, // 24 hours
+      message: 'Lockout time must be between 1 and 1440 minutes',
+    },
+    cascade_time: {
+      min: 1,
+      max: 60,
+      message: 'Cascade time must be between 1 and 60 minutes',
+    },
+  };
+
   // Only fetch limits once on mount
   useEffect(() => {
     if (data?.results && !isEditing) {
@@ -70,6 +95,32 @@ const UserSettings = ({ data, season_mode }) => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setIsEditing(true);
+
+    let error = '';
+    if (value !== '') {
+      const numValue = Number(value);
+
+      if (name === 'setpoint_min' || name === 'setpoint_max') {
+        const { hard_limits } = tempLimits;
+        if (
+          numValue < hard_limits.min_setpoint ||
+          numValue > hard_limits.max_setpoint
+        ) {
+          error = `Value must be between ${hard_limits.min_setpoint}°F and ${hard_limits.max_setpoint}°F`;
+        }
+      } else if (validationRules[name]) {
+        const { min, max, message } = validationRules[name];
+        if (numValue < min || numValue > max) {
+          error = message;
+        }
+      }
+    }
+
+    setErrors({
+      ...errors,
+      [name]: error,
+    });
+
     setFormData({
       ...formData,
       [name]: value,
@@ -220,8 +271,8 @@ const UserSettings = ({ data, season_mode }) => {
                   },
                 ].map(({ label, key, unit = '', min, max, help }) => (
                   <CCol xs="12" key={key}>
-                    <div style={{ marginBottom: '10px' }}>
-                      <span htmlFor={key} className="temp-label ">
+                    <div style={{ marginBottom: '20px' }}>
+                      <span htmlFor={key} className="temp-label">
                         {label}:
                         {help && (
                           <small
@@ -241,14 +292,29 @@ const UserSettings = ({ data, season_mode }) => {
                         placeholder={`${data.results[key] ?? '0.0'} ${unit}`}
                         min={min}
                         max={max}
+                        invalid={!!errors[key]}
+                        className={errors[key] ? 'is-invalid' : ''}
                       />
+                      {errors[key] && (
+                        <div
+                          className="invalid-feedback"
+                          style={{ display: 'block' }}
+                        >
+                          {errors[key]}
+                        </div>
+                      )}
                     </div>
                   </CCol>
                 ))}
               </CRow>
             </div>
             <CCol xs="12" className="text-end">
-              <CButton type="submit" color="primary" className="update-btn m-2">
+              <CButton
+                type="submit"
+                color="primary"
+                className="update-btn m-2"
+                disabled={Object.keys(errors).some((key) => errors[key])}
+              >
                 Update
               </CButton>
             </CCol>

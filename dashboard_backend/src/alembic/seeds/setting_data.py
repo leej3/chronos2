@@ -12,5 +12,6 @@ SETTING_DATA = [
         "mode": 0,
         "mode_switch_timestamp": "2021-01-01 00:00:00",
         "mode_switch_lockout_time": 1,
+        "is_auto_switch_season": False,
     },
 ]

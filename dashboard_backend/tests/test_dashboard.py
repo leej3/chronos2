@@ -46,6 +46,7 @@ settings = {
     "setpoint_offset_summer": 140,
     "setpoint_offset_winter": 130,
     "mode_change_delta_temp": 3,
+    "is_auto_switch_season": False,
 }
 
 settings_invalid = {
