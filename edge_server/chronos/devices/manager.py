@@ -28,7 +28,6 @@ class RelayManager:
         self._devices = {}
         self._season_mode = None
         self.season_mode = season_mode
-
         # Initialize all devices immediately
         # Use the relay dictionary from config which maps names to device IDs
         for relay_name, device_id in cfg.relay.__dict__.items():
