@@ -12,6 +12,7 @@ dependencies = [
     "pydantic",
     "requests>=2.32.3",
     "uvicorn>=0.34.0",
+    "apscheduler==3.11.0",
 ]
 
 [project.optional-dependencies]

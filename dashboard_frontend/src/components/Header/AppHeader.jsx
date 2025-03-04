@@ -39,7 +39,7 @@ const AppHeader = () => {
     });
   }, []);
   const getSeasonIcon = () => {
-    if (season === 1) {
+    if (season === 'summer') {
       return '/images/Icons/WinterSummer/SOn.png';
     }
     return '/images/Icons/WinterSummer/WOn.png';
@@ -119,7 +119,7 @@ const AppHeader = () => {
                   <img
                     className="me-1 me-sm-2 ms-2"
                     src={getSeasonIcon()}
-                    alt={`${season === 1 ? 'Summer' : 'Winter'} mode`}
+                    alt={`${season === 'summer' ? 'Summer' : 'Winter'} mode`}
                   />
                 </CNavLink>
               </CNavItem>
@@ -142,7 +142,7 @@ const AppHeader = () => {
             <div className="d-flex align-items-center mb-1 ">
               <img
                 src={getSeasonIcon()}
-                alt={`${season === 1 ? 'Summer' : 'Winter'} mode`}
+                alt={`${season === 'summer' ? 'Summer' : 'Winter'} mode`}
               />
               <div
                 className={`ms-1 d-flex align-items-center ${

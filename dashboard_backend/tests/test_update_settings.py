@@ -85,7 +85,7 @@ def test_update_settings(client, dummy_edge_server):
         "setpoint_offset_summer": 140,
         "setpoint_offset_winter": 130.0,
         "mode_change_delta_temp": 3,
-        "mode_switch_lockout_time": 30,
+        "mode_switch_lockout_time": 1,
         "cascade_time": 5,
     }
 
@@ -116,7 +116,7 @@ def test_update_settings_invalid_setpoint_min(client, dummy_edge_server, auth_he
         "setpoint_offset_summer": 140.0,
         "setpoint_offset_winter": 130.0,
         "mode_change_delta_temp": 3.0,
-        "mode_switch_lockout_time": 30,
+        "mode_switch_lockout_time": 1,
         "cascade_time": 5,
     }
     response = client.post("/api/update_settings", json=payload, headers=auth_headers)
@@ -135,7 +135,7 @@ def test_update_settings_invalid_setpoint_max(client, dummy_edge_server, auth_he
         "setpoint_offset_summer": 140.0,
         "setpoint_offset_winter": 130.0,
         "mode_change_delta_temp": 3.0,
-        "mode_switch_lockout_time": 30,
+        "mode_switch_lockout_time": 1,
         "cascade_time": 5,
     }
     response = client.post("/api/update_settings", json=payload, headers=auth_headers)
@@ -158,7 +158,7 @@ def test_update_settings_read_only_mode(client, dummy_edge_server, auth_headers)
         "setpoint_offset_summer": 140.0,
         "setpoint_offset_winter": 130.0,
         "mode_change_delta_temp": 3.0,
-        "mode_switch_lockout_time": 30,
+        "mode_switch_lockout_time": 1,
         "cascade_time": 5,
     }
     response = client.post("/api/update_settings", json=payload, headers=auth_headers)
@@ -183,7 +183,7 @@ def test_update_settings_generic_error(client, dummy_edge_server, auth_headers):
         "setpoint_offset_summer": 140.0,
         "setpoint_offset_winter": 130.0,
         "mode_change_delta_temp": 3.0,
-        "mode_switch_lockout_time": 30,
+        "mode_switch_lockout_time": 1,
         "cascade_time": 5,
     }
     response = client.post("/api/update_settings", json=payload, headers=auth_headers)

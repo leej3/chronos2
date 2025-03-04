@@ -19,10 +19,9 @@ import { getDeviceId } from '../../utils/constant';
 import { fetchData } from '../../features/chronos/chronosSlice';
 import './ManualOverride.css';
 
-const ManualOverride = ({ data }) => {
+const ManualOverride = ({ data, season_mode }) => {
   const dispatch = useDispatch();
   const state = useSelector((state) => state.manualOverride);
-  const season = useSelector((state) => state.chronos.season);
   const [alertMessage, setAlertMessage] = useState('');
   const readOnlyMode = useSelector((state) => state.chronos.read_only_mode);
   const [alertColor, setAlertColor] = useState('danger');
@@ -37,10 +36,10 @@ const ManualOverride = ({ data }) => {
     dispatch(
       setInitialState({
         boiler: devices[0],
-        chiller1: devices[1],
-        chiller2: devices[2],
-        chiller3: devices[3],
-        chiller4: devices[4],
+        chiller1: devices[2],
+        chiller2: devices[1],
+        chiller3: devices[4],
+        chiller4: devices[3],
       }),
     );
   }, [data]);
@@ -80,16 +79,17 @@ const ManualOverride = ({ data }) => {
       return true;
     }
 
-    if (season === 1) {
+    if (season_mode === 'summer') {
       return device === 'boiler';
     }
-    if (season === 0) {
+    if (season_mode === 'winter') {
       return device.startsWith('chiller');
     }
     return false;
   };
 
   const handleDeviceStateChange = async (device, newState) => {
+    setAlertMessage('');
     if (isDeviceDisabled(device)) return;
 
     if (readOnlyMode) {
@@ -139,7 +139,9 @@ const ManualOverride = ({ data }) => {
           draggable: true,
         },
       );
-      setAlertMessage('Relay switching has failed.');
+      setAlertMessage(
+        error.response?.data?.message || 'Relay switching has failed.',
+      );
     }
   };
 
@@ -147,7 +149,7 @@ const ManualOverride = ({ data }) => {
     const isDisabled = isDeviceDisabled(device);
     const deviceName = device.charAt(0).toUpperCase() + device.slice(1);
     const tooltipContent = isDisabled
-      ? `${deviceName} not available in ${season} mode`
+      ? `${deviceName} not available in ${season_mode} mode`
       : `Click to toggle ${deviceName} ON/OFF`;
 
     return (
@@ -175,7 +177,7 @@ const ManualOverride = ({ data }) => {
           <div className={`device-control ${isDisabled ? 'disabled' : ''}`}>
             <span className="temp-label">OFF</span>
             <CFormSwitch
-              checked={state[device].state === 1}
+              checked={state[device].state === true}
               className="temp-label"
               onChange={(e) =>
                 handleDeviceStateChange(device, e.target.checked)

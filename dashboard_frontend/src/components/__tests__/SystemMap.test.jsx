@@ -50,6 +50,10 @@ describe('SystemMap component', () => {
         switched_timestamp: '2024-01-01T00:00:00Z',
       },
     },
+    chronos: {
+      is_switching_season: false,
+      season_mode: 'summer',
+    },
   };
 
   const defaultHomedata = {
@@ -60,7 +64,7 @@ describe('SystemMap component', () => {
   it('should render summer view with all chillers', () => {
     render(
       <Provider store={mockStore(defaultState)}>
-        <SystemMap homedata={defaultHomedata} season={1} />
+        <SystemMap homedata={defaultHomedata} season_mode="summer" />
       </Provider>,
     );
 
@@ -86,11 +90,15 @@ describe('SystemMap component', () => {
           switched_timestamp: '2024-01-01T00:00:00Z',
         },
       },
+      chronos: {
+        is_switching_season: false,
+        season_mode: 'winter',
+      },
     };
 
     render(
       <Provider store={mockStore(overrideState)}>
-        <SystemMap homedata={defaultHomedata} season={0} />
+        <SystemMap homedata={defaultHomedata} season_mode="winter" />
       </Provider>,
     );
 
@@ -127,11 +135,15 @@ describe('SystemMap component', () => {
           switched_timestamp: '2024-01-01T00:00:00Z',
         },
       },
+      chronos: {
+        is_switching_season: false,
+        season_mode: 'summer',
+      },
     };
 
     render(
       <Provider store={mockStore(overrideState)}>
-        <SystemMap homedata={defaultHomedata} season={1} />
+        <SystemMap homedata={defaultHomedata} season_mode="summer" />
       </Provider>,
     );
 
@@ -162,7 +174,7 @@ describe('SystemMap component', () => {
 
     render(
       <Provider store={mockStore(defaultState)}>
-        <SystemMap homedata={homedata} season={0} />
+        <SystemMap homedata={homedata} season_mode="summer" />
       </Provider>,
     );
 
@@ -170,14 +182,38 @@ describe('SystemMap component', () => {
     expect(naValues.length).toBeGreaterThan(0);
   });
 
-  it('should handle missing homedata prop', () => {
+  it('should handle switching season', () => {
+    const overrideState = {
+      ...defaultState,
+      chronos: {
+        ...defaultState.chronos,
+        is_switching_season: true,
+        season_mode: 'winter',
+      },
+    };
+
     render(
-      <Provider store={mockStore(defaultState)}>
-        <SystemMap />
+      <Provider store={mockStore(overrideState)}>
+        <SystemMap homedata={defaultHomedata} season_mode="winter" />
       </Provider>,
     );
 
-    const naValues = screen.getAllByText('N/A');
-    expect(naValues.length).toBeGreaterThan(0);
+    expect(screen.getByAltText('Chiller 1')).toHaveAttribute(
+      'src',
+      'images/Icons/Boiler/Chiller-OFF.png',
+    );
+    expect(screen.getByAltText('Chiller 2')).toHaveAttribute(
+      'src',
+      'images/Icons/Boiler/Chiller-OFF.png',
+    );
+
+    expect(screen.getByAltText('Chiller 3')).toHaveAttribute(
+      'src',
+      'images/Icons/Boiler/Chiller-OFF.png',
+    );
+    expect(screen.getByAltText('Chiller 4')).toHaveAttribute(
+      'src',
+      'images/Icons/Boiler/Chiller-OFF.png',
+    );
   });
 });
