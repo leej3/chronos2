@@ -14,17 +14,7 @@ from src.core.services.boiler import Boiler
 from src.core.services.chiller import Chiller
 from src.core.services.edge_server import EdgeServer
 from src.core.services.valve import Valve
-from src.core.utils.constant import (
-    EFFICIENCY_HOUR,
-    MANUAL_AUTO,
-    MANUAL_OFF,
-    MANUAL_ON,
-    OFF,
-    ON,
-    WEATHER_HEADERS,
-    WEATHER_URL,
-    Mode,
-)
+from src.core.utils.constant import EFFICIENCY_HOUR, WEATHER_HEADERS, WEATHER_URL, Mode
 from src.core.utils.helpers import get_current_time
 
 scheduler = AsyncIOScheduler()
@@ -63,11 +53,13 @@ class Chronos(object):
 
     @property
     def mode(self):
-        return self.setting_repository._get_property_from_db("mode")
+        return self.get_edge_server_data()["season_mode"]
 
     @mode.setter
-    def mode(self, mode: int):
-        self.setting_repository._update_property_in_db("mode", mode)
+    def mode(self, mode: str):
+        self.setting_repository._update_property_in_db(
+            "mode", mode=1 if mode == "summer" else 0
+        )
 
     def get_data_from_web(self):
         logger.debug("Retrieve data from web.")
@@ -143,93 +135,19 @@ class Chronos(object):
         )
 
     def create_update_history(self):
-        edge_server_data = self.edge_server.get_data()
+        edge_server_data = self.get_edge_server_data()
         sensors = edge_server_data["sensors"]
         mode = self.mode
-        if mode in (Mode.WINTER.value, Mode.SUMMER.value):
+        if mode in ("winter", "summer"):
             with session_scope() as session:
                 parameters = History(
                     timestamp=get_current_time(UTC),
                     outside_temp=self.outside_temp,
                     water_out_temp=sensors["water_out_temp"],
                     return_temp=sensors["return_temp"],
-                    mode=mode,
+                    mode=0 if mode == "winter" else 1,
                 )
                 session.add(parameters)
 
-    def _switch_devices(self, is_season_switch=False):
-        for device in self.devices:
-            if device.manual_override == MANUAL_ON:
-                device.turn_on(is_season_switch=is_season_switch)
-            elif device.manual_override == MANUAL_OFF:
-                device.turn_off(is_season_switch=is_season_switch)
-            elif device.manual_override == MANUAL_AUTO:
-                if device.status == ON:
-                    device.turn_on(is_season_switch=is_season_switch)
-                elif device.status == OFF:
-                    device.turn_off(is_season_switch=is_season_switch)
-
-    def _save_devices_states(self, mode):
-        if mode == Mode.SWITCHING_TO_SUMMER.value:
-            self.boiler.save_status()
-        elif mode == Mode.SWITCHING_TO_WINTER.value:
-            for chiller in self.devices[1:]:
-                chiller.save_status()
-
-    def _restore_devices_states(self, mode: Mode):
-        if mode == Mode.SWITCHING_TO_SUMMER.value:
-            self.boiler.restore_status()
-        elif mode == Mode.SWITCHING_TO_WINTER.value:
-            for chiller in self.devices[1:]:
-                chiller.restore_status()
-
-    def turn_off_devices(self, is_season_switch=False):
-        for device in self.devices:
-            device.turn_off(is_season_switch=is_season_switch)
-
-    def _switch_season(self, mode: int):
-        if mode == Mode.WAITING_SWITCH_TO_SUMMER.value:
-            logger.debug("Switching to summer mode")
-            self.mode = Mode.WAITING_SWITCH_TO_SUMMER.value
-            self.mode_switch_timestamp = get_current_time(UTC)
-            self._save_devices_states(mode)
-            self.turn_off_devices(is_season_switch=True)
-            self.summer_valve.turn_on(is_season_switch=True)
-            self.winter_valve.turn_off(is_season_switch=True)
-
-            self.scheduler.add_job(
-                self._switch_season,
-                "date",
-                run_date=get_current_time(UTC)
-                + timedelta(minutes=self.mode_switch_lockout_time),
-                args=[Mode.SWITCHING_TO_SUMMER.value],
-            )
-
-        elif mode == Mode.WAITING_SWITCH_TO_WINTER.value:
-            logger.debug("Switching to winter mode")
-            self.mode = Mode.WAITING_SWITCH_TO_WINTER.value
-            self.mode_switch_timestamp = get_current_time(UTC)
-            self._save_devices_states(mode)
-            self.turn_off_devices(is_season_switch=True)
-            self.summer_valve.turn_off(is_season_switch=True)
-            self.winter_valve.turn_on(is_season_switch=True)
-
-            self.scheduler.add_job(
-                self._switch_season,
-                "date",
-                run_date=get_current_time(UTC)
-                + timedelta(minutes=self.mode_switch_lockout_time),
-                args=[Mode.SWITCHING_TO_WINTER.value],
-            )
-
-        elif mode == Mode.SWITCHING_TO_WINTER.value:
-            logger.debug("Switched to winter mode")
-            self._restore_devices_states(mode)
-            self._switch_devices(is_season_switch=True)
-            self.mode = Mode.WINTER.value
-
-        elif mode == Mode.SWITCHING_TO_SUMMER.value:
-            logger.debug("Switched to summer mode")
-            self._restore_devices_states(mode)
-            self._switch_devices(is_season_switch=True)
-            self.mode = Mode.SUMMER.value
+    def get_edge_server_data(self):
+        return self.edge_server.get_data()

@@ -64,8 +64,9 @@ def test_get_device_manager_mock():
 
 def test_get_device_manager_real():
     cfg.MOCK_DEVICES = False
-    manager = get_device_manager()
-    assert isinstance(manager, DeviceManager)
+    with patch.object(DeviceManager, "__init__", lambda self: None):
+        manager = get_device_manager()
+        assert isinstance(manager, DeviceManager)
 
 
 class TestMockDeviceManager:
@@ -73,25 +74,22 @@ class TestMockDeviceManager:
         """Test that MockDeviceManager correctly manages device states."""
         manager = MockDeviceManager()
 
-        # Set device states
-        for i in range(5):
-            manager.set_device_state(i, False)
-
-        # Verify states are all False
-        devices = manager.get_state_of_all_relays()
-        for i in range(5):
-            assert devices[i]["state"] == 0
+        manager.season_mode = "winter"
+        manager.set_device_state(0, True)
+        assert manager.get_relay_state(0)["state"] == 1
+        manager.set_device_state(0, False)
+        assert manager.get_relay_state(0)["state"] == 0
 
         # Change one state
-        manager.set_device_state(0, True)
-        assert manager.get_relay_state(0)
+        manager.season_mode = "summer"
+        manager.set_device_state(1, True)
+        assert manager.get_relay_state(1)["state"] == 1
+        manager.set_device_state(1, False)
+        assert manager.get_relay_state(1)["state"] == 0
 
         # Check all device states
         devices = manager.get_state_of_all_relays()
         assert len(devices) == 8  # 5 relays + 3 chiller
-        assert devices[0]["state"] == 1
-        for i in range(1, 5):
-            assert devices[i]["state"] == 0
 
     def test_boiler_setpoint(self, mock_modbus_manager):
         """Test boiler setpoint management."""
@@ -155,10 +153,10 @@ class TestRealDeviceManager:
     def mock_serial_devices(self):
         """Mock serial devices for RealDeviceManager."""
         mock_devices = []
-        for i in range(5):
+        for i in range(8):
             device = MagicMock()
             device.id = i
-            device.state = True
+            device.state = False
             mock_devices.append(device)
         return mock_devices
 
@@ -166,38 +164,20 @@ class TestRealDeviceManager:
     def manager(self, mock_serial_devices):
         with patch("chronos.devices.hardware.SerialDevice") as mock_serial:
             mock_serial.side_effect = mock_serial_devices
-        manager = DeviceManager()
-        manager._devices = {
-            i: mock_serial_devices[i] for i in range(len(mock_serial_devices))
-        }
-        try:
-            yield manager
-        finally:
-            pass
+            with patch.object(DeviceManager, "__init__", lambda self: None):
+                manager = get_device_manager()
+                manager._devices = {
+                    i: mock_serial_devices[i] for i in range(len(mock_serial_devices))
+                }
+                yield manager
 
     def test_device_state_management(self, manager, mock_serial_devices):
         """Test that RealDeviceManager correctly manages device states."""
-        # Set device states
-        for i in range(5):
-            manager.set_device_state(i, False)
-            mock_serial_devices[i].state = False
-
-        # Verify states are all False
-        devices = manager.get_state_of_all_relays()
-        for i in range(5):
-            assert devices[i]["state"] is False
-
-        # # Change one state
+        manager.season_mode = "winter"
         manager.set_device_state(0, True)
-        mock_serial_devices[0].state = True
-        assert manager.get_relay_state(0)
-
-        # # Check all device states
-        devices = manager.get_state_of_all_relays()
-        assert len(devices) == 5
-        assert devices[0]["state"] is True
-        for i in range(1, 5):
-            assert devices[i]["state"] is False
+        assert manager.get_relay_state(0)["state"] == 1
+        manager.set_device_state(0, False)
+        assert manager.get_relay_state(0)["state"] == 0
 
     def test_boiler_stats(self, manager, mock_serial_devices):
         """Test boiler stats with mocked ModbusDevice."""

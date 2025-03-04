@@ -66,6 +66,10 @@ const SeasonSwitch = ({ season_mode }) => {
       await switchSeason(newSeason);
       dispatch(fetchData());
     } catch (error) {
+      setAlertState({
+        color: 'danger',
+        message: error?.response?.data?.message || 'Error switching season',
+      });
       resetStates();
     }
   };
@@ -139,7 +143,7 @@ const SeasonSwitch = ({ season_mode }) => {
         className={getSeasonClassName(seasonMode)}
         onClick={() => {
           const canSwitch =
-            !unlockTime && !isAnimating && seasonMode !== season_mode; // Only allow switching if not current season
+            !unlockTime && !isAnimating && seasonMode !== season_mode;
           if (canSwitch) handleSeasonChange(seasonMode);
         }}
       >
@@ -172,16 +176,16 @@ const SeasonSwitch = ({ season_mode }) => {
       <div className="season-toggle-header">
         {renderSeasonButton('winter')}
 
-        {(unlockTime || isSwitchingSeason
-          ? switchDirection === 'tosummer'
-            ? 'winter'
-            : 'summer'
-          : season_mode) === 'winter' ? (
-          <BsArrowRight
+        {((season_mode === 'winter' && isSwitchingSeason) ||
+          (season_mode === 'summer' && !isSwitchingSeason)) && (
+          <BsArrowLeft
             className={`arrow-icon ${switchDirection ? 'switching' : ''}`}
           />
-        ) : (
-          <BsArrowLeft
+        )}
+
+        {((season_mode === 'winter' && !isSwitchingSeason) ||
+          (season_mode === 'summer' && isSwitchingSeason)) && (
+          <BsArrowRight
             className={`arrow-icon ${switchDirection ? 'switching' : ''}`}
           />
         )}

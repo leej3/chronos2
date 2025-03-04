@@ -19,9 +19,8 @@ import './AppHeader.css';
 
 const AppHeader = () => {
   const headerRef = useRef();
-  const { systemStatus, season, lastUpdated } = useSelector(
-    (state) => state.chronos,
-  );
+  const { systemStatus, season_mode, lastUpdated, is_switching_season } =
+    useSelector((state) => state.chronos);
   const data = useSelector((state) => state.chronos.data);
 
   const outdoorTemp = data?.results?.outside_temp || 'N/A';
@@ -39,10 +38,18 @@ const AppHeader = () => {
     });
   }, []);
   const getSeasonIcon = () => {
-    if (season === "summer") {
+    if (
+      (season_mode === 'summer' && !is_switching_season) ||
+      (season_mode === 'winter' && is_switching_season)
+    ) {
       return '/images/Icons/WinterSummer/SOn.png';
     }
-    return '/images/Icons/WinterSummer/WOn.png';
+    if (
+      (season_mode === 'winter' && !is_switching_season) ||
+      (season_mode === 'summer' && is_switching_season)
+    ) {
+      return '/images/Icons/WinterSummer/WOn.png';
+    }
   };
 
   return (
@@ -66,8 +73,9 @@ const AppHeader = () => {
                   SYSTEM
                 </span>
                 <span
-                  className={`${systemStatus === 'ONLINE' ? 'text-success' : 'text-danger'
-                    } d-flex align-items-center`}
+                  className={`${
+                    systemStatus === 'ONLINE' ? 'text-success' : 'text-danger'
+                  } d-flex align-items-center`}
                 >
                   <span
                     className="d-inline-block rounded-circle me-1"
@@ -118,7 +126,9 @@ const AppHeader = () => {
                   <img
                     className="me-1 me-sm-2 ms-2"
                     src={getSeasonIcon()}
-                    alt={`${season === "summer" ? 'Summer' : 'Winter'} mode`}
+                    alt={`${
+                      season_mode === 'summer' ? 'Summer' : 'Winter'
+                    } mode`}
                   />
                 </CNavLink>
               </CNavItem>
@@ -141,17 +151,19 @@ const AppHeader = () => {
             <div className="d-flex align-items-center mb-1 ">
               <img
                 src={getSeasonIcon()}
-                alt={`${season === "summer" ? 'Summer' : 'Winter'} mode`}
+                alt={`${season_mode === 'summer' ? 'Summer' : 'Winter'} mode`}
               />
               <div
-                className={`ms-1 d-flex align-items-center ${systemStatus === 'ONLINE' ? 'text-success' : 'text-danger'
-                  } status-indicator`}
+                className={`ms-1 d-flex align-items-center ${
+                  systemStatus === 'ONLINE' ? 'text-success' : 'text-danger'
+                } status-indicator`}
               >
                 <span
-                  className={`status-dot ${systemStatus === 'ONLINE'
+                  className={`status-dot ${
+                    systemStatus === 'ONLINE'
                       ? 'status-dot-online'
                       : 'status-dot-offline'
-                    }`}
+                  }`}
                 />
                 <span>{systemStatus}</span>
               </div>

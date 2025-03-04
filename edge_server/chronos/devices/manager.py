@@ -21,12 +21,14 @@ class RelayManager:
 
     def __init__(self, season_mode="winter"):
         """Initialize the relay manager with all configured devices."""
+        self.is_switching_season = False
+        self.mode_switch_lockout_time = 2
+        self.scheduler = BackgroundScheduler()
+        self.scheduler.start()
         self._devices = {}
         self._season_mode = None
         self.season_mode = season_mode
-        self.is_switching_season = False
-        self.scheduler = BackgroundScheduler()
-        self.scheduler.start()
+
         # Initialize all devices immediately
         # Use the relay dictionary from config which maps names to device IDs
         for relay_name, device_id in cfg.relay.__dict__.items():
@@ -44,14 +46,53 @@ class RelayManager:
         self.season_mode = "winter" if self.get_relay_state(5)["state"] else "summer"
 
     @property
+    def mode_switch_lockout_time(self):
+        return self._mode_switch_lockout_time
+
+    @mode_switch_lockout_time.setter
+    def mode_switch_lockout_time(self, value):
+        self._mode_switch_lockout_time = value
+
+    @property
     def season_mode(self):
         return self._season_mode
 
     @season_mode.setter
     def season_mode(self, value):
+        """Set season mode and handle season switching logic.
+
+        Args:
+            value (str): Either 'winter' or 'summer'
+        """
         if value not in {"winter", "summer"}:
             raise ValueError("season_mode must be either 'winter' or 'summer'")
-        self._season_mode = value
+
+        if value != self._season_mode:
+            self.is_switching_season = True
+            self._season_mode = value
+            self._turn_off_all_devices()
+
+            if value == "winter":
+                logger.debug("Switching to winter mode")
+                self._turn_off_device(6)
+                self._turn_on_device(5)
+                self.scheduler.add_job(
+                    self._restore_devices_state_for_winter,
+                    "date",
+                    run_date=self.get_current_time()
+                    + timedelta(minutes=self.mode_switch_lockout_time),
+                )
+
+            else:
+                logger.debug("Switching to summer mode")
+                self._turn_off_device(5)
+                self._turn_on_device(6)
+                self.scheduler.add_job(
+                    self._restore_devices_state_for_summer,
+                    "date",
+                    run_date=self.get_current_time()
+                    + timedelta(minutes=self.mode_switch_lockout_time),
+                )
 
     def get_relay_state(self, device_id: int) -> Dict[str, Any]:
         """Get the current state of a device."""
@@ -160,36 +201,6 @@ class RelayManager:
         for device in self._devices.values():
             self.set_device_state(device.id, False)
 
-    def season_switch(self, season_mode: str, mode_switch_lockout_time: int):
-        """Handle season switching logic for relays."""
-        if season_mode == "winter":
-            logger.debug("Switching to winter mode")
-            self.season_mode = "winter"
-            self._turn_off_all_devices()
-            self._turn_off_device(6)
-            self._turn_on_device(5)
-            self.scheduler.add_job(
-                self._restore_devices_state_for_winter,
-                "date",
-                run_date=self.get_current_time()
-                + timedelta(minutes=mode_switch_lockout_time),
-            )
-            self.is_switching_season = True
-
-        elif season_mode == "summer":
-            logger.debug("Switching to summer mode")
-            self.season_mode = "summer"
-            self._turn_off_all_devices()
-            self._turn_off_device(5)
-            self._turn_on_device(6)
-            self.scheduler.add_job(
-                self._restore_devices_state_for_summer,
-                "date",
-                run_date=self.get_current_time()
-                + timedelta(minutes=mode_switch_lockout_time),
-            )
-            self.is_switching_season = True
-
     def _restore_devices_state_for_winter(self):
         self._turn_on_device(0)
         self.is_switching_season = False
@@ -258,12 +269,13 @@ class MockRelayManager(RelayManager):
 
     def __init__(self, season_mode="winter"):
         """Initialize the mock relay manager with all configured devices."""
-        self._devices = {}
-        self._season_mode = None
-        self.season_mode = season_mode
         self.scheduler = BackgroundScheduler()
         self.scheduler.start()
         self.is_switching_season = False
+        self.mode_switch_lockout_time = 2
+        self._devices = {}
+        self._season_mode = None
+        self.season_mode = season_mode
 
         # Initialize mock devices for each configured relay
         for relay_name, device_id in cfg.relay.__dict__.items():

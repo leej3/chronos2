@@ -198,7 +198,9 @@ async def set_temperature_limits(limits: SetpointLimitsUpdate):
 @with_rate_limit(rate_limiter_season_switch)
 async def season_switch(data: SeasonSwitch):
     try:
-        device_manager.season_switch(data.season_mode, data.mode_switch_lockout_time)
+        device_manager.mode_switch_lockout_time = data.mode_switch_lockout_time
+        device_manager.season_mode = data.season_mode
+
         return {"message": "Season switch updated successfully"}
     except Exception as e:
         logger.error(f"Failed to set season switch: {str(e)}")
