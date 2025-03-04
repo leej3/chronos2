@@ -1,4 +1,4 @@
-from sqlalchemy import INTEGER, REAL, Column, DateTime
+from sqlalchemy import BOOLEAN, INTEGER, REAL, Column, DateTime
 
 from .base import Base
 
@@ -17,3 +17,4 @@ class Settings(Base):
     mode = Column(INTEGER, default=0, nullable=False)
     mode_switch_timestamp = Column(DateTime, nullable=True)
     mode_switch_lockout_time = Column(INTEGER, default=2, nullable=False)
+    is_auto_switch_season = Column(BOOLEAN, default=False, nullable=False)

@@ -17,6 +17,7 @@ from src.alembic.seeds.chiller_data import (
     CHILLER3_DATA,
     CHILLER4_DATA,
 )
+from src.alembic.seeds.setpoint_data import SETPOINT_LOOKUP_DATA
 from src.alembic.seeds.setting_data import SETTING_DATA
 from src.alembic.seeds.value_data import SUMMER_DATA, WINTER_DATA
 
@@ -113,6 +114,7 @@ def upgrade() -> None:
             sa.column("mode", sa.Integer),
             sa.column("mode_switch_timestamp", sa.DateTime),
             sa.column("mode_switch_lockout_time", sa.Integer),
+            sa.column("is_auto_switch_season", sa.Boolean),
         ),
         SETTING_DATA,
     )
@@ -133,6 +135,18 @@ def upgrade() -> None:
             sa.column("status", sa.Integer),
         ),
         WINTER_DATA,
+    )
+
+    op.bulk_insert(
+        sa.table(
+            "setpoint_lookup",
+            sa.column("id", sa.Integer),
+            sa.column("wind_chill", sa.Integer),
+            sa.column("setpoint", sa.Float),
+            sa.column("avg_wind_chill", sa.Integer),
+            sa.column("setpoint_offset", sa.Integer),
+        ),
+        SETPOINT_LOOKUP_DATA,
     )
 
 
