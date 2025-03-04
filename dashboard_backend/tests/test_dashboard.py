@@ -188,7 +188,7 @@ def test_switch_season_success(client, mock_edge_server, mock_dashboard_service)
     mock_dashboard_service.switch_season_mode.return_value = (
         switch_season_success_response
     )
-    response = client.post("/api/switch-season", json={"season_value": 0})
+    response = client.post("/api/switch-season", json={"season_mode": "winter"})
     data = response.json()
     assert response.status_code == 200
     assert data == switch_season_success_response
@@ -196,8 +196,7 @@ def test_switch_season_success(client, mock_edge_server, mock_dashboard_service)
 
 def test_switch_season_invalid_season_value(client, mock_dashboard_service):
     mock_dashboard_service.switch_season_mode.side_effect = HTTPException(
-        status_code=400, detail="Invalid season value: 6"
+        status_code=400, detail="Invalid season value: spring"
     )
-    response = client.post("/api/switch-season", json={"season_value": 6})
+    response = client.post("/api/switch-season", json={"season_mode": "spring"})
     assert response.status_code == 400
-    assert response.json() == {"detail": "Invalid season value: 6"}

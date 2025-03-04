@@ -63,9 +63,10 @@ describe('UserSettings Component', () => {
         },
       },
       chronos: {
-        season: 1,
+        season_mode: 'summer',
         lockoutInfo: null,
         unlock_time: null,
+        is_switching_season: false,
       },
       manualOverride: {
         manual_override: false,
@@ -74,7 +75,7 @@ describe('UserSettings Component', () => {
 
     const { container } = render(
       <Provider store={mockStore(state)}>
-        <UserSettings data={state.settings} />
+        <UserSettings data={state.settings} season_mode="summer" />
       </Provider>,
     );
 
@@ -94,7 +95,7 @@ describe('UserSettings Component', () => {
   it('should render user settings loading state when data is not fetched', () => {
     const state = {
       chronos: {
-        season: 1,
+        season_mode: 'winter',
         unlock_time: null,
       },
       manualOverride: {
@@ -104,7 +105,7 @@ describe('UserSettings Component', () => {
 
     render(
       <Provider store={mockStore(state)}>
-        <UserSettings data={state.settings} />
+        <UserSettings data={state.settings} season_mode="winter" />
       </Provider>,
     );
 
@@ -121,14 +122,14 @@ describe('UserSettings Component', () => {
         },
       },
       chronos: {
-        season: 1,
+        season_mode: 'winter',
         lockoutInfo: null,
       },
     };
 
     const { container } = render(
       <Provider store={mockStore(state)}>
-        <UserSettings data={state.settings} />
+        <UserSettings data={state.settings} season_mode="winter" />
       </Provider>,
     );
 
@@ -156,7 +157,7 @@ describe('UserSettings Component', () => {
 
     const { container } = render(
       <Provider store={mockStore(state)}>
-        <UserSettings data={state.settings} />
+        <UserSettings data={state.settings} season_mode="winter" />
       </Provider>,
     );
 
@@ -191,14 +192,15 @@ describe('UserSettings Component', () => {
         },
       },
       chronos: {
-        season: 1,
+        season_mode: 'winter',
         lockoutInfo: null,
+        is_switching_season: false,
       },
     };
 
     const { container } = render(
       <Provider store={mockStore(state)}>
-        <UserSettings data={state.settings} />
+        <UserSettings data={state.settings} season_mode="winter" />
       </Provider>,
     );
 
@@ -241,7 +243,7 @@ describe('UserSettings Component', () => {
 
     const { container } = render(
       <Provider store={mockStore(state)}>
-        <UserSettings data={state.settings} />
+        <UserSettings data={state.settings} season_mode="winter" />
       </Provider>,
     );
 

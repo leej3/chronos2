@@ -16,14 +16,13 @@ class SystemStatus(BaseModel):
     sensors: dict
     mock_devices: bool = False
     read_only_mode: bool = False
-    season_mode: str
+    season_mode: str = Field(..., description="Season mode (winter or summer)")
     is_switching_season: bool = False
 
 
 class SwitchStateRequest(BaseModel):
     command: str
     relay_only: bool = False
-    is_season_switch: bool = False
 
 
 class RelayModel(BaseModel):

@@ -105,6 +105,9 @@ class SerialDevice(RelayInterface):
     def state(self) -> bool:
         """Get the current state of the device."""
         on_off_val = self._send_command(f"relay read {self._id}\n\r")
+        # Return last known state if read fails
+        if on_off_val is None:
+            return False if self._state is None else self._state
         return self.command_to_state[on_off_val]
 
     @state.setter

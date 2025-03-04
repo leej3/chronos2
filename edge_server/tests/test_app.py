@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 from unittest.mock import patch
 
 import pytest
@@ -12,11 +13,15 @@ logger = logging.getLogger(__name__)
 
 
 mock_get_sensor_data = MockDeviceManager().get_sensor_data()
+season_mode = MockDeviceManager().season_mode
+is_switching_season = MockDeviceManager().is_switching_season
 
 mock_system_status = {
     "sensors": mock_get_sensor_data,
     "mock_devices": True,
     "read_only_mode": False,
+    "season_mode": "winter",
+    "is_switching_season": False,
 }
 
 mock_get_state_of_all_relays = MockDeviceManager().get_state_of_all_relays()
@@ -43,6 +48,8 @@ def mock_device_manager():
 
 def test_get_data(client, mock_device_manager):
     mock_device_manager.get_sensor_data.return_value = mock_system_status["sensors"]
+    mock_device_manager.season_mode = "winter"
+    mock_device_manager.is_switching_season = False
     mock_device_manager.is_mock_mode.return_value = True
 
     response = client.get("/get_data")
@@ -136,45 +143,40 @@ def test_update_device_state_rate_limiter_error(client, mock_device_manager):
 
 
 def test_update_device_state_is_season_switch_rate_limiter(client, mock_device_manager):
+    time.sleep(5)
     mock_device_manager.set_device_state.return_value = True
-    response = client.post(
-        "/device_state", json={"id": 0, "state": True, "is_season_switch": True}
-    )
+    response = client.post("/device_state", json={"id": 1, "state": True})
     assert response.status_code == 200
     assert response.json() is True
+    time.sleep(5)
 
-    response2 = client.post(
-        "/device_state", json={"id": 0, "state": True, "is_season_switch": True}
-    )
+    response2 = client.post("/device_state", json={"id": 2, "state": True})
     assert response2.status_code == 200
     assert response2.json() is True
+    time.sleep(5)
 
-    response3 = client.post(
-        "/device_state", json={"id": 0, "state": False, "is_season_switch": True}
-    )
+    response3 = client.post("/device_state", json={"id": 3, "state": False})
     assert response3.status_code == 200
     assert response3.json() is True
+    time.sleep(5)
+    response4 = client.post("/device_state", json={"id": 4, "state": True})
+    assert response4.status_code == 200
+    assert response4.json() is True
 
 
 def test_update_device_state_is_season_switch_rate_limiter_error(
     client, mock_device_manager
 ):
     mock_device_manager.set_device_state.return_value = True
-    response = client.post(
-        "/device_state", json={"id": 1, "state": True, "is_season_switch": False}
-    )
+    response = client.post("/device_state", json={"id": 1, "state": True})
     assert response.status_code == 200
     assert response.json() is True
 
-    response2 = client.post(
-        "/device_state", json={"id": 1, "state": True, "is_season_switch": False}
-    )
+    response2 = client.post("/device_state", json={"id": 1, "state": True})
     assert response2.status_code == 429
     assert "Too many changes" in response2.json()["detail"]
 
-    response3 = client.post(
-        "/device_state", json={"id": 1, "state": False, "is_season_switch": False}
-    )
+    response3 = client.post("/device_state", json={"id": 1, "state": False})
     assert response3.status_code == 429
     assert "Too many changes" in response3.json()["detail"]
 
@@ -328,3 +330,20 @@ def test_download_log_file_not_found(client, mock_device_manager):
     response = client.get("/download_log")
     assert response.status_code == 500
     assert "Failed to read log file" in response.json()["detail"]
+
+
+def test_season_switch(client, mock_device_manager):
+    mock_device_manager.is_mock_mode.return_value = True
+    response = client.post(
+        "/season_switch", json={"season_mode": "winter", "mode_switch_lockout_time": 10}
+    )
+    assert response.status_code == 200
+
+
+def test_season_switch_rate_limiter(client, mock_device_manager):
+    mock_device_manager.is_mock_mode.return_value = True
+    response = client.post(
+        "/season_switch", json={"season_mode": "winter", "mode_switch_lockout_time": 10}
+    )
+    assert response.status_code == 429
+    assert "Too many changes" in response.json()["detail"]
