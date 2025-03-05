@@ -130,6 +130,7 @@ def upgrade() -> None:
         sa.Column("mode", sa.INTEGER(), nullable=False),
         sa.Column("mode_switch_timestamp", sa.DateTime(), nullable=False),
         sa.Column("mode_switch_lockout_time", sa.INTEGER(), nullable=False),
+        sa.Column("is_auto_switch_season", sa.BOOLEAN(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(

@@ -42,6 +42,7 @@ class UpdateSettings(BaseModel):
     mode_change_delta_temp: Optional[float]
     mode_switch_lockout_time: Optional[int]
     cascade_time: Optional[int]
+    is_auto_switch_season: Optional[bool]
 
     @validator("setpoint_max")
     def max_greater_than_min(cls, v, values):
@@ -51,3 +52,10 @@ class UpdateSettings(BaseModel):
                     "Maximum setpoint must be greater than minimum setpoint"
                 )
         return v
+
+    @validator("mode_switch_lockout_time")
+    def mode_switch_lockout_time(cls, value):
+        if value is not None:
+            if value < 0:
+                raise ValueError("Mode switch lockout time must be greater than 0")
+        return value
