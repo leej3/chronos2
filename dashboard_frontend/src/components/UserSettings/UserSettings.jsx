@@ -51,13 +51,23 @@ const UserSettings = ({ data, season_mode }) => {
     },
     mode_switch_lockout_time: {
       min: 1,
-      max: 1440, // 24 hours
+      max: 1440,
       message: 'Lockout time must be between 1 and 1440 minutes',
     },
     cascade_time: {
       min: 1,
       max: 60,
       message: 'Cascade time must be between 1 and 60 minutes',
+    },
+    setpoint_offset_summer: {
+      min: -10,
+      max: 130,
+      message: 'Setpoint offset must be between -10°F and 130°F',
+    },
+    setpoint_offset_winter: {
+      min: -10,
+      max: 130,
+      message: 'Setpoint offset must be between -10°F and 130°F',
     },
   };
 
@@ -246,15 +256,16 @@ const UserSettings = ({ data, season_mode }) => {
                     max: tempLimits.hard_limits.max_setpoint,
                     help: `Hard limits: ${tempLimits.hard_limits.min_setpoint}°F - ${tempLimits.hard_limits.max_setpoint}°F`,
                   },
+
                   {
-                    label: `Setpoint Offset (${
-                      season_mode === 'summer' ? 'Summer' : 'Winter'
-                    })`,
-                    key:
-                      season_mode === 'summer'
-                        ? 'setpoint_offset_summer'
-                        : 'setpoint_offset_winter',
+                    label: 'Setpoint Offset Summer',
+                    key: 'setpoint_offset_summer',
                   },
+                  {
+                    label: 'Setpoint Offset Winter',
+                    key: 'setpoint_offset_winter',
+                  },
+
                   {
                     label: 'Mode Change Delta Temp',
                     key: 'mode_change_delta_temp',
