@@ -1,4 +1,4 @@
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, timedelta, timezone
 
 import requests
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -44,8 +44,6 @@ class Chronos(object):
             self.chiller4,
         )
         self.valves = (self.winter_valve, self.summer_valve)
-        self._devices_chiller = None
-        self._devices_boiler = None
         self._outside_temp = None
         self._wind_speed = None
         self._baseline_setpoint = None
@@ -58,11 +56,53 @@ class Chronos(object):
         self._is_auto_switch_season = False
         self.scheduler = BackgroundScheduler()
         self.scheduler.start()
+        self.device_map = {
+            Relay.BOILER.value: self.boiler,
+            Relay.CHILLER1.value: self.chiller1,
+            Relay.CHILLER2.value: self.chiller2,
+            Relay.CHILLER3.value: self.chiller3,
+            Relay.CHILLER4.value: self.chiller4,
+        }
         #
         self.history_repository = HistoryRepository()
         self.setting_repository = SettingRepository()
         self.setpoint_repository = SetpointRepository()
         self.edge_server = EdgeServer()
+
+    @property
+    def is_auto_switch_season(self):
+        is_auto_switch_season = self.setting_repository._get_property_from_db(
+            "is_auto_switch_season"
+        )
+        if is_auto_switch_season != self._is_auto_switch_season:
+            self._is_auto_switch_season = is_auto_switch_season
+        return is_auto_switch_season
+
+    @is_auto_switch_season.setter
+    def is_auto_switch_season(self, is_auto_switch_season):
+        self.setting_repository._update_property_in_db(
+            "is_auto_switch_season", is_auto_switch_season
+        )
+
+    @property
+    def setpoint_offset_summer(self):
+        return self.setting_repository._get_property_from_db("setpoint_offset_summer")
+
+    @setpoint_offset_summer.setter
+    def setpoint_offset_summer(self, setpoint_offset):
+        self.setting_repository._update_property_in_db(
+            "setpoint_offset_summer", setpoint_offset
+        )
+
+    @property
+    def setpoint_offset_winter(self):
+        return self.setting_repository._get_property_from_db("setpoint_offset_winter")
+
+    @setpoint_offset_winter.setter
+    def setpoint_offset_winter(self, setpoint_offset):
+        self.setting_repository._update_property_in_db(
+            "setpoint_offset_winter", setpoint_offset
+        )
 
     @property
     def devices_chiller(self):
@@ -96,7 +136,8 @@ class Chronos(object):
 
     @property
     def return_temp(self):
-        return_temp = self._return_temp or self.get_edge_server_data()["return_temp"]
+        sensors = self.get_edge_server_data()["sensors"]
+        return_temp = self._return_temp or sensors["return_temp"]
         if return_temp != self._return_temp:
             self._return_temp = return_temp
         return return_temp
@@ -110,14 +151,23 @@ class Chronos(object):
         self.setting_repository._update_property_in_db("tolerance", tolerance)
 
     @property
+    def mode_change_delta_temp(self):
+        return self.setting_repository._get_property_from_db("mode_change_delta_temp")
+
+    @mode_change_delta_temp.setter
+    def mode_change_delta_temp(self, mode_change_delta_temp):
+        self.setting_repository._update_property_in_db(
+            "mode_change_delta_temp", mode_change_delta_temp
+        )
+
+    @property
     def mode(self):
         return self.get_edge_server_data()["season_mode"]
 
     @mode.setter
     def mode(self, mode: str):
-        self.setting_repository._update_property_in_db(
-            "mode", mode=1 if mode == "summer" else 0
-        )
+        mode_value = 1 if mode == "summer" else 0
+        self.setting_repository._update_property_in_db("mode", mode_value)
 
     def get_data_from_web(self):
         logger.debug("Retrieve data from web.")
@@ -213,12 +263,16 @@ class Chronos(object):
         )
 
     @property
+    def wind_chill_avg(self):
+        return self.history_repository.wind_chill_avg()
+
+    @property
     def baseline_setpoint(self):
         wind_chill = int(round(self.outside_temp))
         if wind_chill < 11:
             baseline_setpoint = 100
         else:
-            baseline_setpoint = self.setpoint_repository.get_by_value(
+            baseline_setpoint = self.setpoint_repository.get_setpoint_by_param_value(
                 "wind_chill", wind_chill
             )
 
@@ -231,8 +285,10 @@ class Chronos(object):
         if self.wind_chill_avg < 71:
             temperature_history_adjsutment = 0
         else:
-            temperature_history_adjsutment = self.setpoint_repository.get_by_value(
-                "avg_wind_chill", self.wind_chill_avg
+            temperature_history_adjsutment = (
+                self.setpoint_repository.get_setpoint_by_param_value(
+                    "avg_wind_chill", self.wind_chill_avg
+                )
             )
         tha_setpoint = self.baseline_setpoint - temperature_history_adjsutment
         if tha_setpoint != self._tha_setpoint:
@@ -257,6 +313,10 @@ class Chronos(object):
         if effective_setpoint != self._effective_setpoint:
             self._effective_setpoint = effective_setpoint
         return effective_setpoint
+
+    @property
+    def previous_return_temp(self):
+        return self.history_repository.previous_return_temp()
 
     @property
     def current_delta(self):
@@ -288,44 +348,59 @@ class Chronos(object):
         return self.edge_server.get_data()
 
     def get_state_devices_from_edge_server(self):
-        return self.edge_server.get_data()["devices"]
+        return self.edge_server.get_state_of_all_relays()
 
-    def boiler_switcher(self):
-        if self.is_auto_switch_season:
-            if not self.devices_boiler["state"] and self.return_temp <= (
-                self.effective_setpoint - self.tolerance
-            ):
-                self.edge_server.update_device_state(Relay.BOILER.value, True)
-            elif self.devices_boiler["state"] and self.return_temp > (
-                self.effective_setpoint + self.tolerance
-            ):
-                self.edge_server.update_device_state(Relay.BOILER.value, False)
+    def boiler_switcher(
+        self, devices_boiler, return_temp, effective_setpoint, tolerance
+    ):
+        if not devices_boiler["state"] and return_temp <= (
+            effective_setpoint - tolerance
+        ):
+            self.edge_server.update_device_state(Relay.BOILER.value, True)
+        elif devices_boiler["state"] and return_temp > (effective_setpoint + tolerance):
+            self.edge_server.update_device_state(Relay.BOILER.value, False)
 
-    def _find_chiller_index_to_switch(self, status: bool):
+    def _find_chiller_index_to_switch(self, status: bool, devices_chiller):
         min_date = datetime.now(UTC)
         switch_index = None
-        if self.is_auto_switch_season:
-            for i, chiller in enumerate(self.devices_chiller[1:], 1):
-                if chiller.switched_timestamp < min_date and chiller.state == status:
-                    min_date = chiller.switched_timestamp
+        for i, chiller in enumerate(devices_chiller[1:], 1):
+            if chiller["switched_timestamp"] < min_date and chiller["state"] == status:
+                min_date = chiller["switched_timestamp"]
                 switch_index = i
         return switch_index
 
-    def chillers_cascade_switcher(self):
+    def chillers_cascade_switcher(
+        self,
+        return_temp,
+        devices_boiler,
+        devices_chiller,
+        effective_setpoint,
+        mode_change_delta_temp,
+        tolerance,
+    ):
+        # Find the most recently switched chiller timestamp
         max_chillers_timestamp = max(
-            chiller.switched_timestamp for chiller in self.devices[1:]
+            chiller["switched_timestamp"] for chiller in devices_chiller[1:]
         )
-        time_gap = (datetime.now(UTC) - max_chillers_timestamp).total_seconds()
+
+        max_chillers_timestamp = (
+            datetime.strptime(max_chillers_timestamp, "%Y-%m-%dT%H:%M:%SZ")
+            if isinstance(max_chillers_timestamp, str)
+            else max_chillers_timestamp
+        ).replace(tzinfo=timezone.utc)
+
+        time_gap = (datetime.now(timezone.utc) - max_chillers_timestamp).total_seconds()
+
         db_delta = self.history_repository.three_minute_avg_delta()
         db_return_temp = self.history_repository.previous_return_temp()
 
         # Turn on chillers
         if (
-            self.return_temp >= (self.effective_setpoint + self.tolerance)
+            return_temp >= (effective_setpoint + tolerance)
             and db_delta > 0.1
             and time_gap >= self.cascade_time * 60
         ):
-            turn_on_index = self._find_chiller_index_to_switch(False)
+            turn_on_index = self._find_chiller_index_to_switch(False, devices_chiller)
             try:
                 self.edge_server.update_device_state(
                     getattr(Relay, f"CHILLER{turn_on_index}").value, True
@@ -334,11 +409,11 @@ class Chronos(object):
                 pass
         # Turn off chillers
         elif (
-            db_return_temp < (self.effective_setpoint - self.tolerance)
+            db_return_temp < (effective_setpoint - tolerance)
             and self.current_delta < 0
             and time_gap >= self.cascade_time * 60 / 1.5
         ):
-            turn_off_index = self._find_chiller_index_to_switch(True)
+            turn_off_index = self._find_chiller_index_to_switch(True, devices_chiller)
             try:
                 self.edge_server.update_device_state(
                     getattr(Relay, f"CHILLER{turn_off_index}").value, False
@@ -346,24 +421,94 @@ class Chronos(object):
             except TypeError:
                 pass
 
-    def _is_time_to_switch_season_to_summer(self):
+    def _get_data_auto_switch(self):
+        data = self.edge_server.get_data()
+        tolerance = self.tolerance
+        is_switching_season = data["is_switching_season"]
+        return_temp = data["sensors"]["return_temp"]
+        mode_change_delta_temp = self.mode_change_delta_temp
+        devices = self.get_state_devices_from_edge_server()
+        for i in range(len(devices)):
+            devices[i]["switched_timestamp"] = self._get_switch_timestamp(
+                devices[i]["id"]
+            )
+
+        devices_boiler = devices[Relay.BOILER.value]
+        devices_chiller = (
+            devices[Relay.CHILLER1.value],
+            devices[Relay.CHILLER2.value],
+            devices[Relay.CHILLER3.value],
+            devices[Relay.CHILLER4.value],
+        )
         effective_setpoint = self.tha_setpoint + self.setpoint_offset_winter
         effective_setpoint = self._constrain_effective_setpoint(effective_setpoint)
-        is_switching_season = self.edge_server.get_data()["is_time_to_switch"]
-        timespan = datetime.now(UTC) - self.mode_switch_timestamp
+
         return (
-            self.return_temp > (effective_setpoint + self.mode_change_delta_temp)
-            and is_switching_season
-            and timespan > timedelta(minutes=self.mode_switch_lockout_time)
+            is_switching_season,
+            return_temp,
+            mode_change_delta_temp,
+            devices_boiler,
+            devices_chiller,
+            tolerance,
+            effective_setpoint,
+        )
+
+    def _is_time_to_switch_season_to_summer(self):
+        (
+            is_switching_season,
+            return_temp,
+            mode_change_delta_temp,
+            devices_boiler,
+            devices_chiller,
+            tolerance,
+            effective_setpoint,
+        ) = self._get_data_auto_switch()
+
+        self.boiler_switcher(devices_boiler, return_temp, effective_setpoint, tolerance)
+        return (
+            return_temp > (effective_setpoint + mode_change_delta_temp)
+            and not is_switching_season
         )
 
     def _is_time_to_switch_season_to_winter(self):
-        effective_setpoint = self.tha_setpoint + self.setpoint_offset_summer
-        effective_setpoint = self._constrain_effective_setpoint(effective_setpoint)
-        is_switching_season = self.edge_server.get_data()["is_time_to_switch"]
-        timespan = datetime.now(UTC) - self.mode_switch_timestamp
-        return (
-            self.return_temp < (effective_setpoint - self.mode_change_delta_temp)
-            and is_switching_season
-            and timespan > timedelta(minutes=self.mode_switch_lockout_time)
+        (
+            is_switching_season,
+            return_temp,
+            mode_change_delta_temp,
+            devices_boiler,
+            devices_chiller,
+            tolerance,
+            effective_setpoint,
+        ) = self._get_data_auto_switch()
+
+        self.chillers_cascade_switcher(
+            return_temp,
+            devices_boiler,
+            devices_chiller,
+            effective_setpoint,
+            mode_change_delta_temp,
+            tolerance,
         )
+        return (
+            return_temp < (effective_setpoint - mode_change_delta_temp)
+            and not is_switching_season
+        )
+
+    def _turn_off_all_devices(self):
+        self.edge_server.turn_off_all_devices()
+
+    async def _switch_season_auto(self):
+        current_mode = self.mode
+        if current_mode == "winter":
+            if self._is_time_to_switch_season_to_summer():
+                self.edge_server.season_switch("summer", self.mode_switch_lockout_time)
+        elif current_mode == "summer":
+            if self._is_time_to_switch_season_to_winter():
+                self.edge_server.season_switch("winter", self.mode_switch_lockout_time)
+
+    def _get_device(self, id: int):
+        return self.device_map.get(id)
+
+    def _get_switch_timestamp(self, id: int):
+        device = self._get_device(id)
+        return device.switched_timestamp if device else None

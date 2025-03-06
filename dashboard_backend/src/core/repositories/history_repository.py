@@ -64,3 +64,12 @@ class HistoryRepository:
             (return_temp,) = result.first()
             session.expunge_all()
         return return_temp
+
+    def wind_chill_avg(self):
+        with session_scope() as session:
+            result = (
+                session.query(History.outside_temp).order_by(desc(History.id)).limit(4)
+            )
+            (outside_temp,) = result.first()
+            session.expunge_all()
+        return outside_temp

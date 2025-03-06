@@ -205,3 +205,13 @@ async def season_switch(data: SeasonSwitch):
     except Exception as e:
         logger.error(f"Failed to set season switch: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/turn_off_all_devices", dependencies=[Depends(ensure_not_read_only)])
+@with_circuit_breaker(circuit_breaker)
+async def turn_off_all_devices():
+    try:
+        device_manager._turn_off_all_devices()
+        return {"message": "All devices turned off successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
