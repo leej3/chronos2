@@ -295,6 +295,16 @@ class Chronos(object):
             self._tha_setpoint = tha_setpoint
         return tha_setpoint
 
+    @property
+    def cascade_time(self):
+        return self.setting_repository._get_property_from_db("cascade_time") / 60
+
+    @cascade_time.setter
+    def cascade_time(self, cascade_time):
+        self.setting_repository._update_property_in_db(
+            "cascade_time", cascade_time * 60
+        )
+
     def _constrain_effective_setpoint(self, effective_setpoint):
         if effective_setpoint > self.setpoint_max:
             effective_setpoint = self.setpoint_max
@@ -341,6 +351,15 @@ class Chronos(object):
                     water_out_temp=sensors["water_out_temp"],
                     return_temp=sensors["return_temp"],
                     mode=0 if mode == "winter" else 1,
+                    tha_setpoint=self.tha_setpoint,
+                    setpoint_offset_winter=self.setpoint_offset_winter,
+                    setpoint_offset_summer=self.setpoint_offset_summer,
+                    tolerance=self.tolerance,
+                    cascade_time=self.cascade_time,
+                    wind_speed=self.wind_speed,
+                    avg_outside_temp=self.wind_chill_avg,
+                    avg_cascade_fire_rate=self.cascade_fire_rate_avg,
+                    delta=self.current_delta,
                 )
                 session.add(parameters)
 
@@ -393,7 +412,6 @@ class Chronos(object):
 
         db_delta = self.history_repository.three_minute_avg_delta()
         db_return_temp = self.history_repository.previous_return_temp()
-
         # Turn on chillers
         if (
             return_temp >= (effective_setpoint + tolerance)
@@ -489,6 +507,7 @@ class Chronos(object):
             mode_change_delta_temp,
             tolerance,
         )
+
         return (
             return_temp < (effective_setpoint - mode_change_delta_temp)
             and not is_switching_season
