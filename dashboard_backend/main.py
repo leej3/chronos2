@@ -1,3 +1,7 @@
+import asyncio
+import signal
+import sys
+
 import uvicorn
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import APIRouter, FastAPI, Request
@@ -10,10 +14,32 @@ from src.core.services.chronos import Chronos
 from src.features.auth.auth_service import AuthService
 
 chronos = Chronos()
+is_auto_switch_season = chronos.is_auto_switch_season
+
+
+def destructor(signum=None, frame=None, status=0):
+    chronos.scheduler.shutdown(wait=False)
+    chronos._turn_off_all_devices()
+    sys.exit(status)
+
+
+signal.signal(signal.SIGTERM, destructor)
 
 auth_service = AuthService()
 app = FastAPI()
 scheduler = AsyncIOScheduler()
+
+
+async def auto_switch_season():
+    try:
+        while True:
+            if is_auto_switch_season:
+                await chronos._switch_season_auto()
+                await asyncio.sleep(5)
+            else:
+                await asyncio.sleep(1)
+    except Exception:
+        asyncio.create_task(auto_switch_season())
 
 
 @app.on_event("startup")
@@ -22,6 +48,8 @@ async def startup():
     scheduler.add_job(chronos.create_update_history, "cron", minute="*")
     scheduler.add_job(chronos.get_data_from_web, "cron", minute="*")
     scheduler.start()
+
+    asyncio.create_task(auto_switch_season())
 
 
 @app.exception_handler(GenericError)

@@ -128,3 +128,8 @@ class EdgeServer:
             },
         )
         return self._handle_response(response)
+
+    @catch_connection_error
+    def turn_off_all_devices(self):
+        response = requests.post(f"{self.url}/turn_off_all_devices")
+        return self._handle_response(response)

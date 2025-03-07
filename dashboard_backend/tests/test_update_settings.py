@@ -87,6 +87,7 @@ def test_update_settings(client, dummy_edge_server):
         "mode_change_delta_temp": 3,
         "mode_switch_lockout_time": 1,
         "cascade_time": 5,
+        "is_auto_switch_season": False,
     }
 
     # Test successful update
@@ -118,6 +119,7 @@ def test_update_settings_invalid_setpoint_min(client, dummy_edge_server, auth_he
         "mode_change_delta_temp": 3.0,
         "mode_switch_lockout_time": 1,
         "cascade_time": 5,
+        "is_auto_switch_season": False,
     }
     response = client.post("/api/update_settings", json=payload, headers=auth_headers)
     assert response.status_code == 400
@@ -137,6 +139,7 @@ def test_update_settings_invalid_setpoint_max(client, dummy_edge_server, auth_he
         "mode_change_delta_temp": 3.0,
         "mode_switch_lockout_time": 1,
         "cascade_time": 5,
+        "is_auto_switch_season": False,
     }
     response = client.post("/api/update_settings", json=payload, headers=auth_headers)
     assert response.status_code == 400
@@ -160,6 +163,7 @@ def test_update_settings_read_only_mode(client, dummy_edge_server, auth_headers)
         "mode_change_delta_temp": 3.0,
         "mode_switch_lockout_time": 1,
         "cascade_time": 5,
+        "is_auto_switch_season": False,
     }
     response = client.post("/api/update_settings", json=payload, headers=auth_headers)
     # Expect a 403 Forbidden response with the correct error message
@@ -185,6 +189,7 @@ def test_update_settings_generic_error(client, dummy_edge_server, auth_headers):
         "mode_change_delta_temp": 3.0,
         "mode_switch_lockout_time": 1,
         "cascade_time": 5,
+        "is_auto_switch_season": False,
     }
     response = client.post("/api/update_settings", json=payload, headers=auth_headers)
     # Expect a 400 Bad Request with an error message indicating failure to update temperature limits

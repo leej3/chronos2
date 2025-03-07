@@ -9,7 +9,7 @@ from src.core.repositories.history_repository import HistoryRepository
 from src.core.repositories.setting_repository import SettingRepository
 from src.core.services.chronos import Chronos
 from src.core.services.edge_server import EdgeServer
-from src.core.utils.constant import EFFICIENCY_HOUR, Relay, State
+from src.core.utils.constant import EFFICIENCY_HOUR, State
 from src.core.utils.helpers import convert_datetime_to_str, get_current_time
 
 
@@ -19,26 +19,18 @@ class DashboardService:
         self.history_repository = HistoryRepository()
         self.setting_repository = SettingRepository()
         self.edge_server = EdgeServer()
-        self.device_map = {
-            Relay.BOILER.value: self.chronos.boiler,
-            Relay.CHILLER1.value: self.chronos.chiller1,
-            Relay.CHILLER2.value: self.chronos.chiller2,
-            Relay.CHILLER3.value: self.chronos.chiller3,
-            Relay.CHILLER4.value: self.chronos.chiller4,
-        }
-
-    def _get_device(self, id: int):
-        return self.device_map.get(id)
 
     def get_data(self):
         history = self.history_repository.get_last_history()
         settings = self.setting_repository.get_last_settings()
 
         edge_server_data = self.edge_server.get_data()
+        self.chronos.mode = edge_server_data["season_mode"]
         devices = self.edge_server.get_state_of_all_relays()
         for i in range(len(devices)):
             devices[i]["switched_timestamp"] = convert_datetime_to_str(
-                self.get_switch_timestamp(devices[i]["id"]), "%Y-%m-%dT%H:%M:%SZ"
+                self.chronos._get_switch_timestamp(devices[i]["id"]),
+                "%Y-%m-%dT%H:%M:%SZ",
             )
 
         results = {
@@ -310,10 +302,6 @@ class DashboardService:
             "mode": season_mode,
             "unlock_time": unlock_time.isoformat(),
         }
-
-    def get_switch_timestamp(self, id: int):
-        device = self._get_device(id)
-        return device.switched_timestamp if device else None
 
     def update_device_state(self, data):
         device_state = self.edge_server.update_device_state(
