@@ -5,14 +5,14 @@ import { FaThermometerHalf } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 import { getFormattedChicagoTime } from '../../utils/dateUtils';
 import './TypeMode.css';
-
+import { Link } from 'react-router-dom';
 const TypeMode = ({ homedata }) => {
   const season_mode = useSelector((state) => state.chronos.season_mode);
   const isSwitchingSeason = useSelector(
     (state) => state.chronos.is_switching_season,
   );
   const outdoorTemp = homedata?.results?.outside_temp || 'N/A';
-  const avgTemp = homedata?.efficiency?.average_temperature_difference || 'N/A';
+  const avgTemp = homedata?.results?.wind_chill_avg || 'N/A';
   const [currentTime, setCurrentTime] = useState('');
 
   const [isSmallScreen, setIsSmallScreen] = useState(false);
@@ -80,6 +80,14 @@ const TypeMode = ({ homedata }) => {
                   <div className="temp-label mt-2">Avg Temp (96 hrs)</div>
                 </CCol>
               </CRow>
+              <div className="d-flex justify-content-center">
+                <Link
+                  to="https://barnreportpro.com/sites/view/tlco"
+                  className="mt-3"
+                >
+                  <div className="text-primary">View live</div>
+                </Link>
+              </div>
             </CCardBody>
           </CCardBody>
         </CCard>

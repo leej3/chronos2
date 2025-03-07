@@ -36,7 +36,8 @@ async def auto_switch_season():
             if is_auto_switch_season:
                 await chronos._switch_season_auto()
                 await asyncio.sleep(5)
-            continue
+            else:
+                await asyncio.sleep(1)
     except Exception:
         asyncio.create_task(auto_switch_season())
 
