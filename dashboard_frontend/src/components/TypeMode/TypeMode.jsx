@@ -7,8 +7,10 @@ import { getFormattedChicagoTime } from '../../utils/dateUtils';
 import './TypeMode.css';
 
 const TypeMode = ({ homedata }) => {
-  const season = useSelector((state) => state.chronos.season_mode);
-
+  const season_mode = useSelector((state) => state.chronos.season_mode);
+  const isSwitchingSeason = useSelector(
+    (state) => state.chronos.is_switching_season,
+  );
   const outdoorTemp = homedata?.results?.outside_temp || 'N/A';
   const avgTemp = homedata?.efficiency?.average_temperature_difference || 'N/A';
   const [currentTime, setCurrentTime] = useState('');
@@ -44,7 +46,12 @@ const TypeMode = ({ homedata }) => {
           <CCardBody>
             <div className="d-flex flex-column align-items-center">
               <h2 className="chronous-title text-center mb-2">
-                {season === 'Winter' ? 'Winter Mode' : 'Summer Mode'}
+                {((season_mode === 'winter' && isSwitchingSeason) ||
+                  (season_mode === 'summer' && !isSwitchingSeason)) &&
+                  'Summer Mode '}
+                {((season_mode === 'winter' && !isSwitchingSeason) ||
+                  (season_mode === 'summer' && isSwitchingSeason)) &&
+                  'Winter Mode'}
               </h2>
               <div className="current-time">{currentTime}</div>
             </div>
