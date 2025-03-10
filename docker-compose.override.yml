@@ -10,13 +10,24 @@ services:
       - "5171:5171"
     env_file:
       - ./edge_server/.env.docker
+    volumes:
+      - ./edge_server:/app
+    environment:
+      - RELOAD=1
+
   dashboard_frontend:
     ports:
       - "5173:5173"
+    volumes:
+      - ./dashboard_frontend:/app
 
   dashboard_backend:
     ports:
       - "5172:5172"
+    volumes:
+      - ./dashboard_backend:/app
+    environment:
+      - RELOAD=1
 
   postgres:
     ports:
