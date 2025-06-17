@@ -7,7 +7,7 @@ import { getFormattedChicagoTime } from '../../utils/dateUtils';
 import './TypeMode.css';
 
 const TypeMode = ({ homedata }) => {
-  const season = useSelector((state) => state.chronos.season);
+  const season = useSelector((state) => state.chronos.season_mode);
 
   const outdoorTemp = homedata?.results?.outside_temp || 'N/A';
   const avgTemp = homedata?.efficiency?.average_temperature_difference || 'N/A';

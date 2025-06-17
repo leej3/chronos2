@@ -1,13 +1,14 @@
-from datetime import UTC, datetime
+from datetime import UTC
 
 from src.core.configs.database import session_scope
 from src.core.models import Boiler
 from src.core.repositories.setting_repository import SettingRepository
+from src.core.utils.helpers import get_current_time
 
 
 class BoilerRepository:
     def __init__(self):
-        self.timestamp = datetime.now(UTC)
+        self.timestamp = get_current_time(UTC)
         self.setting = SettingRepository()
 
     def _get_property_from_db(self, param, **kwargs):

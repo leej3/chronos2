@@ -41,7 +41,7 @@ const LoadingOverlay = ({ remainingTimeRefresh, error }) => (
 
 const Home = () => {
   const dispatch = useDispatch();
-  const { data, status, error, season, devices } = useSelector(
+  const { data, status, error, season_mode, devices } = useSelector(
     (state) => state.chronos,
   );
   const { data: temperatureData, status: temperatureStatus } = useSelector(
@@ -55,6 +55,9 @@ const Home = () => {
   const chartIntervalRef = useRef(null);
   const timeoutRef = useRef(null);
   const unlockTime = useSelector((state) => state.chronos.unlock_time);
+  const isSwitchingSeason = useSelector(
+    (state) => state.chronos.is_switching_season,
+  );
   const calculateDelay = () => {
     if (unlockTime) {
       const unlockDate = parseISO(unlockTime);
@@ -155,7 +158,7 @@ const Home = () => {
               <CCardBody className="p-0">
                 <SystemMap
                   homedata={data}
-                  season={season}
+                  season_mode={season_mode}
                   boiler={data?.boiler}
                 />
               </CCardBody>
@@ -163,10 +166,14 @@ const Home = () => {
           </CCol>
 
           <CCol xs={12} className="mt-3">
-            {season === 1 ? (
+            {((season_mode === 'winter' && isSwitchingSeason) ||
+              (season_mode === 'summer' && !isSwitchingSeason)) && (
               <SwitchTimeDisplay devices={devices} />
-            ) : (
-              <CCard>
+            )}
+
+            {((season_mode === 'winter' && !isSwitchingSeason) ||
+              (season_mode === 'summer' && isSwitchingSeason)) && (
+              <CCard className="mb-3">
                 <CCardBody className="p-0">
                   <Modbus boiler={data?.boiler} />
                 </CCardBody>
@@ -175,13 +182,13 @@ const Home = () => {
           </CCol>
 
           <CCol xs={12} className="mt-3">
-            <UserSettings data={data} />
+            <UserSettings data={data} season_mode={season_mode} />
           </CCol>
 
           <CCol xs={12} className="mt-3">
             <CCard>
               <CCardBody className="p-0">
-                <ManualOverride data={data} season={season} />
+                <ManualOverride data={data} season_mode={season_mode} />
               </CCardBody>
             </CCard>
           </CCol>
@@ -194,9 +201,13 @@ const Home = () => {
               <TableTemplate homedata={data} />
             </div>
             <div className="mt-3">
-              {season === 1 ? (
+              {((season_mode === 'winter' && isSwitchingSeason) ||
+                (season_mode === 'summer' && !isSwitchingSeason)) && (
                 <SwitchTimeDisplay devices={devices} />
-              ) : (
+              )}
+
+              {((season_mode === 'winter' && !isSwitchingSeason) ||
+                (season_mode === 'summer' && isSwitchingSeason)) && (
                 <CCard className="mb-3">
                   <CCardBody className="p-0">
                     <Modbus boiler={data?.boiler} />
@@ -211,7 +222,7 @@ const Home = () => {
               <CCardBody className="p-0">
                 <SystemMap
                   homedata={data}
-                  season={season}
+                  season_mode={season_mode}
                   boiler={data?.boiler}
                 />
               </CCardBody>
@@ -219,13 +230,13 @@ const Home = () => {
 
             <CCard>
               <CCardBody className="p-0">
-                <ManualOverride data={data} season={season} />
+                <ManualOverride data={data} season_mode={season_mode} />
               </CCardBody>
             </CCard>
           </CCol>
 
           <CCol lg={3}>
-            <UserSettings data={data} />
+            <UserSettings data={data} season_mode={season_mode} />
           </CCol>
 
           <CCol lg={12}>

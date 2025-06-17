@@ -26,6 +26,11 @@ class TestEdgeServer(unittest.TestCase):
                 }
             )
         )
+        # self.edge_server.update_device_state = MagicMock(
+        #     return_value=MagicMock(
+        #         json=lambda: {"id": 1, "state": True, "is_season_switch": False}
+        #     )
+        # )
 
     def test_get_data_success(self):
         response = self.edge_server.get_data()
@@ -61,11 +66,16 @@ class TestEdgeServer(unittest.TestCase):
         # self.assertEqual(response, {"device": "on"})
         # mock_get.assert_called_once_with(f"{self.edge_server.url}/device_state", params={"device": "heater"})
 
-    # @patch("src.core.services.edge_server.requests.post")
-    def test_update_device_state_success(self):
-        device = {"id": 1, "state": True}
+    @patch("src.core.services.edge_server.requests.post")
+    def test_update_device_state_success(self, mock_post):
+        device = {"id": 1, "state": True, "is_season_switch": False}
+        mock_post.return_value = MagicMock(
+            json=lambda: {"id": 1, "state": True, "is_season_switch": False}
+        )
         time.sleep(5)
-        response = self.edge_server.update_device_state(device["id"], device["state"])
+        response = self.edge_server.update_device_state(
+            device["id"], device["state"], device["is_season_switch"]
+        )
         assert response["id"] == device["id"]
         assert response["state"] == device["state"]
 
@@ -89,6 +99,55 @@ class TestEdgeServer(unittest.TestCase):
 
         with self.assertRaises(ErrorReadDataEdgeServer):
             self.edge_server.download_log()
+
+    @patch("src.core.services.edge_server.requests.post")
+    def test_update_device_state_general_error(self, mock_post):
+        mock_post.return_value = MagicMock(
+            json=lambda: {"id": 1, "state": True, "is_season_switch": False}
+        )
+        mock_post.side_effect = EdgeServerError()
+        with self.assertRaises(EdgeServerError):
+            self.edge_server.update_device_state(1, True, False)
+
+    @patch("src.core.services.edge_server.requests.get")
+    def test_get_state_of_all_relays_success(self, mock_get):
+        mock_get.return_value = MagicMock(
+            json=lambda: [
+                {
+                    "id": 0,
+                    "state": True,
+                },
+                {
+                    "id": 2,
+                    "state": False,
+                },
+                {
+                    "id": 1,
+                    "state": False,
+                },
+                {
+                    "id": 4,
+                    "state": False,
+                },
+                {
+                    "id": 3,
+                    "state": False,
+                },
+                {
+                    "id": 5,
+                    "state": False,
+                },
+                {
+                    "id": 6,
+                    "state": True,
+                },
+            ]
+        )
+        response = self.edge_server.get_state_of_all_relays()
+        assert len(response) == 7
+        for relay in response:
+            assert relay["id"] in [0, 1, 2, 3, 4, 5, 6]
+            assert relay["state"] in [True, False]
 
 
 if __name__ == "__main__":

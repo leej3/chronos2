@@ -1,8 +1,9 @@
-from datetime import UTC, datetime
+from datetime import UTC
 
 from src.core.repositories.device_repository import DeviceRepository
 from src.core.services.edge_server import EdgeServer
-from src.core.utils.constant import MANUAL_AUTO, MANUAL_OFF, MANUAL_ON, OFF, ON
+from src.core.utils.constant import MANUAL_AUTO, MANUAL_OFF, MANUAL_ON, OFF, ON, State
+from src.core.utils.helpers import get_current_time
 
 
 class Device(object):
@@ -13,48 +14,32 @@ class Device(object):
         self.edge_server = EdgeServer()
         self.table_class_name = table_class_name
 
-    def _switch_state(self, command, relay_only=False, is_season_switch=False):
-        return self.edge_server._switch_state(command, relay_only, is_season_switch)
-
-    # @property
-    # def relay_state(self):
-    #     # try:
-    #     #     with serial.Serial(cfg.serial.portname, cfg.serial.baudr, timeout=1) as ser_port:
-    #     #         ser_port.write("relay read {}\n\r".format(self.relay_number))
-    #     #         response = ser_port.read(25)
-    #     # except serial.SerialException as e:
-    #     #     logger.error("Serial port error: {}".format(e))
-    #     #     sys.exit(1)
-    #     # else:
-    #     #     if "on" in response:
-    #     #         state = True
-    #     #     elif "off" in response:
-    #     #         state = False
-    #     #     else:
-    #     #         logger.error("Unexpected response: {}".format(response))
-    #     #     return state
-    #     # TODO: edge server
-    #     return False
-
-    def turn_on(self, relay_only=False, is_season_switch=False):
-        self._switch_state(
-            "on", relay_only=relay_only, is_season_switch=is_season_switch
+    def _device_state(self, id, state, is_season_switch=False):
+        return self.edge_server.update_device_state(
+            id=id, state=state, is_season_switch=is_season_switch
         )
 
-        if not relay_only and self.TYPE == "boiler":
-            switched_timestamp = datetime.now(UTC)
+    def turn_on(self, is_season_switch=False):
+        self._device_state(
+            id=self.relay_number,
+            state=State.ON.value,
+            is_season_switch=is_season_switch,
+        )
+
+        if self.TYPE == "boiler":
+            switched_timestamp = get_current_time(UTC)
             self._update_value_in_db(switched_timestamp=switched_timestamp)
 
-    def turn_off(self, relay_only=False, is_season_switch=False):
-        self._switch_state(
-            "off", relay_only=relay_only, is_season_switch=is_season_switch
+    def turn_off(self, is_season_switch=False):
+        self._device_state(
+            id=self.relay_number,
+            state=State.OFF.value,
+            is_season_switch=is_season_switch,
         )
 
-        if not relay_only and self.TYPE == "boiler":
-            switched_timestamp = datetime.now(UTC)
-            self._update_value_in_db(
-                timestamp=switched_timestamp, switched_timestamp=switched_timestamp
-            )
+        if self.TYPE == "boiler":
+            switched_timestamp = get_current_time(UTC)
+            self._update_value_in_db(switched_timestamp=switched_timestamp)
 
     def _get_property_from_db(self, *args, **kwargs):
         return self.device_repository._get_property_from_db(*args, **kwargs)

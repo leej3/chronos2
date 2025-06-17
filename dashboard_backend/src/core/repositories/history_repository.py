@@ -1,9 +1,10 @@
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, timedelta
 
 from sqlalchemy import desc
 from sqlalchemy.sql import func
 from src.core.configs.database import session_scope
 from src.core.models import History, Settings
+from src.core.utils.helpers import get_current_time
 
 
 class HistoryRepository:
@@ -21,7 +22,7 @@ class HistoryRepository:
 
     def get_last_histories(self, hours=1):
         with session_scope() as session:
-            timespan = datetime.now(UTC) - timedelta(hours=hours)
+            timespan = get_current_time(UTC) - timedelta(hours=hours)
             rows = (
                 session.query(History)
                 .filter(History.timestamp > timespan)

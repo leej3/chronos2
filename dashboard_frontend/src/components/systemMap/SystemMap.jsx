@@ -5,7 +5,10 @@ import { useSelector } from 'react-redux';
 import { formatTemperature } from '../../utils/tranform';
 import './SystemMap.css';
 
-const SystemMap = memo(({ homedata, season, boiler }) => {
+const SystemMap = memo(({ homedata, season_mode, boiler }) => {
+  const isSwitchingSeason = useSelector(
+    (state) => state.chronos.is_switching_season,
+  );
   const { sensors } = homedata || {};
   const {
     cascade_current_power,
@@ -227,7 +230,17 @@ const SystemMap = memo(({ homedata, season, boiler }) => {
     </CCol>
   );
 
-  return <>{season === 0 ? renderWinterView() : renderSummerView()}</>;
+  return (
+    <>
+      {((season_mode === 'winter' && isSwitchingSeason) ||
+        (season_mode === 'summer' && !isSwitchingSeason)) &&
+        renderSummerView()}
+
+      {((season_mode === 'winter' && !isSwitchingSeason) ||
+        (season_mode === 'summer' && isSwitchingSeason)) &&
+        renderWinterView()}
+    </>
+  );
 });
 
 export default SystemMap;

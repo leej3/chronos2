@@ -5,23 +5,29 @@ from pydantic import BaseModel, Field
 from .config import cfg
 
 
+class SeasonSwitch(BaseModel):
+    season_mode: str = Field(..., description="Season mode (winter or summer)")
+    mode_switch_lockout_time: int = Field(
+        ..., description="Mode switch lockout time in minutes"
+    )
+
+
 class SystemStatus(BaseModel):
     sensors: dict
-    status: bool
     mock_devices: bool = False
     read_only_mode: bool = False
+    season_mode: str = Field(..., description="Season mode (winter or summer)")
+    is_switching_season: bool = False
 
 
 class SwitchStateRequest(BaseModel):
     command: str
     relay_only: bool = False
-    is_season_switch: bool = False
 
 
-class DeviceModel(BaseModel):
-    id: int = Field(..., ge=0, lt=7, description="Device ID (0-4)")
+class RelayModel(BaseModel):
+    id: int = Field(..., ge=0, lt=8, description="Device ID (0-7)")
     state: bool
-    is_season_switch: bool = False
 
 
 # New models for boiler data

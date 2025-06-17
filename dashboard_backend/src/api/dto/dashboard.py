@@ -8,7 +8,7 @@ class SetpointUpdate(BaseModel):
 
 
 class SwitchSeason(BaseModel):
-    season_value: int
+    season_mode: str
 
 
 class UpdateDeviceState(BaseModel):
@@ -16,7 +16,7 @@ class UpdateDeviceState(BaseModel):
     state: bool
 
 
-class DeviceModel(BaseModel):
+class RelayModel(BaseModel):
     id: int = Field(..., ge=0, lt=7, description="Device ID (0-4)")
     state: bool
 

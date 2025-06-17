@@ -9,22 +9,22 @@ const manualOverrideSlice = createSlice({
       lastSwitch: null,
     },
     chiller1: {
-      id: 1,
-      state: 'auto',
-      lastSwitch: null,
-    },
-    chiller2: {
       id: 2,
       state: 'auto',
       lastSwitch: null,
     },
+    chiller2: {
+      id: 1,
+      state: 'auto',
+      lastSwitch: null,
+    },
     chiller3: {
-      id: 3,
+      id: 4,
       state: 'auto',
       lastSwitch: null,
     },
     chiller4: {
-      id: 4,
+      id: 3,
       state: 'auto',
       lastSwitch: null,
     },

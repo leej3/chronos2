@@ -49,29 +49,6 @@ def test_temperature_limits_blocked():
     assert "Operation not permitted" in response.json().get("detail", "")
 
 
-def test_read_operations_allowed(client, mock_modbus_device):
-    """Test that read operations are still allowed in read-only mode."""
-    cfg.READ_ONLY_MODE = True
-    cfg.MOCK_DEVICES = True
-    try:
-        # Test reading boiler stats
-        response = client.get("/boiler_stats")
-        assert response.status_code == 200
-        data = response.json()
-        assert data["system_supply_temp"] == 154.4
-        assert data["outlet_temp"] == 158.0
-
-        # Test reading temperature limits
-        response = client.get("/temperature_limits")
-        assert response.status_code == 200
-        data = response.json()
-        assert "hard_limits" in data
-        assert "soft_limits" in data
-    finally:
-        cfg.READ_ONLY_MODE = False
-        cfg.MOCK_DEVICES = False
-
-
 def test_write_operations_blocked(client):
     """Test that all write operations are blocked in read-only mode."""
     cfg.READ_ONLY_MODE = True

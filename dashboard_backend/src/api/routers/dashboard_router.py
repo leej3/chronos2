@@ -192,5 +192,5 @@ async def switch_season(
     dashboard_service: Annotated[DashboardService, Security(get_dashboard_service)],
     edge_server: Annotated[EdgeServer, Security(get_edge_server)],
 ):
-    result = dashboard_service.switch_season_mode(data.season_value)
+    result = dashboard_service.switch_season_mode(data.season_mode)
     return JSONResponse(content=result, status_code=200)

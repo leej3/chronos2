@@ -64,9 +64,9 @@ class EdgeServer:
         return self._handle_response(response)
 
     @catch_connection_error
-    def update_device_state(self, id: int, state: bool):
+    def update_device_state(self, id: int, state: bool, is_season_switch: bool = False):
         """Update device state."""
-        data = {"id": id, "state": state}
+        data = {"id": id, "state": state, "is_season_switch": is_season_switch}
         response = requests.post(f"{self.url}/device_state", data=json.dumps(data))
         return self._handle_response(response)
 
@@ -114,18 +114,17 @@ class EdgeServer:
         return self._handle_response(response)
 
     @catch_connection_error
-    def _switch_state(self, command, relay_only=False, is_season_switch=False):
-        response = requests.post(
-            f"{self.url}/switch_state",
-            json={
-                "command": command,
-                "relay_only": relay_only,
-                "is_season_switch": is_season_switch,
-            },
-        )
+    def get_state_of_all_relays(self):
+        response = requests.get(f"{self.url}/get_state_of_all_relays")
         return self._handle_response(response)
 
     @catch_connection_error
-    def get_all_devices_state(self):
-        response = requests.get(f"{self.url}/get_all_devices_state")
+    def season_switch(self, season_mode: str, mode_switch_lockout_time: int):
+        response = requests.post(
+            f"{self.url}/season_switch",
+            json={
+                "season_mode": season_mode,
+                "mode_switch_lockout_time": mode_switch_lockout_time,
+            },
+        )
         return self._handle_response(response)

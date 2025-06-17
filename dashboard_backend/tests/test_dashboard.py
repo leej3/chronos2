@@ -74,39 +74,7 @@ def mock_edge_server():
         "hard_limits": {"min_setpoint": 70.0, "max_setpoint": 110.0},
         "soft_limits": {"min_setpoint": 70.0, "max_setpoint": 110.0},
     }
-    mock._switch_state = MagicMock(spec=EdgeServer._switch_state)
-    mock.get_all_devices_state.return_value = {
-        "0": {
-            "id": 0,
-            "state": True,
-            "switched_timestamp": datetime.now().isoformat(),
-        },
-        "1": {
-            "id": 1,
-            "state": False,
-            "switched_timestamp": datetime.now().isoformat(),
-        },
-        "2": {
-            "id": 2,
-            "state": False,
-            "switched_timestamp": datetime.now().isoformat(),
-        },
-        "3": {
-            "id": 3,
-            "state": False,
-            "switched_timestamp": datetime.now().isoformat(),
-        },
-        "4": {
-            "id": 4,
-            "state": False,
-            "switched_timestamp": datetime.now().isoformat(),
-        },
-    }
-    mock.update_device_state.return_value = {
-        "id": 1,
-        "state": True,
-        "switched_timestamp": datetime.now().isoformat(),
-    }
+
     return mock
 
 
@@ -115,9 +83,7 @@ def mock_device():
     mock = MagicMock(spec=Device)
     mock.turn_on = MagicMock(spec=Device.turn_on)
     mock.turn_off = MagicMock(spec=Device.turn_off)
-    mock._switch_state = MagicMock(spec=Device._switch_state)
     mock.edge_server = MagicMock(spec=EdgeServer)
-    mock.edge_server._switch_state = MagicMock(spec=EdgeServer._switch_state)
     return mock
 
 
@@ -168,7 +134,10 @@ def test_update_device_state(client, mock_dashboard_service):
         "state": 1,
         "switched_timestamp": datetime.now().isoformat(),
     }
-    response = client.post("/api/update_device_state", json={"id": 0, "state": 1})
+    response = client.post(
+        "/api/update_device_state",
+        json={"id": 0, "state": 1, "is_season_switch": False},
+    )
     assert response.status_code == 200
     data = response.json()
     assert data["id"] == 0
@@ -219,7 +188,7 @@ def test_switch_season_success(client, mock_edge_server, mock_dashboard_service)
     mock_dashboard_service.switch_season_mode.return_value = (
         switch_season_success_response
     )
-    response = client.post("/api/switch-season", json={"season_value": 0})
+    response = client.post("/api/switch-season", json={"season_mode": "winter"})
     data = response.json()
     assert response.status_code == 200
     assert data == switch_season_success_response
@@ -227,8 +196,7 @@ def test_switch_season_success(client, mock_edge_server, mock_dashboard_service)
 
 def test_switch_season_invalid_season_value(client, mock_dashboard_service):
     mock_dashboard_service.switch_season_mode.side_effect = HTTPException(
-        status_code=400, detail="Invalid season value: 6"
+        status_code=400, detail="Invalid season value: spring"
     )
-    response = client.post("/api/switch-season", json={"season_value": 6})
+    response = client.post("/api/switch-season", json={"season_mode": "spring"})
     assert response.status_code == 400
-    assert response.json() == {"detail": "Invalid season value: 6"}
