@@ -3,7 +3,7 @@ MODBUS = {
         "baudr": 9600,
         "portname": "/dev/ttyUSB0",
         "parity": "E",
-        "timeout": 1,
+        "timeout": 3,
         "registers": {
             "holding": {
                 "operating_mode": 0,  # 40001

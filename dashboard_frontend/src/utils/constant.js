@@ -10,7 +10,7 @@ export const DEVICES = {
 
 export const getDeviceId = (device) => DEVICES[device];
 
-export const REFRESH_TIME = 5;
+export const REFRESH_TIME = 10;
 export const RETRY_TIME = 10;
 
 export const SEASON_MODE = {

@@ -33,7 +33,7 @@ def _ensure_event_loop():
 
 
 @contextmanager
-def create_modbus_connection(port="/dev/ttyUSB0", baudrate=9600, parity="E", timeout=1):
+def create_modbus_connection(port="/dev/ttyUSB0", baudrate=9600, parity="E", timeout=3):
     """
     Create a ModbusDevice connection using a context manager.
 
@@ -83,7 +83,7 @@ class ModbusDevice:
         device.close()
     """
 
-    def __init__(self, port="/dev/ttyUSB0", baudrate=9600, parity="E", timeout=1):
+    def __init__(self, port="/dev/ttyUSB0", baudrate=9600, parity="E", timeout=3):
         _ensure_event_loop()
         self.client = ModbusSerialClient(
             port=port, baudrate=baudrate, parity=parity, timeout=timeout
@@ -197,7 +197,7 @@ class ModbusDevice:
                 f"Failed to read input register {address}: {e}"
             ) from e
 
-    def read_boiler_data(self, max_retries=3):
+    def read_boiler_data(self, max_retries=6):
         """Read various temperature and status data from the boiler.
 
         This implementation has been verified against a working C implementation (bstat).
@@ -314,7 +314,7 @@ class ModbusDevice:
         )
         return None
 
-    def set_boiler_setpoint(self, effective_setpoint, max_retries=3):
+    def set_boiler_setpoint(self, effective_setpoint, max_retries=6):
         """Set the boiler's temperature setpoint.
 
         The C implementation uses a specific formula for converting temperature to percentage:

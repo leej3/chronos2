@@ -54,7 +54,7 @@ REAL_HARDWARE_TEMPS = [
 HARDWARE_TIMING = {
     "normal_read": 0.1,  # Typical read time
     "slow_read": 0.5,  # Slow but acceptable read
-    "timeout": 2.0,  # Timeout threshold
+    "timeout": 3.0,  # Timeout threshold
     "retry_delay": 1.0,  # Delay between retries
 }
 
@@ -112,7 +112,7 @@ def test_device_initialization(mock_modbus_client):
 
     # Verify client initialization
     mock_modbus_client.assert_called_once_with(
-        port="/dev/ttyUSB0", baudrate=9600, parity="E", timeout=1
+        port="/dev/ttyUSB0", baudrate=9600, parity="E", timeout=3
     )
 
     # Verify connection attempt
@@ -677,21 +677,21 @@ def test_hardware_error_conditions(device, mock_modbus_client):
             "error": ModbusIOException("Connection lost"),
             "error_type": "connection",
             "should_retry": True,
-            "max_retries": 3,
+            "max_retries": 6,
             "recovery_time": 1,
         },
         {
             "error": ValueError("Invalid CRC"),
             "error_type": "protocol",
             "should_retry": True,
-            "max_retries": 3,
+            "max_retries": 6,
             "recovery_time": 1,
         },
         {
             "error": TimeoutError("No response"),
             "error_type": "timeout",
             "should_retry": True,
-            "max_retries": 3,
+            "max_retries": 6,
             "recovery_time": 1,
         },
     ]
@@ -799,8 +799,8 @@ def test_read_boiler_data_all_retries_fail(mock_modbus_device):
     mock_modbus_device.client.connect.return_value = True  # Reconnection succeeds
 
     # Should raise ModbusException after max retries
-    result = mock_modbus_device.read_boiler_data(max_retries=3)
+    result = mock_modbus_device.read_boiler_data(max_retries=6)
     assert result is None
     assert (
-        mock_modbus_device.client.read_holding_registers.call_count == 3
+        mock_modbus_device.client.read_holding_registers.call_count == 6
     )  # Verify retry count

@@ -196,7 +196,7 @@ async def get_data():
             return SystemStatus(
                 sensors={},
                 status=False,
-                mock_devices=True,
+                mock_devices=MOCK_DEVICES,
                 read_only_mode=cfg.READ_ONLY_MODE,
             )
 

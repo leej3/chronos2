@@ -288,5 +288,5 @@ def test_read_boiler_data_all_retries_fail(mock_modbus_device):
         "Communication failed"
     )
 
-    result = mock_modbus_device.read_boiler_data(max_retries=3)
+    result = mock_modbus_device.read_boiler_data(max_retries=6)
     assert result is None
